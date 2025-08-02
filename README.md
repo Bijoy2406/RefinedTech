@@ -6,6 +6,20 @@
 Sellers can list used tech products with verified condition grades, while buyers enjoy AI-powered recommendations, escrow payment protection, and a seamless bidding/purchasing experience.
 
 ---
+## � Project Objective  
+To create a trusted multi-user eCommerce platform where individuals can **buy/sell used electronics** (smartphones, PCs, gadgets) with:  
+- **AI-powered fraud detection** for listings  
+- Escrow-based secure payments  
+- Verified condition grading  
+
+---
+
+## � Target Audience  
+- **Tech Enthusiasts**: Affordable, high-quality refurbished devices.  
+- **Sellers**: Individuals/businesses reselling used tech securely.  
+- **Eco-Conscious Users**: Reduce e-waste by promoting reuse.
+
+---
 
 ## Figma Design
 Click Here: [RefinedTech](https://www.figma.com/design/Vamwe21bV0AiM5MHPnyMqK/RefinedTech?node-id=0-1&t=9MeQwzWboM1RyzeW-1)
