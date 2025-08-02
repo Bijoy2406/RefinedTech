@@ -117,14 +117,14 @@ Click Here: [RefinedTech](https://www.figma.com/design/Vamwe21bV0AiM5MHPnyMqK/Re
 ---
 
 🎨 Design Principles
-- 1. User-Centric Minimalism
-- 2. Responsive Architecture
-- 3. Trust-Centric UX
-- 4. WCAG-Compliant Accessibility
-- 5. Performance-Optimized Interactions
-- 6. Cognitive Load Reduction
-- 7. Consistent Design Language
-- 8. Data-Driven Microinteractions
+- User-Centric Minimalism
+- Responsive Architecture
+- Trust-Centric UX
+- WCAG-Compliant Accessibility
+- Performance-Optimized Interactions
+- Cognitive Load Reduction
+- Consistent Design Language
+- Data-Driven Microinteractions
 
 ---
 
