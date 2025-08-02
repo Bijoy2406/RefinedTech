@@ -7,10 +7,15 @@ Sellers can list used tech products with verified condition grades, while buyers
 
 ---
 ##  Project Objective  
-To create a trusted multi-user eCommerce platform where individuals can **buy/sell used electronics** (smartphones, PCs, gadgets) with:  
-- **AI-powered fraud detection** for listings  
-- Escrow-based secure payments  
-- Verified condition grading  
+
+RefinedTech is an online marketplace designed to make buying and selling used tech gadgets simple, safe, and smart. Our goal is to:
+- Connect buyers and sellers of pre-owned electronics (phones, laptops, gaming gear) in one trusted platform.  
+- Prevent scams with AI-powered fraud detection for all listings. 
+- Guarantee fair deals using escrow payments - your money is only released when you receive the item.
+- Simplify decisions with verified condition ratings (Like-new/Good/Fair) and real photos.
+- Save you time with smart recommendations based on your preferences.
+
+No more sketchy Craigslist deals - just easy, secure tech trading! 
 
 ---
 
