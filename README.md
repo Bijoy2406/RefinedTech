@@ -26,6 +26,12 @@ No more sketchy Craigslist deals - just easy, secure tech trading!
 - **Gamers & Tech Enthusiasts**
 - **Global Users**
 
+Why They’ll Love RefinedTech:
+✨ First-time buyers: Guided purchasing with AI recommendations
+💼 Small businesses: Bulk listing tools and seller analytics
+🌱 Eco-warriors: Carbon footprint tracker for each purchase
+🌎 International users: Multi-language support & local shipping partners
+
 ---
 
 ## Figma Design
