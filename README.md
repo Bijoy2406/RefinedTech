@@ -20,9 +20,11 @@ No more sketchy Craigslist deals - just easy, secure tech trading!
 ---
 
 ##  Target Audience  
-- **Tech Enthusiasts**
-- **Sellers**
-- **Eco-Conscious Users**
+- **Budget-Conscious Shoppers**
+- **Tech Resellers & Small Businesses**
+- **Eco-Friendly Consumers**
+- **Gamers & Tech Enthusiasts**
+- **Global Users**
 
 ---
 
