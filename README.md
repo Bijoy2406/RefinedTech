@@ -15,9 +15,9 @@ To create a trusted multi-user eCommerce platform where individuals can **buy/se
 ---
 
 ##  Target Audience  
-- **Tech Enthusiasts**: Affordable, high-quality refurbished devices.  
-- **Sellers**: Individuals/businesses reselling used tech securely.  
-- **Eco-Conscious Users**: Reduce e-waste by promoting reuse.
+- **Tech Enthusiasts**
+- **Sellers**
+- **Eco-Conscious Users**
 
 ---
 
