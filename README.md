@@ -134,7 +134,7 @@ Click Here: [RefinedTech](https://www.figma.com/design/Vamwe21bV0AiM5MHPnyMqK/Re
 
    ```bash
    git clone https://github.com/Bijoy2406/RefinedTech.git
-   cd .\BookMyDoc\
+   cd .\RefinedTech\
    ```
 2. Install dependencies:
 
