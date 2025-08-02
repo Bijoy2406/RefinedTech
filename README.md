@@ -8,7 +8,7 @@ Sellers can list used tech products with verified condition grades, while buyers
 ---
 
 ## Figma Design
-[RefinedTech](https://www.figma.com/design/Vamwe21bV0AiM5MHPnyMqK/RefinedTech?node-id=0-1&t=9MeQwzWboM1RyzeW-1)
+Click Here: [RefinedTech](https://www.figma.com/design/Vamwe21bV0AiM5MHPnyMqK/RefinedTech?node-id=0-1&t=9MeQwzWboM1RyzeW-1)
 
 ---
 
