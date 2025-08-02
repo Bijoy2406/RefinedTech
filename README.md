@@ -2,7 +2,8 @@
 
 ## About the Project
 
-**RefinedTech** is a secure multi-user eCommerce platform for buying and selling refurbished gadgets, PCs, and smartphones. Sellers can list used tech products with verified condition grades, while buyers enjoy AI-powered recommendations, escrow payment protection, and a seamless bidding/purchasing experience.
+**RefinedTech** is a secure multi-user eCommerce platform for buying and selling refurbished gadgets, PCs, and smartphones. 
+Sellers can list used tech products with verified condition grades, while buyers enjoy AI-powered recommendations, escrow payment protection, and a seamless bidding/purchasing experience.
 
 ---
 
