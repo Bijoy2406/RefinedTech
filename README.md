@@ -124,21 +124,24 @@ Click Here: [RefinedTech](https://www.figma.com/design/Vamwe21bV0AiM5MHPnyMqK/Re
 ---
 
 ## Installation
-```bash
-# Clone repo
-git clone https://github.com/your-username/RefinedTech.git
-cd RefinedTech
 
-# Install dependencies
-npm install
-composer install
+1. Clone the repository:
 
-# Configure .env (copy from .env.example)
-# Set database and payment API keys
+   ```bash
+   git clone https://github.com/...
+   cd .\BookMyDoc\
+   ```
+2. Install dependencies:
 
-# Run migrations
-php artisan migrate --seed
+   ```bash
+   npm install
+   ```
+3. Configure environment variables by copying `.env.example` to `.env` and filling in your details.
+4. Run the development server:
 
-# Start dev server
-npm run dev
-php artisan serve
+   ```bash
+   npm run dev
+   ```
+
+
+---
