@@ -1,4 +1,4 @@
-# RefinedTech ♻️
+# RefinedTech 
 
 ## About the Project
 
