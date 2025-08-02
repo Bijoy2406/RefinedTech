@@ -27,10 +27,10 @@ No more sketchy Craigslist deals - just easy, secure tech trading!
 - **Global Users**
 
 Why They’ll Love RefinedTech:
-✨ First-time buyers: Guided purchasing with AI recommendations
-💼 Small businesses: Bulk listing tools and seller analytics
-🌱 Eco-warriors: Carbon footprint tracker for each purchase
-🌎 International users: Multi-language support & local shipping partners
+- ✨ First-time buyers: Guided purchasing with AI recommendations
+- 💼 Small businesses: Bulk listing tools and seller analytics
+- 🌱 Eco-warriors: Carbon footprint tracker for each purchase
+- 🌎 International users: Multi-language support & local shipping partners
 
 ---
 
