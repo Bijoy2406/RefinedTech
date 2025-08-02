@@ -75,7 +75,6 @@ Click Here: [RefinedTech](https://www.figma.com/design/Vamwe21bV0AiM5MHPnyMqK/Re
 | Frontend     | JavaScript, CSS (Tailwind) |
 | Backend      | Laravel (PHP)              |
 | Database     | MySQL                      |
-| Payment      | Stripe/PayPal API          |
 
 ---
 
