@@ -45,7 +45,7 @@ Click Here: [RefinedTech](https://www.figma.com/design/Vamwe21bV0AiM5MHPnyMqK/Re
 | 20220104007  | Salman Faresi                | faresisalman999@gmail.com         |                       |
 | 20220104049  | Maisha Momtaz Meem           | maishamomtaz2003@gmail.com        |                       |
 | 20220104157  | Tajuddin Ahmed               | bijoy.ahmed12555@gmail.com        |                       |
-| 20210204104  | Jarin Tasnim                 | @gmail.com                        |                       |
+| 20210204105  | Jarin Tasnim                 | tasnim.cse.20210204105@aust.edu   |                       |
 
 ---
 
