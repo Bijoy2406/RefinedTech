@@ -42,21 +42,24 @@ Click Here: [RefinedTech](https://www.figma.com/design/Vamwe21bV0AiM5MHPnyMqK/Re
 ## 👨‍💻 Team Members
 | ID           | Name                         | Email                             | Role                  |
 |--------------|------------------------------|-----------------------------------|-----------------------|
-| 20220104007  | Salman Faresi                | faresisalman999@gmail.com         |                       |
-| 20220104049  | Maisha Momtaz Meem           | maishamomtaz2003@gmail.com        |                       |
-| 20220104157  | Tajuddin Ahmed               | bijoy.ahmed12555@gmail.com        |                       |
-| 20210204105  | Jarin Tasnim                 | tasnim.cse.20210204105@aust.edu   |                       |
+| 20220104007  | Salman Faresi                | faresisalman999@gmail.com         |           Lead            |
+| 20220104049  | Maisha Momtaz Meem           | maishamomtaz2003@gmail.com        |           Frontend            |
+| 20210204105  | Jarin Tasnim                 | tasnim.cse.20210204105@aust.edu   |             Frontend          |
+| 20220104157  | Tajuddin Ahmed               | bijoy.ahmed12555@gmail.com        |      Backend                 |
+
 
 ---
 
 ## Wakatime Badges
--- **Salman Faresi**
+ **Salman Faresi**
 
--- **Maisha Momtaz Meem**
+ **Maisha Momtaz Meem**
 
--- **Tajuddin Ahmed**
+ **Tajuddin Ahmed**
 
--- **Jarin Tasnim**
+[![wakatime](https://wakatime.com/badge/user/652acd96-cfb8-4029-a662-a80978f37e02/project/0349f369-f284-46d8-b5a1-67a32ae2a0cf.svg)](https://wakatime.com/badge/user/652acd96-cfb8-4029-a662-a80978f37e02/project/0349f369-f284-46d8-b5a1-67a32ae2a0cf)
+
+ **Jarin Tasnim**
 
 ---
 
@@ -72,7 +75,7 @@ Click Here: [RefinedTech](https://www.figma.com/design/Vamwe21bV0AiM5MHPnyMqK/Re
 ## Technology Stack
 | Layer        | Technology                 |
 |--------------|----------------------------|
-| Frontend     | JavaScript, CSS (Tailwind) |
+| Frontend     | JavaScript, CSS |
 | Backend      | Laravel (PHP)              |
 | Database     | MySQL                      |
 
@@ -128,25 +131,27 @@ Click Here: [RefinedTech](https://www.figma.com/design/Vamwe21bV0AiM5MHPnyMqK/Re
 
 ---
 
-## Installation
+# Installation
 
-1. Clone the repository:
+## Clone Repository
+```bash
+git clone https://github.com/Bijoy2406/RefinedTech.git
+cd RefinedTech
+```
 
-   ```bash
-   git clone https://github.com/Bijoy2406/RefinedTech.git
-   cd .\RefinedTech\
-   ```
-2. Install dependencies:
+## Backend (Laravel)
+```bash
+cd backend
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+php artisan serve
+```
 
-   ```bash
-   npm install
-   ```
-3. Configure environment variables by copying `.env.example` to `.env` and filling in your details.
-4. Run the development server:
-
-   ```bash
-   npm run dev
-   ```
-
-
----
+## Frontend (React)
+```bash
+cd frontend
+npm install
+npm run dev
+```
