@@ -1,0 +1,41 @@
+.home .hero {
+  padding: 3rem 2rem;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--card-bg), transparent);
+  border: 1px solid var(--card-border);
+}
+
+.home .hero h1 {
+  font-size: 2.4rem;
+  margin: 0 0 .5rem 0;
+  color: var(--text-primary);
+}
+
+.home .hero p {
+  margin: 0 0 1rem 0;
+  color: var(--text-secondary);
+}
+
+.home .cta {
+  display: flex;
+  gap: .8rem;
+}
+
+.features {
+  margin-top: 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  padding: 1rem;
+  border-radius: 16px;
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+}
+
+.card h3 {
+  margin: .2rem 0 .4rem 0;
+  color: var(--text-primary);
+}
