@@ -40,9 +40,23 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        // Original single sanctum guard (retain for backward compatibility)
         'sanctum' => [
             'driver' => 'sanctum',
             'provider' => 'users',
+        ],
+        // New per-role sanctum guards
+        'admin' => [
+            'driver' => 'sanctum',
+            'provider' => 'admins',
+        ],
+        'buyer' => [
+            'driver' => 'sanctum',
+            'provider' => 'buyers',
+        ],
+        'seller' => [
+            'driver' => 'sanctum',
+            'provider' => 'sellers',
         ],
     ],
 
@@ -64,9 +78,22 @@ return [
     */
 
     'providers' => [
+        // Keep "users" provider mapped to Admin for backward compatibility with existing tokens
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\User::class),
+            'model' => App\Models\Admin::class,
+        ],
+        'admins' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Admin::class,
+        ],
+        'buyers' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Buyer::class,
+        ],
+        'sellers' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Seller::class,
         ],
 
         // 'users' => [

@@ -19,3 +19,208 @@
   gap: .5rem;
   margin-top: 1rem;
 }
+
+.status.success {
+  color: #16a34a;
+  background-color: rgba(22, 163, 74, 0.1);
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid rgba(22, 163, 74, 0.2);
+}
+
+.status.error {
+  color: #dc2626;
+  background-color: rgba(220, 38, 38, 0.1);
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+input:disabled, select:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Lottie Loading Full-Screen Overlay */
+.lottie-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.lottie-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.lottie-animation {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.lottie-loading-text {
+  color: white;
+  font-size: 1.3rem;
+  font-weight: 600;
+  text-align: center;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Role Selection Styles */
+.role-selection {
+  max-width: 600px;
+  text-align: center;
+}
+
+.role-selection h2 {
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.role-selection p {
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+}
+
+.role-options {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+}
+
+.role-option {
+  padding: 2rem 1.5rem;
+  border: 2px solid var(--card-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: var(--card-bg);
+  text-align: center;
+  flex: 1;
+  max-width: 200px;
+}
+
+.role-option:hover {
+  border-color: var(--primary-color);
+  background-color: var(--hover-bg);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+
+.role-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.8;
+}
+
+.role-option h3 {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-primary);
+  font-size: 1.2rem;
+}
+
+.role-option p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* Signup page: image + form layout */
+.signup-with-image {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  max-width: 900px;
+  padding: 1.25rem;
+}
+
+.signup-image img {
+  width: 260px;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.15);
+  display: block;
+}
+
+.signup-form {
+  flex: 1 1 1;
+}
+
+.form-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.back-button {
+  background: none;
+  border: 1px solid var(--card-border);
+  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.back-button:hover {
+  background-color: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+.form-header h2 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.form-description {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin: 0.5rem 0 1rem 0;
+  padding: 0.75rem;
+  background-color: var(--hover-bg);
+  border-radius: 6px;
+  border-left: 3px solid var(--primary-color);
+}
+
+@media (max-width: 880px) {
+  .signup-with-image {
+    flex-direction: column;
+    max-width: 420px;
+  }
+  
+  .signup-image img {
+    width: 100%;
+    max-width: 360px;
+  }
+  
+  .role-options {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .role-option {
+    max-width: 300px;
+    width: 100%;
+  }
+}

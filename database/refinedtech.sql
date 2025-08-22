@@ -2,24 +2,114 @@ DROP DATABASE IF EXISTS refinedtech;
 CREATE DATABASE refinedtech CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE refinedtech;
 
--- Users Table
-CREATE TABLE users (
+-- Buyers Table
+CREATE TABLE buyers (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
+    first_name VARCHAR(255) NOT NULL,
+    last_name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
+    email_verified_at TIMESTAMP NULL,
     password VARCHAR(255) NOT NULL,
-    role ENUM('buyer', 'seller', 'admin') DEFAULT 'buyer',
+    country VARCHAR(255) NOT NULL,
+    phone_number VARCHAR(255) NOT NULL,
     status ENUM('pending', 'approved', 'rejected') DEFAULT 'approved',
+    remember_token VARCHAR(100) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Create sample accounts (password hashes should be regenerated in production)
-INSERT INTO users (name,email,password,role,status,created_at,updated_at) VALUES
-('Admin User','admin@refinedtech.local','$2y$10$Zxw9Zxw9Zxw9Zxw9Zxw9Zexw9Zxw9Zxw9Zxw9Ze','admin','approved',NOW(),NOW()),
-('Sample Seller','seller@refinedtech.local','$2y$10$Zxw9Zxw9Zxw9Zxw9Zxw9Zexw9Zxw9Zxw9Zxw9Ze','seller','pending',NOW(),NOW());
-select * from users;
+-- Sellers Table  
+CREATE TABLE sellers (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    first_name VARCHAR(255) NOT NULL,
+    last_name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    email_verified_at TIMESTAMP NULL,
+    password VARCHAR(255) NOT NULL,
+    country VARCHAR(255) NOT NULL,
+    phone_number VARCHAR(255) NOT NULL,
+    shop_username VARCHAR(255) UNIQUE NOT NULL,
+    date_of_birth DATE NOT NULL,
+    business_address TEXT NOT NULL,
+    national_id_path VARCHAR(255) NULL,
+    proof_of_ownership_path VARCHAR(255) NULL,
+    status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    remember_token VARCHAR(100) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
 
+-- Admins Table
+CREATE TABLE admins (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    first_name VARCHAR(255) NOT NULL,
+    last_name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    email_verified_at TIMESTAMP NULL,
+    password VARCHAR(255) NOT NULL,
+    admin_access_code VARCHAR(255) NOT NULL,
+    admin_username VARCHAR(255) UNIQUE NOT NULL,
+    country VARCHAR(255) NOT NULL,
+    id_proof_reference VARCHAR(255) NOT NULL,
+    status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    remember_token VARCHAR(100) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Personal Access Tokens Table (Required by Laravel Sanctum)
+CREATE TABLE personal_access_tokens (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    tokenable_type VARCHAR(255) NOT NULL,
+    tokenable_id BIGINT UNSIGNED NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    token VARCHAR(64) NOT NULL UNIQUE,
+    abilities TEXT NULL,
+    last_used_at TIMESTAMP NULL,
+    expires_at TIMESTAMP NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    INDEX personal_access_tokens_tokenable_type_tokenable_id_index (tokenable_type, tokenable_id)
+);
+
+-- Admin Access Codes Table
+CREATE TABLE admin_access_codes (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    access_code VARCHAR(255) UNIQUE NOT NULL,
+    created_by_admin_id BIGINT UNSIGNED NULL,
+    used_by_admin_id BIGINT UNSIGNED NULL,
+    is_used BOOLEAN DEFAULT FALSE,
+    used_at TIMESTAMP NULL,
+    description TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by_admin_id) REFERENCES admins(id) ON DELETE SET NULL,
+    FOREIGN KEY (used_by_admin_id) REFERENCES admins(id) ON DELETE SET NULL
+);
+
+-- Insert initial admin access codes
+INSERT INTO admin_access_codes (access_code, description, created_by_admin_id, is_used) VALUES
+('ADM-SYSTEM01', 'System generated admin access code #1', NULL, FALSE),
+('ADM-SYSTEM02', 'System generated admin access code #2', NULL, FALSE),
+('ADM-SYSTEM03', 'System generated admin access code #3', NULL, FALSE);
+
+-- Insert a super admin user (approved by default)
+INSERT INTO admins (name, first_name, last_name, email, password, admin_access_code, admin_username, country, id_proof_reference, status, created_at, updated_at) VALUES
+('Super Admin', 'Super', 'Admin', 'admin@refinedtech.com', '$2y$12$b59UhTSZFanXUF.PPqOD/.wFM1C9BW7Jo1BJ6AIOHuGWWYc1GX8fG', 'ADM-SYSTEM01', 'superadmin', 'System', 'SUPER-ADMIN-001', 'approved', NOW(), NOW());
+
+-- Mark the access code as used by the super admin
+UPDATE admin_access_codes SET is_used = TRUE, used_by_admin_id = 1, used_at = NOW() WHERE access_code = 'ADM-SYSTEM01';
+
+-- Insert additional admin access codes generated by the super admin
+INSERT INTO admin_access_codes (access_code, description, created_by_admin_id, is_used) VALUES
+('ADM-A1B2C3D4', 'Access code generated by Super Admin #1', 1, FALSE),
+('ADM-E5F6G7H8', 'Access code generated by Super Admin #2', 1, FALSE),
+('ADM-I9J0K1L2', 'Access code generated by Super Admin #3', 1, FALSE),
+('ADM-M3N4O5P6', 'Access code generated by Super Admin #4', 1, FALSE),
+('ADM-Q7R8S9T0', 'Access code generated by Super Admin #5', 1, FALSE);
 -- Products Table
 CREATE TABLE products (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -30,19 +120,19 @@ CREATE TABLE products (
     status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (seller_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (seller_id) REFERENCES sellers(id) ON DELETE CASCADE ON UPDATE CASCADE,
     INDEX(seller_id)
 );
 
--- Conversations Table
+-- Conversations Table  
 CREATE TABLE conversations (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     seller_id BIGINT UNSIGNED NOT NULL,
     buyer_id BIGINT UNSIGNED NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (seller_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (buyer_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (seller_id) REFERENCES sellers(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (buyer_id) REFERENCES buyers(id) ON DELETE CASCADE ON UPDATE CASCADE,
     INDEX(seller_id),
     INDEX(buyer_id)
 );
@@ -52,13 +142,13 @@ CREATE TABLE messages (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     conversation_id BIGINT UNSIGNED NOT NULL,
     sender_id BIGINT UNSIGNED NOT NULL,
+    sender_type ENUM('buyer', 'seller') NOT NULL,
     message TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
     INDEX(conversation_id),
-    INDEX(sender_id)
+    INDEX(sender_id, sender_type)
 );
 
 -- Admin Approvals Table
@@ -66,12 +156,12 @@ CREATE TABLE admin_approvals (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     admin_id BIGINT UNSIGNED NOT NULL,
     approved_user_id BIGINT UNSIGNED NOT NULL,
+    approved_user_type ENUM('buyer', 'seller', 'admin') NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (approved_user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE CASCADE ON UPDATE CASCADE,
     INDEX(admin_id),
-    INDEX(approved_user_id)
+    INDEX(approved_user_id, approved_user_type)
 );
 
 -- Reviews Table
@@ -84,7 +174,35 @@ CREATE TABLE reviews (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (reviewer_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (reviewer_id) REFERENCES buyers(id) ON DELETE CASCADE ON UPDATE CASCADE,
     INDEX(product_id),
     INDEX(reviewer_id)
 );
+
+-- Sample Data Queries --
+-- View all buyers
+-- SELECT * FROM buyers;
+
+-- View all sellers with their business details
+-- SELECT id, name, email, shop_username, business_address, status FROM sellers;
+
+-- View all admins 
+-- SELECT id, name, email, admin_username, status FROM admins;
+
+-- View available admin access codes
+-- SELECT access_code, description, is_used FROM admin_access_codes WHERE is_used = FALSE;
+
+-- Count users by type
+-- SELECT 
+--     (SELECT COUNT(*) FROM buyers) as total_buyers,
+--     (SELECT COUNT(*) FROM sellers) as total_sellers, 
+--     (SELECT COUNT(*) FROM admins) as total_admins;
+
+-- SUPER ADMIN LOGIN CREDENTIALS --
+-- Email: admin@refinedtech.com
+-- Password: password123
+-- Username: superadmin
+-- Status: approved (ready to use)
+--
+-- AVAILABLE ADMIN ACCESS CODES FOR NEW ADMINS:
+-- ADM-SYSTEM02, ADM-SYSTEM03, ADM-A1B2C3D4, ADM-E5F6G7H8, ADM-I9J0K1L2, ADM-M3N4O5P6, ADM-Q7R8S9T0

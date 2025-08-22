@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->enum('status', ['pending', 'approved', 'rejected'])->default('approved');
+        Schema::table('admin_access_codes', function (Blueprint $table) {
+            $table->unsignedBigInteger('created_by_admin_id')->nullable()->change();
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('status');
+        Schema::table('admin_access_codes', function (Blueprint $table) {
+            $table->unsignedBigInteger('created_by_admin_id')->nullable(false)->change();
         });
     }
 };
