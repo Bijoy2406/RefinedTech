@@ -53,6 +53,8 @@ Click Here: [RefinedTech](https://www.figma.com/design/Vamwe21bV0AiM5MHPnyMqK/Re
 ## Wakatime Badges
  **Salman Faresi**
 
+[![wakatime](https://wakatime.com/badge/user/744e9c10-3c2b-4064-b477-29247d78e375/project/b5d19699-d3de-4342-882d-aa0ad9826a1d.svg)](https://wakatime.com/badge/user/744e9c10-3c2b-4064-b477-29247d78e375/project/b5d19699-d3de-4342-882d-aa0ad9826a1d)
+
  **Maisha Momtaz Meem**
 
  **Tajuddin Ahmed**
