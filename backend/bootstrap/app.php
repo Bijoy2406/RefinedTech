@@ -14,6 +14,13 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'cors' => \App\Http\Middleware\CorsMiddleware::class,
+            'multi.auth' => \App\Http\Middleware\MultiAuthSanctum::class,
+        ]);
+        
+        // Add CORS middleware to API routes
+        $middleware->api(prepend: [
+            \App\Http\Middleware\CorsMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

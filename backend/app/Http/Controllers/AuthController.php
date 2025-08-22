@@ -6,39 +6,192 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use App\Models\User;
+use App\Models\Buyer;
+use App\Models\Seller;
+use App\Models\Admin;
+use App\Models\AdminAccessCode;
 
 class AuthController extends Controller
 {
     public function signup(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $role = $request->role;
+        
+        // Base validation rules
+        $baseRules = [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255',
+            'password' => 'required|string|min:6|confirmed',
             'role' => 'required|string|in:Buyer,Seller,Admin',
-        ]);
+            'country' => 'required|string|max:255',
+            'phone_number' => 'required|string|max:20',
+        ];
+
+        // Role-specific validation rules
+        $roleSpecificRules = [];
+        
+        switch ($role) {
+            case 'Seller':
+                $roleSpecificRules = [
+                    'shop_username' => 'required|string|max:255|unique:sellers',
+                    'date_of_birth' => 'required|date|before:today',
+                    'business_address' => 'required|string',
+                    'national_id' => 'required|file|image|mimes:jpeg,png,jpg,gif|max:2048',
+                    'proof_of_ownership' => 'required|file|image|mimes:jpeg,png,jpg,gif|max:2048',
+                ];
+                break;
+                
+            case 'Admin':
+                $roleSpecificRules = [
+                    'admin_access_code' => 'required|string|max:255',
+                    'admin_username' => 'required|string|max:255|unique:admins',
+                    'id_proof_reference' => 'required|string',
+                ];
+                break;
+        }
+
+        // Email uniqueness validation across all tables
+        $emailRules = $this->getEmailValidationRules($role);
+        $baseRules['email'] .= '|' . $emailRules;
+
+        $validator = Validator::make($request->all(), array_merge($baseRules, $roleSpecificRules));
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => $request->role,
-            'status' => $request->role === 'Buyer' ? 'approved' : 'pending',
-        ]);
+        // Additional validation for Admin role
+        if ($role === 'Admin') {
+            $accessCode = AdminAccessCode::where('access_code', $request->admin_access_code)
+                                        ->where('is_used', false)
+                                        ->first();
 
-        $message = 'User registered successfully';
-        if ($request->role === 'Seller' || $request->role === 'Admin') {
-            $message = 'Registration successful. Your account is pending approval.';
+            if (!$accessCode) {
+                return response()->json(['message' => 'The admin access code is invalid or has already been used.'], 422);
+            }
         }
 
-        return response()->json([
-            'message' => $message,
-            'user' => $user
-        ], 201);
+        try {
+            // Create user based on role
+            $user = $this->createUserByRole($request, $role);
+            
+            // If this is an admin registration, mark the access code as used
+            if ($role === 'Admin' && isset($accessCode)) {
+                $accessCode->markAsUsed($user->id);
+            }
+
+            $message = $role === 'Buyer' 
+                ? 'User registered successfully and is approved.' 
+                : 'User registered successfully and is pending approval.';
+
+            return response()->json([
+                'message' => $message,
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'status' => $user->status,
+                ]
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Registration failed: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Get email validation rules to check uniqueness across all user tables
+     */
+    private function getEmailValidationRules($role)
+    {
+        $rules = [];
+        
+        if ($role !== 'Buyer') {
+            $rules[] = 'unique:buyers';
+        }
+        if ($role !== 'Seller') {
+            $rules[] = 'unique:sellers';
+        }
+        if ($role !== 'Admin') {
+            $rules[] = 'unique:admins';
+        }
+        
+        return implode('|', $rules);
+    }
+
+    /**
+     * Create user in the appropriate table based on role
+     */
+    private function createUserByRole(Request $request, $role)
+    {
+        $baseData = [
+            'name' => $request->name,
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'country' => $request->country,
+            'phone_number' => $request->phone_number,
+            'status' => $role === 'Buyer' ? 'approved' : 'pending',
+        ];
+
+        switch ($role) {
+            case 'Buyer':
+                return Buyer::create($baseData);
+
+            case 'Seller':
+                $sellerData = array_merge($baseData, [
+                    'shop_username' => $request->shop_username,
+                    'date_of_birth' => $request->date_of_birth,
+                    'business_address' => $request->business_address,
+                ]);
+
+                // Handle file uploads
+                if ($request->hasFile('national_id')) {
+                    $nationalIdPath = $request->file('national_id')->store('national_ids', 'public');
+                    $sellerData['national_id_path'] = $nationalIdPath;
+                }
+                
+                if ($request->hasFile('proof_of_ownership')) {
+                    $proofPath = $request->file('proof_of_ownership')->store('proof_of_ownership', 'public');
+                    $sellerData['proof_of_ownership_path'] = $proofPath;
+                }
+
+                return Seller::create($sellerData);
+
+            case 'Admin':
+                return Admin::create(array_merge($baseData, [
+                    'admin_access_code' => $request->admin_access_code,
+                    'admin_username' => $request->admin_username,
+                    'id_proof_reference' => $request->id_proof_reference,
+                ]));
+
+            default:
+                throw new \Exception('Invalid role specified');
+        }
+    }
+
+    /**
+     * Find user by email across all tables
+     */
+    private function findUserByEmail($email)
+    {
+        // Try to find in buyers table
+        $buyer = Buyer::where('email', $email)->first();
+        if ($buyer) return $buyer;
+
+        // Try to find in sellers table
+        $seller = Seller::where('email', $email)->first();
+        if ($seller) return $seller;
+
+        // Try to find in admins table
+        $admin = Admin::where('email', $email)->first();
+        if ($admin) return $admin;
+
+        return null;
     }
 
     public function login(Request $request)
@@ -52,7 +205,7 @@ class AuthController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $user = User::where('email', $request->email)->first();
+        $user = $this->findUserByEmail($request->email);
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json(['error' => 'Invalid credentials'], 401);
@@ -62,12 +215,222 @@ class AuthController extends Controller
             return response()->json(['error' => 'Your account is not approved.'], 403);
         }
 
+        // Revoke all existing tokens for this user to prevent token accumulation
+        $user->tokens()->delete();
+        
         $token = $user->createToken('auth_token')->plainTextToken;
+
+        $userResponse = [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role,
+            'status' => $user->status,
+            'created_at' => $user->created_at,
+            'updated_at' => $user->updated_at
+        ];
 
         return response()->json([
             'message' => 'Login successful',
-            'user' => $user,
+            'user' => $userResponse,
             'token' => $token,
         ], 200);
+    }
+
+    public function logout(Request $request)
+    {
+        // Revoke the token that was used to authenticate the current request
+        $request->user()->currentAccessToken()->delete();
+        
+        return response()->json([
+            'message' => 'Logged out successfully'
+        ], 200);
+    }
+
+    public function getUserInfo(Request $request)
+    {
+        $user = $request->user();
+        $imageUrl = null;
+        if ($user && $user->profile_image) {
+            try {
+                $imageUrl = route('profile.image', ['id' => $user->id, 'type' => strtolower($user->role)]);
+            } catch (\Throwable $e) {
+                $imageUrl = null; // route helper failure fallback
+            }
+        }
+        return response()->json([
+            'user' => $user,
+            'profile_image_url' => $imageUrl,
+        ], 200);
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:6',
+            'confirm_password' => 'required|string|same:new_password',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $user = $request->user();
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json(['error' => 'Current password is incorrect'], 400);
+        }
+
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        return response()->json([
+            'message' => 'Password updated successfully'
+        ], 200);
+    }
+
+    /**
+     * Generate a new admin access code (only for existing admins)
+     */
+    public function generateAdminAccessCode(Request $request)
+    {
+        $user = $request->user();
+
+        // Only admins can generate access codes
+        if ($user->role !== 'Admin') {
+            return response()->json(['error' => 'Only administrators can generate access codes'], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'description' => 'nullable|string|max:500',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $accessCode = AdminAccessCode::create([
+            'access_code' => AdminAccessCode::generateUniqueCode(),
+            'created_by_admin_id' => $user->id,
+            'description' => $request->description ?? 'Generated by ' . $user->name,
+        ]);
+
+        return response()->json([
+            'message' => 'Admin access code generated successfully',
+            'access_code' => $accessCode->access_code,
+            'description' => $accessCode->description,
+        ], 201);
+    }
+
+    /**
+     * Get list of access codes created by the authenticated admin
+     */
+    public function getMyAccessCodes(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->role !== 'Admin') {
+            return response()->json(['error' => 'Only administrators can view access codes'], 403);
+        }
+
+        $accessCodes = AdminAccessCode::where('created_by_admin_id', $user->id)
+                                     ->orderBy('created_at', 'desc')
+                                     ->get();
+
+        return response()->json([
+            'access_codes' => $accessCodes
+        ], 200);
+    }
+
+    /**
+     * Upload or replace profile image (stored as BLOB in respective user table)
+     */
+    public function uploadProfileImage(Request $request)
+    {
+        // Accept either traditional multipart file OR base64Image field
+        $hasFile = $request->hasFile('image');
+        $base64 = $request->input('base64Image');
+
+        if (!$hasFile && !$base64) {
+            return response()->json(['errors' => ['image' => ['No image or base64Image supplied']]], 422);
+        }
+
+        $user = $request->user();
+        $binary = null;
+        $mime = null;
+
+        if ($hasFile) {
+            $validator = Validator::make($request->all(), [
+                'image' => 'required|file|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            ]);
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
+            $file = $request->file('image');
+            $binary = file_get_contents($file->getRealPath());
+            $mime = $file->getMimeType();
+        } else {
+            // Expect data URI or raw base64
+            $data = $base64;
+            if (preg_match('/^data:(image\/(?:png|jpeg|jpg|gif|webp));base64,(.*)$/i', $data, $matches)) {
+                $mime = strtolower($matches[1]);
+                $data = $matches[2];
+            } else {
+                // Try to infer mime by padding and characters – default to image/png
+                $mime = 'image/png';
+            }
+            // Validate approximate size (<=5MB)
+            $decoded = base64_decode($data, true);
+            if ($decoded === false) {
+                return response()->json(['errors' => ['base64Image' => ['Invalid base64 encoding']]], 422);
+            }
+            if (strlen($decoded) > 5 * 1024 * 1024) { // 5MB
+                return response()->json(['errors' => ['base64Image' => ['Image exceeds 5MB']]], 422);
+            }
+            // Basic signature sniff (optional)
+            $binary = $decoded;
+            // Quick mime sniff adjustments
+            $sig = substr($binary, 0, 4);
+            if ($sig === "\x89PNG") $mime = 'image/png';
+            elseif (substr($binary, 0, 3) === "GIF") $mime = 'image/gif';
+            elseif (substr($binary, 0, 2) === "\xFF\xD8") $mime = 'image/jpeg';
+            elseif (strncmp($binary, 'RIFF', 4)===0 && substr($binary,8,4)==='WEBP') $mime = 'image/webp';
+        }
+
+        $user->profile_image = $binary;
+        $user->profile_image_mime = $mime;
+        $user->save();
+
+        return response()->json([
+            'message' => 'Profile image updated',
+            'profile_image_url' => route('profile.image', ['id' => $user->id, 'type' => strtolower($user->role)])
+        ], 200);
+    }
+
+    /**
+     * Serve profile image by user id & type
+     */
+    public function getProfileImage($type, $id)
+    {
+        switch (strtolower($type)) {
+            case 'admin':
+                $model = Admin::find($id); break;
+            case 'buyer':
+                $model = Buyer::find($id); break;
+            case 'seller':
+                $model = Seller::find($id); break;
+            default:
+                return response()->json(['error' => 'Invalid user type'], 404);
+        }
+
+        if (!$model || !$model->profile_image) {
+            return response()->json(['error' => 'Image not found'], 404);
+        }
+
+        return response($model->profile_image, 200, [
+            'Content-Type' => $model->profile_image_mime ?? 'image/jpeg',
+            'Cache-Control' => 'private, max-age=3600',
+        ]);
     }
 }
