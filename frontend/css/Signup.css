@@ -1,0 +1,21 @@
+.auth-card {
+  max-width: 420px;
+  margin: 2rem auto;
+  padding: 2rem;
+  border-radius: 18px;
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 10px 30px rgba(0,0,0,.2);
+}
+
+.auth-card h2 {
+  margin-top: 0;
+  color: var(--text-primary);
+}
+
+.auth-card form {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  margin-top: 1rem;
+}
