@@ -1,11 +1,12 @@
 import { Routes, Route, Link, Navigate, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import { ThemeProvider } from './components/Theme.jsx'
 import Home from './components/Home.jsx'
 import Login from './components/Login.jsx'
 import Signup from './components/Signup.jsx'
-import Dashboard from './components/Dashboard.jsx'
-import Profile from './components/Profile.jsx'
+import Navbar from './components/Navbar.jsx'
+import DemoHomePage_AfterLoginAsBuyer from './components/DemoHomePage_AfterLoginAsBuyer.jsx'
 import './css/App.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
@@ -13,7 +14,6 @@ const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
 export default function App() {
   const navigate = useNavigate()
   const [user, setUser] = useState(null)
-  const [theme, setTheme] = useState('light');
   const [showProfile, setShowProfile] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(null);
 
@@ -27,10 +27,6 @@ export default function App() {
   // Attempt to hydrate avatar asynchronously
   fetchUserAndAvatar(storedToken);
     }
-
-    const storedTheme = localStorage.getItem('rt_theme') || 'light';
-    setTheme(storedTheme);
-    document.body.className = storedTheme === 'dark' ? 'dark-mode' : '';
 
     // Listen for profile updates
     const handleStorageChange = (e) => {
@@ -94,13 +90,6 @@ export default function App() {
     }
   }
 
-  const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    localStorage.setItem('rt_theme', newTheme);
-    document.body.className = newTheme === 'dark' ? 'dark-mode' : '';
-  }
-
   const openProfile = () => {
     const token = localStorage.getItem('rt_token');
     const user = localStorage.getItem('rt_user');
@@ -137,54 +126,31 @@ export default function App() {
   }
 
   return (
-    <div className="app-shell">
-      <nav className="nav">
-        <Link className="brand" to="/">
-          <img 
-            src={theme === 'dark' ? '/Assets/logo_dark.png' : '/Assets/logo_light.png'} 
-            alt="RefinedTech" 
-            className="brand-logo" 
-          />
-        </Link>
-        <div className="links">
-          <button onClick={toggleTheme} className="btn theme-toggle">
-            {theme === 'light' ? '🌙' : '☀️'}
-          </button>
-          {user ? (
-            <>
-              {user.role === 'admin' && <Link to="/dashboard" className="btn">Dashboard</Link>}
-              <button onClick={openProfile} className="avatar-plain" title="Profile">
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt="avatar" className="nav-avatar" />
-                ) : (
-                  <span className="nav-avatar placeholder">{(user.name||'?').charAt(0).toUpperCase()}</span>
-                )}
-              </button>
-              <button onClick={handleLogout} className="btn outline">Logout</button>
-            </>
-          ) : (
-            <>
-              <Link to="/login" className="btn">Login</Link>
-              <Link to="/signup" className="btn outline">Sign Up</Link>
-            </>
-          )}
-        </div>
-      </nav>
-      <main className="content">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login onLogin={handleLogin} />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/signup/:role" element={<Signup />} />
-          <Route path="/dashboard" element={user?.role === 'admin' ? <Dashboard /> : <Navigate to="/" />} />
-          <Route path="/profile" element={user ? <Profile onClose={() => navigate(-1)} /> : <Navigate to="/login" />} />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </main>
-      <footer className="footer">© {new Date().getFullYear()} RefinedTech</footer>
-      
-      {/* Profile Modal */}
-      {showProfile && <Profile onClose={closeProfile} />}
-    </div>
+    <ThemeProvider>
+      <div className="app-shell">
+        <Navbar 
+          user={user}
+          avatarUrl={avatarUrl}
+          onLogout={handleLogout}
+          onOpenProfile={openProfile}
+        />
+        <main className="content">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login onLogin={handleLogin} />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/signup/:role" element={<Signup />} />
+            <Route path="/buyer-dashboard" element={<DemoHomePage_AfterLoginAsBuyer />} />
+            {/* <Route path="/dashboard" element={user?.role === 'admin' ? <Dashboard /> : <Navigate to="/" />} /> */}
+            {/* <Route path="/profile" element={user ? <Profile onClose={() => navigate(-1)} /> : <Navigate to="/login" />} /> */}
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </main>
+        <footer className="footer">© {new Date().getFullYear()} RefinedTech</footer>
+        
+        {/* Profile Modal */}
+        {/* {showProfile && <Profile onClose={closeProfile} />} */}
+      </div>
+    </ThemeProvider>
   )
 }
