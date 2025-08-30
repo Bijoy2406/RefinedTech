@@ -289,6 +289,7 @@ export default function Profile() {
                         <div className="avatar-status-dot"></div>
                     </div>
                     <h2 className="user-name gradient-text">{user.name}</h2>
+                    <div className="membership-label pulse-text">{memberLabel}</div>
                     <div className="meta-line fade-in">Role: <span className="pill neutral glow-pill">{user.role}</span></div>
                     <div className="meta-line fade-in">Status: <span className={`pill status-${(user.status||'active').toLowerCase()} glow-pill`}>{user.status || 'Active'}</span></div>
 
@@ -393,16 +394,16 @@ export default function Profile() {
                                             <div className="codes-grid">
                                                 {unusedList.slice(0,5).map((codeData, index) => (
                                                     <div key={codeData.id} className="code-card" style={{animationDelay: `${index * 50}ms`}}>
-                                                        <div className="code-info">
+                                                        <div className="code-info" style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                                                             <span className="code-value">{codeData.access_code}</span>
-                                                            <span className="code-status available">Available</span>
+                                                            <button
+                                                                className={`btn tiny outline hover-lift ${copySuccess === codeData.access_code ? 'success' : ''}`}
+                                                                onClick={() => copyAccessCode(codeData.access_code)}
+                                                            >
+                                                                {copySuccess === codeData.access_code ? '✓' : '📋'}
+                                                            </button>
                                                         </div>
-                                                        <button
-                                                            className={`btn tiny outline hover-lift ${copySuccess === codeData.access_code ? 'success' : ''}`}
-                                                            onClick={() => copyAccessCode(codeData.access_code)}
-                                                        >
-                                                            {copySuccess === codeData.access_code ? '✓' : '📋'}
-                                                        </button>
+                                                        <span className="code-status available">Available</span>
                                                     </div>
                                                 ))}
                                                 {unusedList.length === 0 && (
@@ -420,3 +421,5 @@ export default function Profile() {
         </div>
     );
 }
+
+

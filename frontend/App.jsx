@@ -1,6 +1,7 @@
 import { Routes, Route, Link, Navigate, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import { ThemeProvider, useTheme } from './components/Theme.jsx'
 import Home from './components/Home.jsx'
 import Login from './components/Login.jsx'
 import Signup from './components/Signup.jsx'
@@ -14,8 +15,8 @@ const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
 export default function App() {
   const navigate = useNavigate()
   const [user, setUser] = useState(null)
-  const [theme, setTheme] = useState('light');
   const [avatarUrl, setAvatarUrl] = useState(null);
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const storedUser = localStorage.getItem('rt_user')
@@ -27,10 +28,6 @@ export default function App() {
   // Attempt to hydrate avatar asynchronously
   fetchUserAndAvatar(storedToken);
     }
-
-    const storedTheme = localStorage.getItem('rt_theme') || 'light';
-    setTheme(storedTheme);
-    document.body.className = storedTheme === 'dark' ? 'dark-mode' : '';
 
     // Listen for profile updates
     const handleStorageChange = (e) => {
@@ -90,13 +87,6 @@ export default function App() {
     }
   }
 
-  const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    localStorage.setItem('rt_theme', newTheme);
-    document.body.className = newTheme === 'dark' ? 'dark-mode' : '';
-  }
-
   const openProfile = () => {
     const token = localStorage.getItem('rt_token');
     const user = localStorage.getItem('rt_user');
@@ -129,7 +119,8 @@ export default function App() {
   }
 
   return (
-    <div className="app-shell">
+    <ThemeProvider>
+      <div className="app-shell">
       <nav className="nav">
         <Link className="brand" to="/">
           <img 
@@ -176,5 +167,6 @@ export default function App() {
       </main>
       <footer className="footer">© {new Date().getFullYear()} RefinedTech</footer>
     </div>
+    </ThemeProvider>
   )
 }
