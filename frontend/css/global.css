@@ -1,17 +1,5 @@
-:root {
-  --background: #ffffff;
-  --text-primary: #1a202c;
-  --text-secondary: #718096;
-  --primary-btn-bg: #2c5282;
-  --primary-btn-text: #ffffff;
-  --secondary-btn-bg: #e2e8f0;
-  --secondary-btn-text: #1a202c;
-  --input-bg: #ffffff;
-  --input-border: #e2e8f0;
-  --card-bg: #ffffff;
-  --card-border: #e2e8f0;
-  --link-color: #2c5282;
-}
+/* Import the comprehensive theme system */
+@import './theme.css';
 
 .dark-mode {
   --background: #0f1729;
@@ -19,12 +7,12 @@
   --text-secondary: #cbd5e1;
   --primary-btn-bg: #2563eb;
   --primary-btn-text: #ffffff;
-  --secondary-btn-bg: #334155;
+  --secondary-btn-bg: #000000;
   --secondary-btn-text: #e5e7eb;
   --input-bg: #0b1220;
-  --input-border: #334155;
+  --input-border: #000000;
   --card-bg: #1e293b;
-  --card-border: #334155;
+  --card-border: #000000;
   --link-color: #60a5fa;
 }
 

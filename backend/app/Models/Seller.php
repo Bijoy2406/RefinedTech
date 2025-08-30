@@ -39,6 +39,7 @@ class Seller extends Authenticatable
         'national_id_path',
         'proof_of_ownership_path',
         'status',
+        'admin_access_code',
     ];
 
     /**

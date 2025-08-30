@@ -6,6 +6,7 @@ import Login from './components/Login.jsx'
 import Signup from './components/Signup.jsx'
 import Dashboard from './components/Dashboard.jsx'
 import Profile from './components/Profile.jsx'
+import ProductDetails from './components/ProductDetails.jsx'
 import './css/App.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
@@ -14,7 +15,6 @@ export default function App() {
   const navigate = useNavigate()
   const [user, setUser] = useState(null)
   const [theme, setTheme] = useState('light');
-  const [showProfile, setShowProfile] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(null);
 
   useEffect(() => {
@@ -43,7 +43,6 @@ export default function App() {
     // Listen for authentication failures
     const handleAuthFailure = () => {
       setUser(null);
-      setShowProfile(false);
       navigate('/login');
     };
 
@@ -70,10 +69,7 @@ export default function App() {
   }
 
   const handleLogout = async () => {
-    try {
-      // Close profile modal if open
-      setShowProfile(false);
-      
+    try {      
       const token = localStorage.getItem('rt_token');
       if (token) {
         // Call backend logout to revoke token
@@ -89,7 +85,7 @@ export default function App() {
       localStorage.removeItem('rt_user')
       localStorage.removeItem('rt_token')
       setUser(null)
-  setAvatarUrl(null)
+      setAvatarUrl(null)
       navigate('/login')
     }
   }
@@ -111,7 +107,7 @@ export default function App() {
       return;
     }
     
-    setShowProfile(true);
+    navigate('/profile');
   }
 
   // Fetch user (authoritative) to refresh avatar URL
@@ -132,10 +128,6 @@ export default function App() {
     }
   }
 
-  const closeProfile = () => {
-    setShowProfile(false);
-  }
-
   return (
     <div className="app-shell">
       <nav className="nav">
@@ -152,7 +144,7 @@ export default function App() {
           </button>
           {user ? (
             <>
-              {user.role === 'admin' && <Link to="/dashboard" className="btn">Dashboard</Link>}
+              {user.role === 'Admin' && <Link to="/dashboard" className="btn">Dashboard</Link>}
               <button onClick={openProfile} className="avatar-plain" title="Profile">
                 {avatarUrl ? (
                   <img src={avatarUrl} alt="avatar" className="nav-avatar" />
@@ -172,19 +164,17 @@ export default function App() {
       </nav>
       <main className="content">
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Home user={user} />} />
           <Route path="/login" element={<Login onLogin={handleLogin} />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/signup/:role" element={<Signup />} />
-          <Route path="/dashboard" element={user?.role === 'admin' ? <Dashboard /> : <Navigate to="/" />} />
-          <Route path="/profile" element={user ? <Profile onClose={() => navigate(-1)} /> : <Navigate to="/login" />} />
+          <Route path="/dashboard" element={user?.role === 'Admin' ? <Dashboard /> : <Navigate to="/" />} />
+          <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" />} />
+          <Route path="/product/:id" element={<ProductDetails />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>
       <footer className="footer">© {new Date().getFullYear()} RefinedTech</footer>
-      
-      {/* Profile Modal */}
-      {showProfile && <Profile onClose={closeProfile} />}
     </div>
   )
 }

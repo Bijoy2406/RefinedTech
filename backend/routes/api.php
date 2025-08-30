@@ -21,12 +21,18 @@ Route::middleware(['auth:sanctum'])->get('/test-auth', function (Request $reques
 Route::middleware(['multi.auth'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'getUserInfo']);
+    Route::get('/profile', [AuthController::class, 'getUserInfo']); // Alias for profile page
     Route::put('/profile/password', [AuthController::class, 'updatePassword']);
     Route::post('/profile/image', [AuthController::class, 'uploadProfileImage']);
+    Route::put('/profile/picture', [AuthController::class, 'updateProfilePicture']); // For frontend compatibility
+    Route::delete('/profile/picture', [AuthController::class, 'removeProfilePicture']); // For frontend compatibility
     
     // Admin access code management (only for admins)
     Route::post('/admin/access-codes', [AuthController::class, 'generateAdminAccessCode']);
     Route::get('/admin/access-codes', [AuthController::class, 'getMyAccessCodes']);
+    Route::get('/admin/access-code', [AuthController::class, 'getAdminAccessCode']);
+    Route::get('/admin/referred-users', [AuthController::class, 'getReferredUsers']);
+    Route::post('/admin/generate-codes', [AuthController::class, 'generateNewCodes']);
 });
 
 // Public route to serve stored profile images

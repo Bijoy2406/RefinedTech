@@ -18,7 +18,7 @@ CREATE TABLE buyers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
-
+select * from buyers;
 -- Sellers Table  
 CREATE TABLE sellers (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -40,6 +40,7 @@ CREATE TABLE sellers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+select * from sellers;
 
 -- Admins Table
 CREATE TABLE admins (
@@ -59,6 +60,7 @@ CREATE TABLE admins (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+select * from admins;
 
 -- Personal Access Tokens Table (Required by Laravel Sanctum)
 CREATE TABLE personal_access_tokens (
@@ -89,7 +91,8 @@ CREATE TABLE admin_access_codes (
     FOREIGN KEY (created_by_admin_id) REFERENCES admins(id) ON DELETE SET NULL,
     FOREIGN KEY (used_by_admin_id) REFERENCES admins(id) ON DELETE SET NULL
 );
-
+select * from admin_access_codes;
+drop table admins;
 -- Insert initial admin access codes
 INSERT INTO admin_access_codes (access_code, description, created_by_admin_id, is_used) VALUES
 ('ADM-SYSTEM01', 'System generated admin access code #1', NULL, FALSE),
@@ -98,8 +101,7 @@ INSERT INTO admin_access_codes (access_code, description, created_by_admin_id, i
 
 -- Insert a super admin user (approved by default)
 INSERT INTO admins (name, first_name, last_name, email, password, admin_access_code, admin_username, country, id_proof_reference, status, created_at, updated_at) VALUES
-('Super Admin', 'Super', 'Admin', 'admin@refinedtech.com', '$2y$12$b59UhTSZFanXUF.PPqOD/.wFM1C9BW7Jo1BJ6AIOHuGWWYc1GX8fG', 'ADM-SYSTEM01', 'superadmin', 'System', 'SUPER-ADMIN-001', 'approved', NOW(), NOW());
-
+('Bijoy', 'Bijoy', 'Admin', 'bijoy@refinedtech.com', '$2y$12$b59UhTSZFanXUF.PPqOD/.wFM1C9BW7Jo1BJ6AIOHuGWWYc1GX8fG', 'ADM-SYSTEM01', 'bijoy', 'System', 'SUPER-ADMIN-001', 'approved', NOW(), NOW());
 -- Mark the access code as used by the super admin
 UPDATE admin_access_codes SET is_used = TRUE, used_by_admin_id = 1, used_at = NOW() WHERE access_code = 'ADM-SYSTEM01';
 

@@ -37,6 +37,7 @@ export default function AdminSignupForm({ onBack }) {
         country,
         email, 
         password,
+        password_confirmation: confirmPassword,
         phone_number: phoneNumber,
         admin_access_code: adminAccessCode,
         admin_username: adminUsername,
