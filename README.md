@@ -66,6 +66,9 @@ Click Here: [RefinedTech](https://www.figma.com/design/Vamwe21bV0AiM5MHPnyMqK/Re
 
  **Jarin Tasnim**
 
+ [![wakatime](https://wakatime.com/badge/user/85ee4f6f-8082-4100-93a5-40a68db92477/project/1b792482-608f-4422-9c96-a3b22420bda5.svg)](https://wakatime.com/badge/user/85ee4f6f-8082-4100-93a5-40a68db92477/project/1b792482-608f-4422-9c96-a3b22420bda5)
+ 
+
 ---
 
 ## Core Features
