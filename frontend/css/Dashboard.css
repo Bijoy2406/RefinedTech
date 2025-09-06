@@ -1,0 +1,503 @@
+/* ===================================
+   REFINEDTECH MODERN DASHBOARD STYLES
+   Admin dashboard with glassmorphism design
+   ================================= */
+
+/* === Animations === */
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0.95);
+        height: 0;
+        padding: 0;
+        margin: 0;
+        border: 0;
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        box-shadow: var(--card-shadow);
+    }
+    50% {
+        box-shadow: var(--card-shadow-hover), 0 0 30px rgba(99, 102, 241, 0.3);
+    }
+}
+
+/* === Main Dashboard Container === */
+.dashboard-container {
+    min-height: 100vh;
+    padding: var(--spacing-2xl);
+    font-family: var(--font-family);
+    background: var(--bg-gradient);
+    color: var(--text-primary);
+    position: relative;
+    overflow-x: hidden;
+}
+
+.dashboard-container::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 60%, rgba(99, 102, 241, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* === Main Title === */
+.dashboard-container h1 {
+    text-align: center;
+    margin-bottom: var(--spacing-2xl);
+    font-size: var(--font-size-3xl);
+    font-weight: 700;
+    letter-spacing: -1px;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    position: relative;
+    animation: fadeInScale 0.8s ease-out;
+}
+
+.dashboard-container h1::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 4px;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+    border-radius: var(--radius-full);
+    animation: slideInUp 0.8s ease-out 0.2s both;
+}
+
+/* === Modern Tab System === */
+.tabs {
+    text-align: center;
+    margin-bottom: var(--spacing-2xl);
+    position: relative;
+    display: inline-flex;
+    background: var(--card-bg);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-xs);
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--card-border);
+    -webkit-backdrop-filter: var(--card-backdrop);
+    backdrop-filter: var(--card-backdrop);
+    left: 50%;
+    transform: translateX(-50%);
+    animation: slideInUp 0.6s ease-out 0.4s both;
+}
+
+.tabs button {
+    padding: var(--spacing-md) var(--spacing-xl);
+    margin: 0;
+    border: none;
+    cursor: pointer;
+    background: transparent;
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    position: relative;
+    color: var(--text-secondary);
+    transition: all var(--transition-normal);
+    border-radius: var(--radius-lg);
+    white-space: nowrap;
+    z-index: 2;
+}
+
+.tabs button:hover {
+    color: var(--text-primary);
+    background: rgba(99, 102, 241, 0.1);
+    transform: translateY(-1px);
+}
+
+.tabs button.active {
+    color: var(--text-inverse);
+    font-weight: 600;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+    box-shadow: var(--card-shadow);
+    transform: translateY(-2px);
+}
+
+.tabs button.active:hover {
+    background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+    box-shadow: var(--card-shadow-hover);
+}
+
+/* Remove the old bottom border styling */
+.tabs button.active::after {
+    display: none;
+}
+
+/* === Enhanced User Lists === */
+.user-list, .pending-list {
+    list-style-type: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--spacing-xl);
+    animation: slideInUp 0.6s ease-out 0.6s both;
+}
+
+/* === Modern User Cards === */
+.user-list li, .pending-list li {
+    padding: var(--spacing-xl);
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--card-shadow);
+    -webkit-backdrop-filter: var(--card-backdrop);
+    backdrop-filter: var(--card-backdrop);
+    display: flex;
+    flex-direction: column;
+    transition: all var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.user-list li::before, .pending-list li::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.1), transparent);
+    transition: left 0.6s ease;
+    z-index: 1;
+}
+
+.user-list li:hover::before, .pending-list li:hover::before {
+    left: 100%;
+}
+
+.user-list li:hover, .pending-list li:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: var(--card-shadow-hover);
+    border-color: var(--color-primary);
+}
+
+.pending-list li.fade-out {
+    animation: fadeOut 0.5s forwards;
+}
+
+/* === Enhanced User Info === */
+.user-info {
+    margin-bottom: var(--spacing-lg);
+    position: relative;
+    z-index: 2;
+}
+
+.user-info span {
+    display: block;
+    margin-bottom: var(--spacing-sm);
+    transition: all var(--transition-normal);
+}
+
+.user-info .name {
+    font-weight: 600;
+    font-size: var(--font-size-lg);
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-sm);
+    position: relative;
+}
+
+.user-info .name::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+    transition: width var(--transition-normal);
+}
+
+.user-list li:hover .user-info .name::after,
+.pending-list li:hover .user-info .name::after {
+    width: 100%;
+}
+
+.user-info .email {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.user-info .email::before {
+    content: '📧';
+    font-size: var(--font-size-sm);
+}
+
+.user-info .role {
+    font-style: italic;
+    color: var(--text-tertiary);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    background: rgba(99, 102, 241, 0.1);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.user-info .role::before {
+    content: '👤';
+    font-size: var(--font-size-xs);
+}
+
+/* === Enhanced Action Buttons === */
+.action-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-sm);
+    margin-top: auto;
+    position: relative;
+    z-index: 2;
+}
+
+.action-buttons button {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    transition: all var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
+
+.action-buttons button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.6s ease;
+}
+
+.action-buttons button:hover::before {
+    left: 100%;
+}
+
+.action-buttons button:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: var(--card-shadow-hover);
+}
+
+.action-buttons button:active {
+    transform: translateY(0) scale(0.98);
+    transition: all var(--transition-fast);
+}
+
+/* === Approve Button === */
+.approve-btn {
+    background: linear-gradient(135deg, var(--color-success), var(--color-success-light));
+    color: white;
+    border: 1px solid var(--color-success-border);
+}
+
+.approve-btn:hover {
+    background: linear-gradient(135deg, #059669, var(--color-success));
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+}
+
+/* === Reject Button === */
+.reject-btn {
+    background: linear-gradient(135deg, var(--color-error), var(--color-error-light));
+    color: white;
+    border: 1px solid var(--color-error-border);
+}
+
+.reject-btn:hover {
+    background: linear-gradient(135deg, #dc2626, var(--color-error));
+    box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+}
+
+/* === Error and Loading States === */
+.error-message {
+    background: var(--color-error-bg);
+    color: var(--color-error);
+    border: 1px solid var(--color-error-border);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    animation: slideInUp 0.5s ease-out;
+}
+
+.error-message::before {
+    content: '⚠️';
+    font-size: var(--font-size-lg);
+}
+
+.loading {
+    padding: var(--spacing-2xl);
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: var(--font-size-lg);
+    animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.loading::before {
+    content: '⏳';
+    font-size: var(--font-size-2xl);
+    display: block;
+    margin-bottom: var(--spacing-md);
+    animation: shimmer 2s linear infinite;
+}
+
+/* === Empty States === */
+.user-list li:only-child[style*="text-align: center"],
+.pending-list li:only-child[style*="text-align: center"] {
+    background: var(--card-bg);
+    border: 2px dashed var(--card-border);
+    color: var(--text-tertiary);
+    font-style: italic;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    animation: fadeInScale 0.6s ease-out;
+}
+
+.user-list li:only-child[style*="text-align: center"]::before,
+.pending-list li:only-child[style*="text-align: center"]::before {
+    content: '📋';
+    font-size: var(--font-size-3xl);
+    margin-bottom: var(--spacing-md);
+    opacity: 0.5;
+}
+
+/* === Responsive Design === */
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: var(--spacing-lg);
+    }
+    
+    .dashboard-container h1 {
+        font-size: var(--font-size-2xl);
+        margin-bottom: var(--spacing-lg);
+    }
+    
+    .tabs {
+        margin-bottom: var(--spacing-lg);
+        flex-direction: column;
+        width: 100%;
+        transform: none;
+        left: auto;
+    }
+    
+    .tabs button {
+        padding: var(--spacing-md);
+        font-size: var(--font-size-sm);
+    }
+    
+    .user-list, .pending-list {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-lg);
+    }
+    
+    .user-list li, .pending-list li {
+        padding: var(--spacing-lg);
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+    
+    .action-buttons button {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* === Dark Mode Enhancements === */
+.dark-mode .dashboard-container::before {
+    background: 
+        radial-gradient(circle at 20% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 40% 60%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
+}
+
+.dark-mode .user-info .role {
+    background: rgba(139, 92, 246, 0.15);
+    border-color: rgba(139, 92, 246, 0.3);
+}
+
+.dark-mode .user-list li:hover,
+.dark-mode .pending-list li:hover {
+    border-color: var(--color-primary);
+}
+
+/* === Additional Utility Classes === */
+.dashboard-fade-in {
+    animation: fadeInScale 0.8s ease-out;
+}
+
+.dashboard-slide-up {
+    animation: slideInUp 0.6s ease-out;
+}
+
+.shimmer-effect {
+    background: linear-gradient(90deg, transparent 0%, rgba(99, 102, 241, 0.1) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+}
