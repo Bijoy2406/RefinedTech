@@ -108,21 +108,21 @@
 }
 
 .condition-badge {
-  background: #10b981;
+  background: var(--color-success);
   color: white;
 }
 
 .condition-good {
-  background: #f59e0b;
+  background: var(--color-warning);
 }
 
 .condition-excellent,
 .condition-like-new {
-  background: #10b981;
+  background: var(--color-success);
 }
 
 .condition-fair {
-  background: #ef4444;
+  background: var(--color-error);
 }
 
 .pricing {
@@ -146,7 +146,7 @@
 
 .savings {
   font-size: 1rem;
-  color: #10b981;
+  color: var(--color-success);
   font-weight: 500;
 }
 
@@ -190,7 +190,7 @@
 }
 
 .stars {
-  color: #fbbf24;
+  color: var(--color-warning);
 }
 
 .review-count {
@@ -228,7 +228,7 @@
 
 .product-features li:before {
   content: "✓";
-  color: #10b981;
+  color: var(--color-success);
   margin-right: 0.5rem;
 }
 

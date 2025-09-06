@@ -1,49 +1,66 @@
 .auth-card {
   max-width: 420px;
-  margin: 2rem auto;
-  padding: 2rem;
-  border-radius: 18px;
+  margin: var(--spacing-xl) auto;
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-lg);
   background-color: var(--card-bg);
   border: 1px solid var(--card-border);
-  box-shadow: 0 10px 30px rgba(0,0,0,.2);
+  box-shadow: var(--card-shadow-hover);
+  backdrop-filter: var(--card-backdrop);
+  -webkit-backdrop-filter: var(--card-backdrop);
+  transition: all var(--transition-normal);
+}
+
+.auth-card:hover {
+  box-shadow: var(--modal-shadow);
+  transform: translateY(-2px);
 }
 
 .auth-card h2 {
   margin-top: 0;
   color: var(--text-primary);
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
 }
 
 .auth-card form {
   display: flex;
   flex-direction: column;
-  gap: .5rem;
-  margin-top: 1rem;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-lg);
 }
 
 .status.success {
   color: var(--color-success);
   background-color: var(--color-success-bg);
-  padding: 0.75rem;
-  border-radius: 6px;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
   border: 1px solid var(--color-success-border);
+  font-size: var(--font-size-sm);
 }
 
 .status.error {
   color: var(--color-error);
   background-color: var(--color-error-bg);
-  padding: 0.75rem;
-  border-radius: 6px;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
   border: 1px solid var(--color-error-border);
+  font-size: var(--font-size-sm);
 }
 
 .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none !important;
 }
 
 input:disabled, select:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+  background-color: var(--input-disabled-bg);
+  color: var(--input-disabled-text);
 }
 
 /* Lottie Loading Full-Screen Overlay */
@@ -53,19 +70,26 @@ input:disabled, select:disabled {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(5px);
+  background: var(--modal-overlay);
+  backdrop-filter: var(--modal-backdrop);
+  -webkit-backdrop-filter: var(--modal-backdrop);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 9999;
+  z-index: var(--z-modal);
+  transition: all var(--transition-normal);
 }
 
 .lottie-loading-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
+  gap: var(--spacing-xl);
+  background: var(--modal-bg);
+  padding: var(--spacing-2xl);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--modal-shadow);
+  border: 1px solid var(--card-border);
 }
 
 .lottie-animation {
@@ -75,89 +99,116 @@ input:disabled, select:disabled {
 }
 
 .lottie-loading-text {
-  color: white;
-  font-size: 1.3rem;
+  color: var(--text-primary);
+  font-size: var(--font-size-xl);
   font-weight: 600;
   text-align: center;
   margin: 0;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  text-shadow: none;
 }
 
 /* Role Selection Styles */
 .role-selection {
   max-width: 600px;
   text-align: center;
+  margin: 0 auto;
+  padding: var(--spacing-xl);
 }
 
 .role-selection h2 {
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--spacing-sm);
   color: var(--text-primary);
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
 }
 
 .role-selection p {
   color: var(--text-secondary);
-  margin-bottom: 2rem;
+  margin-bottom: var(--spacing-2xl);
+  font-size: var(--font-size-lg);
+  line-height: 1.6;
 }
 
 .role-options {
   display: flex;
-  gap: 1.5rem;
+  gap: var(--spacing-xl);
   justify-content: center;
+  flex-wrap: wrap;
 }
 
 .role-option {
-  padding: 2rem 1.5rem;
+  padding: var(--spacing-2xl) var(--spacing-xl);
   border: 2px solid var(--card-border);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition-normal);
   background-color: var(--card-bg);
   text-align: center;
   flex: 1;
   max-width: 200px;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  backdrop-filter: var(--card-backdrop);
+  -webkit-backdrop-filter: var(--card-backdrop);
 }
 
 .role-option:hover {
-  border-color: var(--primary-color);
-  background-color: var(--hover-bg);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+  border-color: var(--color-primary);
+  background-color: var(--bg-secondary);
+  transform: translateY(-4px);
+  box-shadow: var(--card-shadow-hover);
 }
 
 .role-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
+  font-size: var(--font-size-3xl);
+  margin-bottom: var(--spacing-md);
   opacity: 0.8;
+  transition: all var(--transition-normal);
+}
+
+.role-option:hover .role-icon {
+  opacity: 1;
+  transform: scale(1.1);
 }
 
 .role-option h3 {
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 var(--spacing-sm) 0;
   color: var(--text-primary);
-  font-size: 1.2rem;
+  font-size: var(--font-size-xl);
+  font-weight: 600;
 }
 
 .role-option p {
   margin: 0;
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
   line-height: 1.4;
 }
 
 /* Signup page: image + form layout */
 .signup-with-image {
   display: flex;
-  gap: 1.5rem;
+  gap: var(--spacing-xl);
   align-items: center;
   max-width: 900px;
-  padding: 1.25rem;
+  padding: var(--spacing-lg);
+  margin: 0 auto;
 }
 
 .signup-image img {
   width: 260px;
   height: auto;
-  border-radius: 12px;
-  box-shadow: 0 10px 24px rgba(0,0,0,0.15);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--card-shadow-hover);
   display: block;
+  transition: all var(--transition-normal);
+}
+
+.signup-image img:hover {
+  transform: scale(1.02);
+  box-shadow: var(--modal-shadow);
 }
 
 .signup-form {
@@ -167,56 +218,66 @@ input:disabled, select:disabled {
 .form-header {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
 }
 
 .back-button {
-  background: none;
+  background: var(--btn-secondary-bg);
   border: 1px solid var(--card-border);
   color: var(--text-secondary);
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.2s ease;
+  font-size: var(--font-size-sm);
+  transition: all var(--transition-fast);
 }
 
 .back-button:hover {
-  background-color: var(--hover-bg);
+  background-color: var(--btn-secondary-hover);
   color: var(--text-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--card-shadow);
 }
 
 .form-header h2 {
   margin: 0;
   color: var(--text-primary);
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
 }
 
 .form-description {
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   color: var(--text-secondary);
   line-height: 1.4;
-  margin: 0.5rem 0 1rem 0;
-  padding: 0.75rem;
-  background-color: var(--hover-bg);
-  border-radius: 6px;
-  border-left: 3px solid var(--primary-color);
+  margin: var(--spacing-sm) 0 var(--spacing-md) 0;
+  padding: var(--spacing-md);
+  background-color: var(--color-info-bg);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--color-info);
 }
 
 @media (max-width: 880px) {
   .signup-with-image {
     flex-direction: column;
     max-width: 420px;
+    padding: var(--spacing-md);
+  }
+  
+  .role-options {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+  
+  .role-option {
+    max-width: none;
+    min-height: auto;
   }
   
   .signup-image img {
     width: 100%;
     max-width: 360px;
-  }
-  
-  .role-options {
-    flex-direction: column;
-    align-items: center;
   }
   
   .role-option {

@@ -1,11 +1,13 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import '../css/theme.css'
 import '../css/Home.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
 
 export default function Home({ user }) {
+  const navigate = useNavigate();
   const [realProducts, setRealProducts] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -32,73 +34,50 @@ export default function Home({ user }) {
     }
   };
 
-  // Hardcoded product data (fallback for non-buyers or API failure)
-  const featuredProducts = [
-    {
-      id: 1,
-      name: "iPhone 13 Pro Max",
-      price: 850,
-      originalPrice: 1200,
-      condition: "Excellent",
-      category: "Phones",
-      location: "Dhaka, Bangladesh",
-      seller: "TechTrader",
-      rating: 4.8,
-      image: "/Assets/placeholders/phone1.jpg",
-      description: "Barely used iPhone 13 Pro Max in excellent condition. Comes with original box and accessories."
-    },
-    {
-      id: 2,
-      name: "MacBook Pro M2",
-      price: 1450,
-      originalPrice: 2000,
-      condition: "Good",
-      category: "Laptops",
-      location: "Chittagong, Bangladesh",
-      seller: "GadgetGuru",
-      rating: 4.9,
-      image: "/Assets/placeholders/laptop1.jpg",
-      description: "Powerful MacBook Pro M2 with 16GB RAM. Perfect for work and creative tasks."
-    },
-    {
-      id: 3,
-      name: "Sony WH-1000XM4",
-      price: 220,
-      originalPrice: 350,
-      condition: "Very Good",
-      category: "Audio",
-      location: "Sylhet, Bangladesh",
-      seller: "AudioExpert",
-      rating: 4.7,
-      image: "/Assets/placeholders/headphones1.jpg",
-      description: "Premium noise-canceling headphones. Crystal clear sound quality."
-    },
-    {
-      id: 4,
-      name: "iPad Air 5th Gen",
-      price: 480,
-      originalPrice: 600,
-      condition: "Like New",
-      category: "Tablets",
-      location: "Khulna, Bangladesh",
-      seller: "TabletTrader",
-      rating: 4.6,
-      image: "/Assets/placeholders/tablet1.jpg",
-      description: "Latest iPad Air with M1 chip. Perfect for students and professionals."
-    }
-  ];
-
+  // Real categories from ProductSeeder with proper icons and item counts
   const categories = [
-    { name: "Phones", icon: "📱", count: 245 },
-    { name: "Laptops", icon: "💻", count: 189 },
-    { name: "Tablets", icon: "📱", count: 67 },
-    { name: "Audio", icon: "🎧", count: 134 },
-    { name: "Gaming", icon: "🎮", count: 98 },
-    { name: "Accessories", icon: "🔌", count: 312 }
+    { name: "Smartphones", icon: "📱", count: 5, color: "#E53935" },
+    { name: "Laptops", icon: "💻", count: 5, color: "#1976D2" },
+    { name: "Tablets", icon: "📱", count: 5, color: "#388E3C" },
+    { name: "Desktop Computers", icon: "🖥️", count: 5, color: "#7B1FA2" },
+    { name: "Gaming", icon: "🎮", count: 5, color: "#F57C00" },
+    { name: "Smart Watches", icon: "⌚", count: 5, color: "#C2185B" },
+    { name: "Audio & Headphones", icon: "🎧", count: 5, color: "#5D4037" },
+    { name: "Cameras", icon: "📷", count: 5, color: "#455A64" },
+    { name: "Accessories", icon: "🔌", count: 5, color: "#424242" },
+    { name: "Other Electronics", icon: "📦", count: 5, color: "#37474F" }
   ];
 
   const formatPrice = (price) => {
-    return `$${parseFloat(price).toFixed(2)}`;
+    return `৳${parseFloat(price).toFixed(2)}`;
+  };
+
+  const handleCategoryClick = (categoryName) => {
+    if (user && user.role === 'Buyer') {
+      // Navigate to buyer page with category filter
+      navigate(`/buyer?category=${encodeURIComponent(categoryName)}`);
+    } else {
+      // Redirect to signup for non-users
+      navigate('/signup/buyer');
+    }
+  };
+
+  const handleProductClick = (product) => {
+    if (user && user.role === 'Buyer') {
+      // Navigate to buyer page and show product details
+      navigate(`/buyer?product=${product.id}`);
+    } else {
+      // Redirect to signup for non-users
+      navigate('/signup/buyer');
+    }
+  };
+
+  const handleViewAllProducts = () => {
+    if (user && user.role === 'Buyer') {
+      navigate('/buyer');
+    } else {
+      navigate('/signup/buyer');
+    }
   };
 
   const getConditionBadgeClass = (condition) => {
@@ -112,45 +91,62 @@ export default function Home({ user }) {
   };
 
   const renderRealProduct = (product) => {
+    const discount = product.original_price && product.original_price > product.price ? 
+      Math.round(((product.original_price - product.price) / product.original_price) * 100) : 0;
+
     return (
-      <div key={product.id} className="product-card">
+      <div 
+        key={product.id} 
+        className="product-card modern" 
+        onClick={() => handleProductClick(product)}
+        style={{ cursor: 'pointer' }}
+      >
         <div className="product-image">
           {product.images && product.images.length > 0 ? (
-            <img src={product.images[0]} alt={product.title} style={{width: '100%', height: '200px', objectFit: 'cover'}} />
+            <img src={`${API_BASE}${product.images[0]}`} alt={product.title} style={{width: '100%', height: '200px', objectFit: 'cover'}} />
           ) : (
             <div className="product-placeholder">
               {product.category === 'Smartphones' && '📱'}
               {product.category === 'Laptops' && '💻'}
               {product.category === 'Tablets' && '📱'}
+              {product.category === 'Desktop Computers' && '🖥️'}
               {product.category === 'Audio & Headphones' && '🎧'}
               {product.category === 'Gaming' && '🎮'}
-              {!['Smartphones', 'Laptops', 'Tablets', 'Audio & Headphones', 'Gaming'].includes(product.category) && '📦'}
+              {product.category === 'Smart Watches' && '⌚'}
+              {product.category === 'Cameras' && '📷'}
+              {product.category === 'Accessories' && '🔌'}
+              {product.category === 'Other Electronics' && '📦'}
+              {!['Smartphones', 'Laptops', 'Tablets', 'Desktop Computers', 'Audio & Headphones', 'Gaming', 'Smart Watches', 'Cameras', 'Accessories', 'Other Electronics'].includes(product.category) && '📦'}
             </div>
           )}
-          {product.is_featured && (
-            <div className="featured-badge">⭐ Featured</div>
-          )}
-          {product.is_urgent_sale && (
-            <div className="urgent-badge">🔥 Urgent</div>
-          )}
+          <div className="product-badges">
+            {product.is_featured && (
+              <span className="condition-badge excellent">⭐ Featured</span>
+            )}
+            {product.is_urgent_sale && (
+              <span className="condition-badge">🔥 Urgent</span>
+            )}
+            {!product.is_featured && !product.is_urgent_sale && (
+              <span className={`condition-badge ${product.condition_grade === 'excellent' ? 'excellent' : ''}`}>
+                {product.condition_grade?.replace('-', ' ') || 'Good'}
+              </span>
+            )}
+          </div>
         </div>
         <div className="product-info">
           <h3 className="product-name">{product.title}</h3>
           <div className="product-price">
             <span className="current-price">{formatPrice(product.price)}</span>
             {product.original_price && product.original_price > product.price && (
-              <span className="original-price">{formatPrice(product.original_price)}</span>
+              <>
+                <span className="original-price">{formatPrice(product.original_price)}</span>
+                <span className="discount">{discount}% OFF</span>
+              </>
             )}
           </div>
           <div className="product-details">
-            <span className={`condition ${getConditionBadgeClass(product.condition_grade)}`}>
-              {product.condition_grade?.replace('-', ' ') || 'Good'}
-            </span>
             <span className="location">📍 {product.location_city}, {product.location_state}</span>
-          </div>
-          <div className="seller-info">
-            <span className="seller">Seller: {product.seller?.shop_username || 'Seller'}</span>
-            <span className="rating">👁️ {product.views_count || 0} views</span>
+            <span className="seller">👤 {product.seller?.shop_username || 'Seller'}</span>
           </div>
           <p className="product-description">
             {product.description ? 
@@ -162,8 +158,21 @@ export default function Home({ user }) {
             }
           </p>
           <div className="product-actions">
-            <Link to={`/buyer`} className="btn small primary">View Details</Link>
-            <button className="btn small outline">Contact Seller</button>
+            <button 
+              className="btn primary small"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleProductClick(product);
+              }}
+            >
+              View Details
+            </button>
+            <button 
+              className="btn outline small"
+              onClick={(e) => e.stopPropagation()}
+            >
+              ❤️ Save
+            </button>
           </div>
         </div>
       </div>
@@ -173,35 +182,69 @@ export default function Home({ user }) {
   if (user) {
     // Logged-in user homepage
     return (
-      <section className="home">
-        <div className="hero">
-          <h1>Welcome back, {user.name}!</h1>
-          <p>
-            {user.role === 'Buyer' 
-              ? "Discover amazing deals on quality refurbished electronics from trusted sellers." 
-              : "Discover amazing deals on quality gadgets from trusted sellers."
-            }
-          </p>
-          <div className="cta">
-            <Link to={user.role === 'Buyer' ? '/buyer' : '/marketplace'} className="btn primary">
-              {user.role === 'Buyer' ? 'Browse All Products' : 'Browse All Products'}
-            </Link>
-            <Link to="/sell" className="btn ghost">Sell Your Gadgets</Link>
+      <section className="home buyer-home">
+        {/* Hero Section for Buyers */}
+        <div className="buyer-hero">
+          <div className="hero-content">
+            <div className="welcome-badge">
+              <span className="badge-icon">🛒</span>
+              <span>Welcome back, {user.name}!</span>
+            </div>
+            <h1 className="hero-title">
+              Discover Amazing <span className="highlight">Tech Deals</span>
+            </h1>
+            <p className="hero-description">
+              Browse thousands of verified refurbished electronics from trusted sellers. 
+              Find your perfect device at the best price.
+            </p>
+            <div className="hero-stats">
+              <div className="stat-item">
+                <span className="stat-number">50+</span>
+                <span className="stat-label">New Products Today</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-number">98%</span>
+                <span className="stat-label">Customer Satisfaction</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-number">7-Day</span>
+                <span className="stat-label">Return Policy</span>
+              </div>
+            </div>
+            <div className="hero-cta">
+              <Link to="/buyer" className="btn primary large">
+                🔍 Browse All Products
+              </Link>
+              <Link to="/favorites" className="btn secondary large">
+                ❤️ My Favorites
+              </Link>
+            </div>
           </div>
         </div>
 
         {/* Categories Section */}
         <div className="categories-section">
-          <h2>Shop by Category</h2>
-          <div className="categories-grid">
+          <div className="section-header">
+            <h2>Shop by Category</h2>
+            <p>Find exactly what you're looking for</p>
+          </div>
+          <div className="categories-grid modern">
             {categories.map((category, index) => (
-              <Link key={index} to={`/category/${category.name.toLowerCase()}`} className="category-card">
-                <div className="category-icon">{category.icon}</div>
+              <div
+                key={index} 
+                className="category-card modern"
+                style={{ '--category-color': category.color, cursor: 'pointer' }}
+                onClick={() => handleCategoryClick(category.name)}
+              >
+                <div className="category-icon-wrapper">
+                  <div className="category-icon">{category.icon}</div>
+                </div>
                 <div className="category-info">
                   <h3>{category.name}</h3>
-                  <span className="category-count">{category.count} items</span>
+                  <span className="category-count">{category.count} items available</span>
                 </div>
-              </Link>
+                <div className="category-arrow">→</div>
+              </div>
             ))}
           </div>
         </div>
@@ -209,75 +252,98 @@ export default function Home({ user }) {
         {/* Featured Products Section */}
         <div className="products-section">
           <div className="section-header">
-            <h2>{user.role === 'Buyer' ? 'Latest Products' : 'Featured Products'}</h2>
-            <Link to={user.role === 'Buyer' ? '/buyer' : '/marketplace'} className="view-all">View All →</Link>
+            <h2>Latest Products</h2>
+            <p>Fresh arrivals from verified sellers</p>
+            <button 
+              className="view-all-btn"
+              onClick={handleViewAllProducts}
+              style={{ cursor: 'pointer', background: 'none', border: 'none', color: 'inherit' }}
+            >
+              View All Products <span className="arrow">→</span>
+            </button>
           </div>
           
-          {user.role === 'Buyer' && loading ? (
+          {loading ? (
             <div className="loading-products">
-              <div className="spinner"></div>
-              <p>Loading latest products...</p>
-            </div>
-          ) : (
-            <div className="products-grid">
-              {user.role === 'Buyer' && realProducts.length > 0 ? (
-                realProducts.map(renderRealProduct)
-              ) : (
-                featuredProducts.map((product) => (
-                  <div key={product.id} className="product-card">
-                    <div className="product-image">
-                      <div className="product-placeholder">
-                        {product.category === 'Phones' && '📱'}
-                        {product.category === 'Laptops' && '💻'}
-                        {product.category === 'Tablets' && '📱'}
-                        {product.category === 'Audio' && '🎧'}
-                      </div>
-                    </div>
-                    <div className="product-info">
-                      <h3 className="product-name">{product.name}</h3>
-                      <div className="product-price">
-                        <span className="current-price">${product.price}</span>
-                        <span className="original-price">${product.originalPrice}</span>
-                      </div>
-                      <div className="product-details">
-                        <span className="condition">{product.condition}</span>
-                        <span className="location">📍 {product.location}</span>
-                      </div>
-                      <div className="seller-info">
-                        <span className="seller">Seller: {product.seller}</span>
-                        <span className="rating">⭐ {product.rating}</span>
-                      </div>
-                      <p className="product-description">{product.description}</p>
-                      <div className="product-actions">
-                        <Link to={`/product/${product.id}`} className="btn small primary">View Details</Link>
-                        <button className="btn small outline">Contact Seller</button>
-                      </div>
+              <div className="loading-grid">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="loading-card">
+                    <div className="loading-image"></div>
+                    <div className="loading-content">
+                      <div className="loading-line large"></div>
+                      <div className="loading-line medium"></div>
+                      <div className="loading-line small"></div>
                     </div>
                   </div>
-                ))
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="products-grid modern">
+              {realProducts.length > 0 ? (
+                realProducts.map(renderRealProduct)
+              ) : (
+                <div className="no-products-message">
+                  <p>No products available at the moment. Please check back later!</p>
+                </div>
               )}
             </div>
           )}
         </div>
 
-        {/* Quick Actions */}
-        <div className="features">
-          <div className="card">
-            <h3>Quick Actions</h3>
-            <p>Manage your listings, check messages, or update your profile.</p>
-            <div className="quick-actions">
-              <Link to="/my-listings" className="btn small">My Listings</Link>
-              <Link to="/favorites" className="btn small outline">Favorites</Link>
-              <Link to="/messages" className="btn small outline">Messages</Link>
+        {/* Quick Actions Section */}
+        <div className="quick-actions-section">
+          <h2>Quick Actions</h2>
+          <div className="actions-grid">
+            <Link to="/buyer/search" className="action-card">
+              <div className="action-icon">🔍</div>
+              <h3>Advanced Search</h3>
+              <p>Find specific products with detailed filters</p>
+            </Link>
+            <Link to="/favorites" className="action-card">
+              <div className="action-icon">❤️</div>
+              <h3>My Favorites</h3>
+              <p>View your saved products and wishlist</p>
+            </Link>
+            <Link to="/orders" className="action-card">
+              <div className="action-icon">📦</div>
+              <h3>My Orders</h3>
+              <p>Track your purchases and order history</p>
+            </Link>
+            <Link to="/messages" className="action-card">
+              <div className="action-icon">💬</div>
+              <h3>Messages</h3>
+              <p>Chat with sellers and get instant replies</p>
+            </Link>
+          </div>
+        </div>
+
+        {/* Trust & Safety Section */}
+        <div className="trust-section">
+          <div className="trust-content">
+            <h2>Why Choose RefinedTech?</h2>
+            <div className="trust-features">
+              <div className="trust-feature">
+                <div className="trust-icon">🛡️</div>
+                <h4>Verified Quality</h4>
+                <p>Every product tested & verified</p>
+              </div>
+              <div className="trust-feature">
+                <div className="trust-icon">🔒</div>
+                <h4>Secure Payments</h4>
+                <p>Your money is safe with us</p>
+              </div>
+              <div className="trust-feature">
+                <div className="trust-icon">📱</div>
+                <h4>Direct Communication</h4>
+                <p>Chat directly with sellers</p>
+              </div>
+              <div className="trust-feature">
+                <div className="trust-icon">⭐</div>
+                <h4>Trusted Reviews</h4>
+                <p>Real feedback from buyers</p>
+              </div>
             </div>
-          </div>
-          <div className="card">
-            <h3>Marketplace Tips</h3>
-            <p>Get the best deals by checking seller ratings and product conditions.</p>
-          </div>
-          <div className="card">
-            <h3>Recent Activity</h3>
-            <p>Stay updated with your latest interactions and deals.</p>
           </div>
         </div>
       </section>
@@ -328,21 +394,21 @@ export default function Home({ user }) {
               <div className="device-icon">📱</div>
               <div className="device-info">
                 <span className="device-name">iPhone 13 Pro</span>
-                <span className="device-price">$850</span>
+                <span className="device-price">৳850</span>
               </div>
             </div>
             <div className="floating-card card-2">
               <div className="device-icon">💻</div>
               <div className="device-info">
                 <span className="device-name">MacBook Pro</span>
-                <span className="device-price">$1,450</span>
+                <span className="device-price">৳1,450</span>
               </div>
             </div>
             <div className="floating-card card-3">
               <div className="device-icon">🎧</div>
               <div className="device-info">
                 <span className="device-name">Sony WH-1000XM4</span>
-                <span className="device-price">$220</span>
+                <span className="device-price">৳220</span>
               </div>
             </div>
           </div>
@@ -397,14 +463,19 @@ export default function Home({ user }) {
         </div>
         <div className="categories-showcase">
           {categories.map((category, index) => (
-            <Link key={index} to="/signup" className="category-showcase-card">
+            <div 
+              key={index} 
+              className="category-showcase-card"
+              style={{ cursor: 'pointer' }}
+              onClick={() => handleCategoryClick(category.name)}
+            >
               <div className="category-icon-large">{category.icon}</div>
               <h4>{category.name}</h4>
               <span className="category-count">{category.count}+ items</span>
               <div className="category-overlay">
                 <span>Explore Now →</span>
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       </div>

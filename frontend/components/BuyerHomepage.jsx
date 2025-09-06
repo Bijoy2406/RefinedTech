@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+import TiltedCard from './TiltedCard';
 import '../css/BuyerHomepage.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
 
 export default function BuyerHomepage() {
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [currentUser, setCurrentUser] = useState(null);
     const [products, setProducts] = useState([]);
     const [filteredProducts, setFilteredProducts] = useState([]);
@@ -14,6 +16,11 @@ export default function BuyerHomepage() {
     const [error, setError] = useState(null);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [showProductModal, setShowProductModal] = useState(false);
+
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(1);
+    const [productsPerPage] = useState(9); // 3 rows × 3 products per row
+    const [paginatedProducts, setPaginatedProducts] = useState([]);
 
     // Filter states
     const [filters, setFilters] = useState({
@@ -27,8 +34,8 @@ export default function BuyerHomepage() {
     });
 
     const categories = [
-        'Smartphones', 'Laptops', 'Tablets', 'Desktop Computers', 
-        'Gaming', 'Smart Watches', 'Audio & Headphones', 'Cameras', 
+        'Smartphones', 'Laptops', 'Tablets', 'Desktop Computers',
+        'Gaming', 'Smart Watches', 'Audio & Headphones', 'Cameras',
         'Accessories', 'Other Electronics'
     ];
 
@@ -50,11 +57,56 @@ export default function BuyerHomepage() {
     useEffect(() => {
         fetchCurrentUser();
         fetchProducts();
+
+        // Handle URL parameters
+        const categoryParam = searchParams.get('category');
+        const productParam = searchParams.get('product');
+
+        if (categoryParam) {
+            setFilters(prev => ({
+                ...prev,
+                category: categoryParam
+            }));
+        }
+
+        if (productParam) {
+            // Auto-open product modal when product ID is in URL
+            setTimeout(() => {
+                const product = products.find(p => p.id.toString() === productParam);
+                if (product) {
+                    handleProductClick(product);
+                }
+            }, 1000); // Wait for products to load
+        }
     }, []);
 
     useEffect(() => {
         applyFilters();
     }, [products, filters]);
+
+    // Handle product parameter when products are loaded
+    useEffect(() => {
+        const productParam = searchParams.get('product');
+        if (productParam && products.length > 0) {
+            const product = products.find(p => p.id.toString() === productParam);
+            if (product) {
+                handleProductClick(product);
+                // Remove the product parameter from URL after opening
+                const newSearchParams = new URLSearchParams(searchParams);
+                newSearchParams.delete('product');
+                setSearchParams(newSearchParams, { replace: true });
+            }
+        }
+    }, [products, searchParams]);
+
+    useEffect(() => {
+        applyPagination();
+    }, [filteredProducts, currentPage]);
+
+    // Reset to first page when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filters]);
 
     const fetchCurrentUser = async () => {
         try {
@@ -71,8 +123,24 @@ export default function BuyerHomepage() {
     const fetchProducts = async () => {
         try {
             setLoading(true);
-            const response = await axios.get(`${API_BASE}/api/products`);
-            setProducts(response.data.products || []);
+            // Fetch first page to discover pagination
+            const first = await axios.get(`${API_BASE}/api/products`, { params: { per_page: 50, page: 1 } });
+            const firstItems = first.data?.products || [];
+            const pg = first.data?.pagination;
+
+            let all = [...firstItems];
+            if (pg && pg.last_page && pg.last_page > 1) {
+                const requests = [];
+                for (let p = 2; p <= pg.last_page; p++) {
+                    requests.push(axios.get(`${API_BASE}/api/products`, { params: { per_page: pg.per_page, page: p } }));
+                }
+                const results = await Promise.all(requests);
+                results.forEach(res => {
+                    all = all.concat(res.data?.products || []);
+                });
+            }
+
+            setProducts(all);
         } catch (error) {
             console.error('Error fetching products:', error);
             setError('Failed to fetch products');
@@ -102,7 +170,7 @@ export default function BuyerHomepage() {
 
         // Brand filter
         if (filters.brand) {
-            filtered = filtered.filter(product => 
+            filtered = filtered.filter(product =>
                 product.brand.toLowerCase().includes(filters.brand.toLowerCase())
             );
         }
@@ -144,11 +212,42 @@ export default function BuyerHomepage() {
         setFilteredProducts(filtered);
     };
 
+    const applyPagination = () => {
+        const startIndex = (currentPage - 1) * productsPerPage;
+        const endIndex = startIndex + productsPerPage;
+        const paginated = filteredProducts.slice(startIndex, endIndex);
+        setPaginatedProducts(paginated);
+    };
+
+    const getTotalPages = () => {
+        return Math.ceil(filteredProducts.length / productsPerPage);
+    };
+
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
+        // Scroll to top of products section
+        document.querySelector('.products-section')?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    };
+
     const handleFilterChange = (filterName, value) => {
         setFilters(prev => ({
             ...prev,
             [filterName]: value
         }));
+
+        // Update URL parameters for category filter
+        if (filterName === 'category') {
+            const newSearchParams = new URLSearchParams(searchParams);
+            if (value) {
+                newSearchParams.set('category', value);
+            } else {
+                newSearchParams.delete('category');
+            }
+            setSearchParams(newSearchParams, { replace: true });
+        }
     };
 
     const clearFilters = () => {
@@ -161,13 +260,16 @@ export default function BuyerHomepage() {
             maxPrice: '',
             sortBy: 'newest'
         });
+
+        // Clear URL parameters
+        setSearchParams({}, { replace: true });
     };
 
     const handleProductClick = async (product) => {
         try {
             // Increment view count
             await axios.get(`${API_BASE}/api/products/${product.id}`);
-            
+
             setSelectedProduct(product);
             setShowProductModal(true);
         } catch (error) {
@@ -188,7 +290,7 @@ export default function BuyerHomepage() {
     };
 
     const formatPrice = (price) => {
-        return `$${parseFloat(price).toFixed(2)}`;
+        return `৳${parseFloat(price).toLocaleString()}`;
     };
 
     const calculateSavings = (price, originalPrice) => {
@@ -200,56 +302,89 @@ export default function BuyerHomepage() {
 
     const renderProductCard = (product) => {
         const savings = calculateSavings(product.price, product.original_price);
-        
-        return (
-            <div 
-                key={product.id} 
-                className="product-card"
-                onClick={() => handleProductClick(product)}
-            >
+
+        const overlayContent = (
+            <div className="product-badges">
+                {product.is_featured && (
+                    <span className="featured-badge">⭐ Featured</span>
+                )}
+                {product.is_urgent_sale && (
+                    <span className="urgent-badge">🔥 Urgent</span>
+                )}
+                {savings && (
+                    <span className="discount-badge">-{savings.percentage}%</span>
+                )}
+            </div>
+        );
+
+        const cardContent = (
+            <div className="buyer-product-card-inner">
                 <div className="product-image">
                     {product.images && product.images.length > 0 ? (
-                        <img src={product.images[0]} alt={product.title} />
+                        <div className="product-image-container">
+                            <img 
+                                src={`${API_BASE}${product.images[0]}`} 
+                                alt={product.title}
+                                className="product-img"
+                            />
+                            <div className="product-badges">
+                                {product.is_featured && (
+                                    <span className="featured-badge">⭐ Featured</span>
+                                )}
+                                {product.is_urgent_sale && (
+                                    <span className="urgent-badge">🔥 Urgent</span>
+                                )}
+                                {savings && (
+                                    <span className="discount-badge">-{savings.percentage}%</span>
+                                )}
+                            </div>
+                        </div>
                     ) : (
                         <div className="no-image">📷</div>
                     )}
-                    {product.is_featured && (
-                        <div className="featured-badge">⭐ Featured</div>
-                    )}
-                    {product.is_urgent_sale && (
-                        <div className="urgent-badge">🔥 Urgent</div>
-                    )}
-                    {savings && (
-                        <div className="discount-badge">-{savings.percentage}%</div>
-                    )}
                 </div>
-                
+
                 <div className="product-info">
-                    <h4 className="product-title">{product.title}</h4>
-                    <p className="product-brand">{product.brand} {product.model}</p>
-                    
-                    <div className="condition-info">
+                    <h3 className="product-title">{product.title}</h3>
+                    <div className="product-details">
+                        <span className="brand-model">{product.brand} {product.model}</span>
                         <span className={`condition-badge ${getConditionBadgeClass(product.condition_grade)}`}>
                             {product.condition_grade?.replace('-', ' ')}
                         </span>
                     </div>
-
                     <div className="price-info">
-                        <span className="current-price">{formatPrice(product.price)}</span>
+                        <span className="current-price2">{formatPrice(product.price)}</span>
                         {product.original_price && product.original_price > product.price && (
-                            <span className="original-price">{formatPrice(product.original_price)}</span>
+                            <span className="original-price2">{formatPrice(product.original_price)}</span>
                         )}
                     </div>
-
-                    <div className="product-meta">
-                        <span className="location">📍 {product.location_city}, {product.location_state}</span>
-                        <span className="views">👁️ {product.views_count || 0} views</span>
-                    </div>
-
-                    <div className="seller-info">
-                        <span>Sold by: {product.seller?.shop_username || 'Seller'}</span>
+                    <div className="product-location">
+                        <span>📍 {product.location_city}, {product.location_state}</span>
                     </div>
                 </div>
+            </div>
+        );
+
+        return (
+            <div
+                key={product.id}
+                className="buyer-product-card"
+                onClick={() => handleProductClick(product)}
+            >
+                <TiltedCard
+                    imageSrc="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSIxIiB2aWV3Qm94PSIwIDAgMSAxIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjwvc3ZnPg=="
+                    altText={product.title}
+                    containerHeight="100%"
+                    containerWidth="100%"
+                    imageHeight="100%"
+                    imageWidth="100%"
+                    scaleOnHover={1.03}
+                    rotateAmplitude={8}
+                    showMobileWarning={false}
+                    showTooltip={false}
+                    overlayContent={cardContent}
+                    displayOverlayContent={true}
+                />
             </div>
         );
     };
@@ -271,17 +406,6 @@ export default function BuyerHomepage() {
             <div className="buyer-header">
                 <div className="header-content">
                     <h1>Discover Refurbished Tech</h1>
-                    <p>Welcome back, {currentUser?.name || 'Buyer'}! Find great deals on quality refurbished electronics.</p>
-                </div>
-                <div className="header-stats">
-                    <div className="stat">
-                        <span className="stat-number">{products.length}</span>
-                        <span className="stat-label">Products Available</span>
-                    </div>
-                    <div className="stat">
-                        <span className="stat-number">{filteredProducts.length}</span>
-                        <span className="stat-label">Matching Your Search</span>
-                    </div>
                 </div>
             </div>
 
@@ -300,7 +424,7 @@ export default function BuyerHomepage() {
                         Clear All Filters
                     </button>
                 </div>
-                
+
                 <div className="filters-grid">
                     {/* Search */}
                     <div className="filter-group">
@@ -359,7 +483,7 @@ export default function BuyerHomepage() {
                         <label>Min Price</label>
                         <input
                             type="number"
-                            placeholder="$0"
+                            placeholder="৳0"
                             value={filters.minPrice}
                             onChange={(e) => handleFilterChange('minPrice', e.target.value)}
                         />
@@ -369,7 +493,7 @@ export default function BuyerHomepage() {
                         <label>Max Price</label>
                         <input
                             type="number"
-                            placeholder="$10000"
+                            placeholder="৳100000"
                             value={filters.maxPrice}
                             onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
                         />
@@ -396,8 +520,9 @@ export default function BuyerHomepage() {
             <div className="products-section">
                 <div className="section-header">
                     <h2>Available Products</h2>
-                    <p>Showing {filteredProducts.length} of {products.length} products</p>
-                </div>
+                    <div className="pagination-info">
+                        Showing {((currentPage - 1) * productsPerPage) + 1} to {Math.min(currentPage * productsPerPage, filteredProducts.length)} of {filteredProducts.length} products
+                    </div>                </div>
 
                 {filteredProducts.length === 0 ? (
                     <div className="empty-state">
@@ -409,9 +534,48 @@ export default function BuyerHomepage() {
                         </button>
                     </div>
                 ) : (
-                    <div className="products-grid">
-                        {filteredProducts.map(renderProductCard)}
-                    </div>
+                    <>
+                        <div className="products-grid">
+                            {paginatedProducts.map(renderProductCard)}
+                        </div>
+
+                        {/* Pagination */}
+                        {getTotalPages() > 1 && (
+                            <div className="pagination-container">
+                                <div className="pagination">
+                                    <button
+                                        className="pagination-btn"
+                                        onClick={() => handlePageChange(currentPage - 1)}
+                                        disabled={currentPage === 1}
+                                    >
+                                        ⬅️ Previous
+                                    </button>
+
+                                    <div className="pagination-numbers">
+                                        {Array.from({ length: getTotalPages() }, (_, i) => i + 1).map(page => (
+                                            <button
+                                                key={page}
+                                                className={`pagination-number ${currentPage === page ? 'active' : ''}`}
+                                                onClick={() => handlePageChange(page)}
+                                            >
+                                                {page}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    <button
+                                        className="pagination-btn"
+                                        onClick={() => handlePageChange(currentPage + 1)}
+                                        disabled={currentPage === getTotalPages()}
+                                    >
+                                        Next ➡️
+                                    </button>
+                                </div>
+
+
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
 
@@ -420,19 +584,19 @@ export default function BuyerHomepage() {
                 <div className="modal-overlay" onClick={() => setShowProductModal(false)}>
                     <div className="modal-content product-detail-modal" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h3>{selectedProduct.title}</h3>
                             <button className="modal-close" onClick={() => setShowProductModal(false)}>×</button>
                         </div>
                         <div className="modal-body">
                             <div className="product-detail-content">
                                 <div className="product-images">
                                     {selectedProduct.images && selectedProduct.images.length > 0 ? (
-                                        <img src={selectedProduct.images[0]} alt={selectedProduct.title} />
+                                        <img src={`${API_BASE}${selectedProduct.images[0]}`} alt={selectedProduct.title} />
                                     ) : (
                                         <div className="no-image-large">📷</div>
                                     )}
+                                    <h2 className="product-modal-title">{selectedProduct.title}</h2>
                                 </div>
-                                
+
                                 <div className="product-details">
                                     <div className="detail-section">
                                         <h4>Product Information</h4>
@@ -440,7 +604,7 @@ export default function BuyerHomepage() {
                                             <div><strong>Brand:</strong> {selectedProduct.brand}</div>
                                             <div><strong>Model:</strong> {selectedProduct.model}</div>
                                             <div><strong>Category:</strong> {selectedProduct.category}</div>
-                                            <div><strong>Condition:</strong> 
+                                            <div><strong>Condition:</strong>
                                                 <span className={`condition-badge ${getConditionBadgeClass(selectedProduct.condition_grade)}`}>
                                                     {selectedProduct.condition_grade?.replace('-', ' ')}
                                                 </span>
