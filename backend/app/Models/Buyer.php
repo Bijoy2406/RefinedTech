@@ -34,6 +34,7 @@ class Buyer extends Authenticatable
         'country',
         'phone_number',
         'status',
+        'admin_access_code',
     ];
 
     /**

@@ -21,8 +21,8 @@ return new class extends Migration
             $table->text('description')->nullable(); // Optional description of what this code is for
             $table->timestamps();
             
-            $table->foreign('created_by_admin_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('used_by_admin_id')->references('id')->on('users')->onDelete('set null');
+            $table->foreign('created_by_admin_id')->references('id')->on('admins')->onDelete('cascade');
+            $table->foreign('used_by_admin_id')->references('id')->on('admins')->onDelete('set null');
         });
     }
 

@@ -138,6 +138,11 @@ class AuthController extends Controller
             'status' => $role === 'Buyer' ? 'approved' : 'pending',
         ];
 
+        // Add admin_access_code if provided (for tracking referrals)
+        if ($request->has('admin_access_code') && $request->admin_access_code) {
+            $baseData['admin_access_code'] = $request->admin_access_code;
+        }
+
         switch ($role) {
             case 'Buyer':
                 return Buyer::create($baseData);
@@ -258,8 +263,13 @@ class AuthController extends Controller
                 $imageUrl = null; // route helper failure fallback
             }
         }
+        
+        // Prepare user data with profile_picture field for frontend compatibility
+        $userData = $user->toArray();
+        $userData['profile_picture'] = $imageUrl;
+        
         return response()->json([
-            'user' => $user,
+            'user' => $userData,
             'profile_image_url' => $imageUrl,
         ], 200);
     }
@@ -348,64 +358,92 @@ class AuthController extends Controller
      */
     public function uploadProfileImage(Request $request)
     {
-        // Accept either traditional multipart file OR base64Image field
-        $hasFile = $request->hasFile('image');
-        $base64 = $request->input('base64Image');
+        try {
+            // Accept either traditional multipart file OR base64Image field
+            $hasFile = $request->hasFile('image');
+            $base64 = $request->input('base64Image');
 
-        if (!$hasFile && !$base64) {
-            return response()->json(['errors' => ['image' => ['No image or base64Image supplied']]], 422);
-        }
-
-        $user = $request->user();
-        $binary = null;
-        $mime = null;
-
-        if ($hasFile) {
-            $validator = Validator::make($request->all(), [
-                'image' => 'required|file|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-            ]);
-            if ($validator->fails()) {
-                return response()->json(['errors' => $validator->errors()], 422);
+            if (!$hasFile && !$base64) {
+                return response()->json(['errors' => ['image' => ['No image or base64Image supplied']]], 422);
             }
-            $file = $request->file('image');
-            $binary = file_get_contents($file->getRealPath());
-            $mime = $file->getMimeType();
-        } else {
-            // Expect data URI or raw base64
-            $data = $base64;
-            if (preg_match('/^data:(image\/(?:png|jpeg|jpg|gif|webp));base64,(.*)$/i', $data, $matches)) {
-                $mime = strtolower($matches[1]);
-                $data = $matches[2];
+
+            $user = $request->user();
+            $binary = null;
+            $mime = null;
+
+            if ($hasFile) {
+                $validator = Validator::make($request->all(), [
+                    'image' => 'required|file|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+                ]);
+                if ($validator->fails()) {
+                    return response()->json(['errors' => $validator->errors()], 422);
+                }
+                $file = $request->file('image');
+                $binary = file_get_contents($file->getRealPath());
+                $mime = $file->getMimeType();
             } else {
-                // Try to infer mime by padding and characters – default to image/png
-                $mime = 'image/png';
+                // Handle base64 data with proper UTF-8 handling
+                $data = $base64;
+                if (preg_match('/^data:(image\/(?:png|jpeg|jpg|gif|webp));base64,(.*)$/i', $data, $matches)) {
+                    $mime = strtolower($matches[1]);
+                    $data = $matches[2];
+                } else {
+                    $mime = 'image/png';
+                }
+                
+                // Clean the base64 string to remove any invalid characters
+                $data = preg_replace('/[^A-Za-z0-9+\/=]/', '', $data);
+                
+                // Validate approximate size (<=5MB)
+                $decoded = base64_decode($data, true);
+                if ($decoded === false) {
+                    return response()->json(['errors' => ['base64Image' => ['Invalid base64 encoding']]], 422);
+                }
+                if (strlen($decoded) > 5 * 1024 * 1024) { // 5MB
+                    return response()->json(['errors' => ['base64Image' => ['Image exceeds 5MB']]], 422);
+                }
+                
+                $binary = $decoded;
+                
+                // Quick mime type detection
+                $sig = substr($binary, 0, 4);
+                if ($sig === "\x89PNG") $mime = 'image/png';
+                elseif (substr($binary, 0, 3) === "GIF") $mime = 'image/gif';
+                elseif (substr($binary, 0, 2) === "\xFF\xD8") $mime = 'image/jpeg';
+                elseif (strncmp($binary, 'RIFF', 4)===0 && substr($binary,8,4)==='WEBP') $mime = 'image/webp';
             }
-            // Validate approximate size (<=5MB)
-            $decoded = base64_decode($data, true);
-            if ($decoded === false) {
-                return response()->json(['errors' => ['base64Image' => ['Invalid base64 encoding']]], 422);
+
+            // Ensure we have valid binary data
+            if (!$binary || strlen($binary) === 0) {
+                return response()->json(['errors' => ['image' => ['Invalid image data']]], 422);
             }
-            if (strlen($decoded) > 5 * 1024 * 1024) { // 5MB
-                return response()->json(['errors' => ['base64Image' => ['Image exceeds 5MB']]], 422);
-            }
-            // Basic signature sniff (optional)
-            $binary = $decoded;
-            // Quick mime sniff adjustments
-            $sig = substr($binary, 0, 4);
-            if ($sig === "\x89PNG") $mime = 'image/png';
-            elseif (substr($binary, 0, 3) === "GIF") $mime = 'image/gif';
-            elseif (substr($binary, 0, 2) === "\xFF\xD8") $mime = 'image/jpeg';
-            elseif (strncmp($binary, 'RIFF', 4)===0 && substr($binary,8,4)==='WEBP') $mime = 'image/webp';
+
+            $user->profile_image = $binary;
+            $user->profile_image_mime = $mime;
+            $user->save();
+
+            // Create a clean response without any binary data
+            $responseData = [
+                'message' => 'Profile image updated',
+                'profile_image_url' => route('profile.image', ['id' => $user->id, 'type' => strtolower($user->role)]),
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'status' => $user->status,
+                ]
+            ];
+
+            return response()->json($responseData, 200);
+            
+        } catch (\Exception $e) {
+            \Log::error('Profile image upload error: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Failed to upload image',
+                'errors' => ['image' => ['Upload failed. Please try again.']]
+            ], 500);
         }
-
-        $user->profile_image = $binary;
-        $user->profile_image_mime = $mime;
-        $user->save();
-
-        return response()->json([
-            'message' => 'Profile image updated',
-            'profile_image_url' => route('profile.image', ['id' => $user->id, 'type' => strtolower($user->role)])
-        ], 200);
     }
 
     /**
@@ -413,24 +451,275 @@ class AuthController extends Controller
      */
     public function getProfileImage($type, $id)
     {
-        switch (strtolower($type)) {
-            case 'admin':
-                $model = Admin::find($id); break;
-            case 'buyer':
-                $model = Buyer::find($id); break;
-            case 'seller':
-                $model = Seller::find($id); break;
-            default:
-                return response()->json(['error' => 'Invalid user type'], 404);
-        }
+        try {
+            switch (strtolower($type)) {
+                case 'admin':
+                    $model = Admin::find($id); break;
+                case 'buyer':
+                    $model = Buyer::find($id); break;
+                case 'seller':
+                    $model = Seller::find($id); break;
+                default:
+                    return response()->json(['error' => 'Invalid user type'], 404);
+            }
 
-        if (!$model || !$model->profile_image) {
-            return response()->json(['error' => 'Image not found'], 404);
-        }
+            if (!$model || !$model->profile_image) {
+                return response()->json(['error' => 'Image not found'], 404);
+            }
 
-        return response($model->profile_image, 200, [
-            'Content-Type' => $model->profile_image_mime ?? 'image/jpeg',
-            'Cache-Control' => 'private, max-age=3600',
+            // Ensure we have valid binary data
+            if (!is_string($model->profile_image) || strlen($model->profile_image) === 0) {
+                return response()->json(['error' => 'Invalid image data'], 404);
+            }
+
+            return response($model->profile_image, 200, [
+                'Content-Type' => $model->profile_image_mime ?? 'image/jpeg',
+                'Cache-Control' => 'private, max-age=3600',
+                'Content-Length' => strlen($model->profile_image),
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Profile image serve error: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to serve image'], 500);
+        }
+    }
+
+    /**
+     * Update profile picture via base64 (frontend compatibility method)
+     */
+    public function updateProfilePicture(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'profile_picture' => 'required|string',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $user = $request->user();
+        $base64Data = $request->input('profile_picture');
+        
+        // Parse data URI
+        if (preg_match('/^data:(image\/(?:png|jpeg|jpg|gif|webp));base64,(.*)$/i', $base64Data, $matches)) {
+            $mime = strtolower($matches[1]);
+            $data = $matches[2];
+        } else {
+            return response()->json(['error' => 'Invalid image format'], 422);
+        }
+        
+        // Decode and validate
+        $decoded = base64_decode($data, true);
+        if ($decoded === false) {
+            return response()->json(['error' => 'Invalid base64 encoding'], 422);
+        }
+        
+        if (strlen($decoded) > 5 * 1024 * 1024) { // 5MB
+            return response()->json(['error' => 'Image exceeds 5MB limit'], 422);
+        }
+        
+        // Store in database
+        $user->profile_image = $decoded;
+        $user->profile_image_mime = $mime;
+        $user->save();
+        
+        // Return user data with profile_picture field for frontend compatibility
+        $userData = $user->toArray();
+        if ($user->profile_image) {
+            $userData['profile_picture'] = route('profile.image', ['id' => $user->id, 'type' => strtolower($user->role)]);
+        }
+        
+        return response()->json([
+            'message' => 'Profile picture updated successfully',
+            'user' => $userData
+        ], 200);
+    }
+
+    /**
+     * Remove profile picture (frontend compatibility method)
+     */
+    public function removeProfilePicture(Request $request)
+    {
+        $user = $request->user();
+        
+        $user->profile_image = null;
+        $user->profile_image_mime = null;
+        $user->save();
+        
+        // Return user data without profile_picture field
+        $userData = $user->toArray();
+        $userData['profile_picture'] = null;
+        
+        return response()->json([
+            'message' => 'Profile picture removed successfully',
+            'user' => $userData
+        ], 200);
+    }
+
+    /**
+     * Get admin's access codes information
+     */
+    public function getAdminAccessCode(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->role !== 'Admin') {
+            return response()->json(['error' => 'Only administrators can view access codes'], 403);
+        }
+
+        // Get all access codes generated by this admin
+        $generatedCodes = AdminAccessCode::where('created_by_admin_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Check if admin needs new codes (less than 1 unused code)
+        $unusedCount = $generatedCodes->where('is_used', false)->count();
+        
+        if ($unusedCount < 1) {
+            // Generate 5 new codes
+            $this->generateCodesForAdmin($user->id);
+            // Refresh the list
+            $generatedCodes = AdminAccessCode::where('created_by_admin_id', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
+
+        return response()->json([
+            'access_codes' => $generatedCodes,
+            'unused_count' => $generatedCodes->where('is_used', false)->count(),
+            'total_count' => $generatedCodes->count(),
+            'referred_count' => $this->getReferredUsersCountForAdmin($user->id)
+        ], 200);
+    }
+
+    /**
+     * Generate 5 new access codes for an admin
+     */
+    private function generateCodesForAdmin($adminId)
+    {
+        for ($i = 0; $i < 5; $i++) {
+            do {
+                $code = $this->generate6DigitCode();
+            } while (AdminAccessCode::where('access_code', $code)->exists());
+
+            AdminAccessCode::create([
+                'access_code' => $code,
+                'created_by_admin_id' => $adminId,
+                'description' => 'Auto-generated referral code',
+                'is_used' => false,
+            ]);
+        }
+    }
+
+    /**
+     * Generate a random 6-digit code
+     */
+    private function generate6DigitCode()
+    {
+        return str_pad(random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Get users who signed up using codes generated by this admin
+     */
+    public function getReferredUsers(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->role !== 'Admin') {
+            return response()->json(['error' => 'Only administrators can view referred users'], 403);
+        }
+
+        $referredUsers = collect();
+
+        // Get all access codes generated by this admin
+        $adminCodes = AdminAccessCode::where('created_by_admin_id', $user->id)
+            ->pluck('access_code')
+            ->toArray();
+
+        if (empty($adminCodes)) {
+            return response()->json([
+                'users' => [],
+                'total_count' => 0
+            ], 200);
+        }
+
+        // Search for users who used any of these codes
+        // Search in buyers table
+        $buyers = \App\Models\Buyer::whereIn('admin_access_code', $adminCodes)
+            ->select('id', 'name', 'email', 'created_at', 'admin_access_code')
+            ->get()
+            ->map(function ($buyer) {
+                $buyer->user_type = 'buyer';
+                return $buyer;
+            });
+
+        // Search in sellers table  
+        $sellers = \App\Models\Seller::whereIn('admin_access_code', $adminCodes)
+            ->select('id', 'name', 'email', 'created_at', 'admin_access_code')
+            ->get()
+            ->map(function ($seller) {
+                $seller->user_type = 'seller';
+                return $seller;
+            });
+
+        // Search in admins table (excluding the current admin)
+        $admins = \App\Models\Admin::whereIn('admin_access_code', $adminCodes)
+            ->where('id', '!=', $user->id)
+            ->select('id', 'name', 'email', 'created_at', 'admin_access_code')
+            ->get()
+            ->map(function ($admin) {
+                $admin->user_type = 'admin';
+                return $admin;
+            });
+
+        // Merge all collections and sort by created_at
+        $referredUsers = $buyers->merge($sellers)->merge($admins)->sortByDesc('created_at')->values();
+
+        return response()->json([
+            'users' => $referredUsers,
+            'total_count' => $referredUsers->count()
+        ], 200);
+    }
+
+    /**
+     * Helper method to count referred users for a specific admin
+     */
+    private function getReferredUsersCountForAdmin($adminId)
+    {
+        // Get all access codes generated by this admin
+        $adminCodes = AdminAccessCode::where('created_by_admin_id', $adminId)
+            ->pluck('access_code')
+            ->toArray();
+
+        if (empty($adminCodes)) {
+            return 0;
+        }
+
+        $buyerCount = \App\Models\Buyer::whereIn('admin_access_code', $adminCodes)->count();
+        $sellerCount = \App\Models\Seller::whereIn('admin_access_code', $adminCodes)->count();
+        $adminCount = \App\Models\Admin::whereIn('admin_access_code', $adminCodes)
+            ->where('id', '!=', $adminId)
+            ->count();
+        
+        return $buyerCount + $sellerCount + $adminCount;
+    }
+
+    /**
+     * Generate new access codes for admin (manual trigger)
+     */
+    public function generateNewCodes(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->role !== 'Admin') {
+            return response()->json(['error' => 'Only administrators can generate codes'], 403);
+        }
+
+        $this->generateCodesForAdmin($user->id);
+
+        return response()->json([
+            'message' => '5 new access codes generated successfully'
+        ], 200);
     }
 }
+

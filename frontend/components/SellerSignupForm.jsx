@@ -11,6 +11,7 @@ export default function SellerSignupForm({ onBack }) {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
+  const [country, setCountry] = useState('')
   const [shopUsername, setShopUsername] = useState('')
   const [dateOfBirth, setDateOfBirth] = useState('')
   const [nationalIdFile, setNationalIdFile] = useState(null)
@@ -63,18 +64,20 @@ export default function SellerSignupForm({ onBack }) {
     setStatus(null)
     try {
       const formData = new FormData()
-      formData.append('name', `${firstName} ${lastName}`)
-      formData.append('first_name', firstName)
-      formData.append('last_name', lastName)
-      formData.append('email', email)
-      formData.append('password', password)
-      formData.append('phone_number', phoneNumber)
-      formData.append('shop_username', shopUsername)
-      formData.append('date_of_birth', dateOfBirth)
-      formData.append('business_address', businessAddress)
-      formData.append('national_id', nationalIdFile)
-      formData.append('proof_of_ownership', proofOfOwnershipFile)
-      formData.append('role', 'Seller')
+  formData.append('name', `${firstName} ${lastName}`)
+  formData.append('first_name', firstName)
+  formData.append('last_name', lastName)
+  formData.append('email', email)
+  formData.append('password', password)
+  formData.append('password_confirmation', confirmPassword)
+  formData.append('phone_number', phoneNumber)
+  formData.append('country', country)
+  formData.append('shop_username', shopUsername)
+  formData.append('date_of_birth', dateOfBirth)
+  formData.append('business_address', businessAddress)
+  formData.append('national_id', nationalIdFile)
+  formData.append('proof_of_ownership', proofOfOwnershipFile)
+  formData.append('role', 'Seller')
 
       const { data } = await axios.post(`${API_BASE}/api/signup`, formData, {
         headers: {
@@ -115,6 +118,7 @@ export default function SellerSignupForm({ onBack }) {
                 setPassword('')
                 setConfirmPassword('')
                 setPhoneNumber('')
+                setCountry('')
                 setShopUsername('')
                 setDateOfBirth('')
                 setNationalIdFile(null)
@@ -186,6 +190,15 @@ export default function SellerSignupForm({ onBack }) {
               required 
               disabled={isLoading}
               placeholder="Enter your phone number"
+            />
+            
+            <label>Country</label>
+            <input 
+              value={country} 
+              onChange={e=>setCountry(e.target.value)} 
+              required 
+              disabled={isLoading}
+              placeholder="Enter your country"
             />
             
             <label>Shop Username / Seller Name</label>

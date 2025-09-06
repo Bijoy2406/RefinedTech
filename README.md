@@ -53,7 +53,12 @@ Click Here: [RefinedTech](https://www.figma.com/design/Vamwe21bV0AiM5MHPnyMqK/Re
 ## Wakatime Badges
  **Salman Faresi**
 
+ [![wakatime](https://wakatime.com/badge/user/744e9c10-3c2b-4064-b477-29247d78e375/project/b5d19699-d3de-4342-882d-aa0ad9826a1d.svg)](https://wakatime.com/badge/user/744e9c10-3c2b-4064-b477-29247d78e375/project/b5d19699-d3de-4342-882d-aa0ad9826a1d)
+
  **Maisha Momtaz Meem**
+ 
+ [![wakatime](https://wakatime.com/badge/user/616ef38b-bd7d-4b21-9300-1b605348a4a2/project/5ca7d186-ba62-4e6a-bc8f-cda0e34d7e23.svg)](https://wakatime.com/badge/user/616ef38b-bd7d-4b21-9300-1b605348a4a2/project/5ca7d186-ba62-4e6a-bc8f-cda0e34d7e23)
+ 
 
  **Tajuddin Ahmed**
 
@@ -69,13 +74,15 @@ Click Here: [RefinedTech](https://www.figma.com/design/Vamwe21bV0AiM5MHPnyMqK/Re
 - **Escrow payment system** for secure transactions
 - **Condition verification** (Like-new/Good/Fair with photos)
 - **Bidding & Fixed-price listings**
+- **Advanced Admin Panel** with hierarchical permissions
+- **Real-time approval system** for user requests
 
 ---
 
 ## Technology Stack
 | Layer        | Technology                 |
 |--------------|----------------------------|
-| Frontend     | JavaScript, CSS |
+| Frontend     | React 18, JavaScript, CSS |
 | Backend      | Laravel (PHP)              |
 | Database     | MySQL                      |
 
@@ -85,7 +92,8 @@ Click Here: [RefinedTech](https://www.figma.com/design/Vamwe21bV0AiM5MHPnyMqK/Re
 
 ### 1. **Login / Signup**
 - OAuth (Google/Github) + Email verification
-- Separate flows for buyers/sellers
+- Separate flows for buyers/sellers/admins
+- Role-based redirects after login
 
 ### 2. **Buyer Dashboard**
 - Saved searches, watchlisted items
@@ -96,6 +104,21 @@ Click Here: [RefinedTech](https://www.figma.com/design/Vamwe21bV0AiM5MHPnyMqK/Re
 - Inventory management
 - Sales analytics
 - Bidding management
+
+### 4. **Admin Homepage** 
+- **📊 Overview Dashboard**: Real-time statistics and quick actions
+- **🏪 Pending Sellers**: Review and approve seller applications
+- **🛒 Pending Buyers**: Review and approve buyer registrations
+- **👤 Super Admin Features**: 
+  - Approve pending admin requests (Super Admin only)
+  - Generate admin access codes
+  - Advanced user management
+
+### 5. **Admin Management System**
+- **Regular Admins**: Can approve sellers and buyers
+- **Super Admins**: Additional permissions for admin approval
+- **Hierarchical Access Control**: First admin or designated super admins
+- **Admin Access Codes**: Controlled admin registration system
 
 ### 4. **Product Listing Page**
 - Filter by: Price, Condition, Location

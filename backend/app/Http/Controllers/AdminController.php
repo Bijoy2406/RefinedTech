@@ -102,6 +102,75 @@ class AdminController extends Controller
     }
 
     /**
+     * Get pending sellers only (for regular admins)
+     */
+    public function getPendingSellers()
+    {
+        $sellers = Seller::where('status', 'pending')
+                         ->get(['id', 'name', 'email', 'status', 'created_at', 'updated_at'])
+                         ->map(function($seller) {
+                             $seller->role = 'Seller';
+                             $seller->table_type = 'sellers';
+                             return $seller;
+                         });
+        
+        return response()->json([
+            'pending_sellers' => $sellers,
+            'count' => $sellers->count()
+        ]);
+    }
+
+    /**
+     * Get pending admins only (for super admins only)
+     */
+    public function getPendingAdmins()
+    {
+        // Check if current user is super admin
+        $currentUser = auth()->user();
+        $isSuperAdmin = $currentUser->id === 1 || 
+                       $currentUser->admin_username === 'superadmin' ||
+                       $currentUser->email === 'admin@refinedtech.com';
+
+        if (!$isSuperAdmin) {
+            return response()->json(['error' => 'Super Admin access required'], 403);
+        }
+
+        $admins = Admin::where('status', 'pending')
+                      ->get(['id', 'name', 'email', 'status', 'created_at', 'updated_at'])
+                      ->map(function($admin) {
+                          $admin->role = 'Admin';
+                          $admin->table_type = 'admins';
+                          return $admin;
+                      });
+        
+        return response()->json([
+            'pending_admins' => $admins,
+            'count' => $admins->count()
+        ]);
+    }
+
+    /**
+     * Check if current user is super admin
+     */
+    public function isSuperAdmin()
+    {
+        $currentUser = auth()->user();
+        $isSuperAdmin = $currentUser->id === 1 || 
+                       $currentUser->admin_username === 'superadmin' ||
+                       $currentUser->email === 'admin@refinedtech.com';
+
+        return response()->json([
+            'is_super_admin' => $isSuperAdmin,
+            'user' => [
+                'id' => $currentUser->id,
+                'name' => $currentUser->name,
+                'admin_username' => $currentUser->admin_username,
+                'email' => $currentUser->email
+            ]
+        ]);
+    }
+
+    /**
      * Approve a user by role and ID
      */
     public function approveUser(Request $request, $role, $id)

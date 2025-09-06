@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import '../css/Profile.css';
+import { useNavigate } from 'react-router-dom';
+import '../css/ProfilePage.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
 
-export default function Profile({ onClose }) {
+export default function Profile() {
+    const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [showPasswordForm, setShowPasswordForm] = useState(false);
     const [uploadingImage, setUploadingImage] = useState(false);
@@ -19,27 +21,25 @@ export default function Profile({ onClose }) {
     const [passwordError, setPasswordError] = useState('');
     const [passwordSuccess, setPasswordSuccess] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [adminData, setAdminData] = useState(null);
+    const [showAccessCodes, setShowAccessCodes] = useState(false);
+    const [copySuccess, setCopySuccess] = useState(false);
+    const [codeNotice, setCodeNotice] = useState('');
 
     useEffect(() => {
         fetchUserInfo();
-        
-        // Add escape key listener
-        const handleEscape = (e) => {
-            if (e.key === 'Escape') {
-                onClose();
-            }
-        };
-        
-        document.addEventListener('keydown', handleEscape);
-        
-        // Prevent body scroll when modal is open
-        document.body.style.overflow = 'hidden';
-        
-        return () => {
-            document.removeEventListener('keydown', handleEscape);
-            document.body.style.overflow = 'unset';
-        };
-    }, [onClose]);
+    }, []);
+
+    // Poll for updated admin access codes while the list is open so used codes disappear automatically
+    useEffect(() => {
+        if (showAccessCodes && user?.role === 'Admin') {
+            const token = localStorage.getItem('rt_token');
+            const interval = setInterval(() => {
+                if (token) fetchAdminData(token);
+            }, 8000); // every 8s (lightweight)
+            return () => clearInterval(interval);
+        }
+    }, [showAccessCodes, user]);
 
     const fetchUserInfo = async () => {
         try {
@@ -47,7 +47,7 @@ export default function Profile({ onClose }) {
             
             if (!token) {
                 console.error('No token found');
-                onClose(); // Close modal and redirect to login
+                navigate('/login');
                 return;
             }
 
@@ -63,19 +63,74 @@ export default function Profile({ onClose }) {
                 // Add cache-busting param so latest uploaded image shows instead of cached first version
                 setImagePreview(enriched.profile_image_url + '?t=' + Date.now());
             }
+
+            // Fetch admin data if user is admin
+            if (enriched.role === 'Admin') {
+                await fetchAdminData(token);
+            }
         } catch (error) {
             console.error('Error fetching user info:', error);
             
-            // If unauthorized, clear token and close modal
+            // If unauthorized, clear token and redirect
             if (error.response?.status === 401) {
                 console.log('Profile: 401 Unauthorized - clearing tokens');
                 localStorage.removeItem('rt_token');
                 localStorage.removeItem('rt_user');
-                onClose(); // This will close the modal and might trigger a logout
+                navigate('/login');
                 
                 // Trigger a custom event to notify App component about authentication failure
                 window.dispatchEvent(new CustomEvent('auth-failed'));
             }
+        }
+    };
+
+    const fetchAdminData = async (token) => {
+        try {
+            const response = await axios.get(`${API_BASE}/api/admin/access-code`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setAdminData(response.data);
+        } catch (error) {
+            console.error('Error fetching admin data:', error);
+        }
+    };
+
+    const copyAccessCode = async (code) => {
+        if (code) {
+            try {
+                await navigator.clipboard.writeText(code);
+                setCopySuccess(code);
+                setTimeout(() => setCopySuccess(false), 2000);
+            } catch (err) {
+                console.error('Failed to copy access code');
+            }
+        }
+    };
+
+    const generateNewCodes = async () => {
+        try {
+            // Defensive guard: prevent generation if any unused codes remain
+            if (adminData) {
+                const unused = (adminData.access_codes || []).filter(c => !c.is_used);
+                if (unused.length > 0) {
+                    setCodeNotice(`You still have ${unused.length} unused code${unused.length === 1 ? '' : 's'}. Use them before generating more.`);
+                    // auto hide after 4s
+                    setTimeout(() => setCodeNotice(''), 4000);
+                    return;
+                }
+            }
+            const token = localStorage.getItem('rt_token');
+            await axios.post(`${API_BASE}/api/admin/generate-codes`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            // Refresh admin data
+            await fetchAdminData(token);
+            setCodeNotice('Generated 5 new referral codes.');
+            setTimeout(() => setCodeNotice(''), 3500);
+        } catch (error) {
+            console.error('Error generating new codes:', error);
+            setCodeNotice('Failed to generate codes.');
+            setTimeout(() => setCodeNotice(''), 4000);
         }
     };
 
@@ -104,38 +159,38 @@ export default function Profile({ onClose }) {
     const uploadImage = async (fileParam) => {
         try {
             setUploadingImage(true);
+            setImageError('');
             const token = localStorage.getItem('rt_token');
-            let payload;
-            let headers = { Authorization: `Bearer ${token}` };
-            // If we have a File object but want base64, convert
+            
+            // Always use FormData for file uploads to avoid UTF-8 encoding issues
             if (fileParam instanceof File) {
-                const base64Data = await new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result);
-                    reader.onerror = reject;
-                    reader.readAsDataURL(fileParam);
-                });
-                payload = { base64Image: base64Data };
-            } else if (typeof fileParam === 'string' && fileParam.startsWith('data:image/')) {
-                payload = { base64Image: fileParam };
-            } else {
-                // fallback: attempt multipart
                 const formData = new FormData();
                 formData.append('image', fileParam);
-                payload = formData;
-                headers['Content-Type'] = 'multipart/form-data';
+                
+                const { data } = await axios.post(`${API_BASE}/api/profile/image`, formData, {
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+                
+                setUser(u => ({ ...u, profile_image_url: data.profile_image_url }));
+                if (data.profile_image_url) {
+                    const bustUrl = data.profile_image_url + '?t=' + Date.now();
+                    setImagePreview(bustUrl);
+                }
+                setSelectedFile(null);
+                
+                // Notify app to refresh navbar avatar immediately
+                window.dispatchEvent(new CustomEvent('profile-image-updated', { 
+                    detail: { url: data.profile_image_url + '?t=' + Date.now() } 
+                }));
+            } else {
+                throw new Error('Invalid file parameter');
             }
-            const { data } = await axios.post(`${API_BASE}/api/profile/image`, payload, { headers });
-            setUser(u => ({ ...u, profile_image_url: data.profile_image_url }));
-            if (data.profile_image_url) {
-                const bustUrl = data.profile_image_url + '?t=' + Date.now();
-                setImagePreview(bustUrl);
-            }
-        setSelectedFile(null);
-        // Notify app to refresh navbar avatar immediately
-        window.dispatchEvent(new CustomEvent('profile-image-updated', { detail: { url: data.profile_image_url + '?t=' + Date.now() } }));
         } catch (err) {
-            setImageError(err.response?.data?.errors?.image?.[0] || 'Upload failed');
+            console.error('Upload error:', err);
+            setImageError(err.response?.data?.errors?.image?.[0] || err.response?.data?.message || 'Upload failed');
         } finally {
             setUploadingImage(false);
         }
@@ -197,152 +252,173 @@ export default function Profile({ onClose }) {
 
     if (!user) {
         return (
-            <div className="profile-overlay" onClick={onClose}>
-                <div className="profile-modal" onClick={(e) => e.stopPropagation()}>
-                    <div className="profile-header">
-                        <h2>Profile</h2>
-                        <button className="close-btn" onClick={onClose}>&times;</button>
-                    </div>
-                    <div className="profile-loading">Loading...</div>
+            <div className="profile-container">
+                <div className="profile-header">
+                    <h1>Profile</h1>
                 </div>
+                <div className="profile-loading">Loading...</div>
             </div>
         );
     }
 
+    const joinedDate = new Date(user.created_at).toLocaleDateString();
+    const memberLabel = user.status === 'Active' ? 'Active User' : (user.status || 'User');
     return (
-        <div className="profile-overlay" onClick={onClose}>
-            <div className="profile-modal" onClick={(e) => e.stopPropagation()}>
-                <div className="profile-header">
-                    <h2>Profile</h2>
-                    <button className="close-btn" onClick={onClose}>&times;</button>
-                </div>
-                
-                <div className="profile-content">
-                    <div className="profile-avatar-section">
-                        <div className="avatar-wrapper">
-                            {imagePreview ? (
-                                <img src={imagePreview} alt="Profile" className="profile-avatar" />
-                            ) : (
-                                <div className="avatar-placeholder">{user.name?.[0] || '?'}</div>
-                            )}
-                            <label className="avatar-upload-btn">
-                                <input type="file" accept="image/*" onChange={handleImageSelect} hidden />
-                                {uploadingImage ? 'Uploading...' : 'Change'}
-                            </label>
-                        </div>
+        <div className="profile-container profile-page-root compact animated-entrance">
+            <div className="floating-particles">
+                <div className="particle"></div>
+                <div className="particle"></div>
+                <div className="particle"></div>
+            </div>
+            
+            <header className="profile-page-header slide-down">
+                <h1>Profile</h1>
+                <p className="subtitle">View all your profile details here.</p>
+            </header>
+
+            <div className="profile-grid">
+                {/* Left main card */}
+                <section className="profile-card slide-left">
+                    <div className="card-glow"></div>
+                    <div className="avatar-ring pulse-ring">
+                        {imagePreview ? (
+                            <img src={imagePreview} alt={user.name} className="avatar-img" />
+                        ) : (
+                            <div className="avatar-fallback">{user.name?.[0] || '?'}</div>
+                        )}
+                        <div className="avatar-status-dot"></div>
+                    </div>
+                    <h2 className="user-name gradient-text">{user.name}</h2>
+                    <div className="membership-label pulse-text">{memberLabel}</div>
+                    <div className="meta-line fade-in">Role: <span className="pill neutral glow-pill">{user.role}</span></div>
+                    <div className="meta-line fade-in">Status: <span className={`pill status-${(user.status||'active').toLowerCase()} glow-pill`}>{user.status || 'Active'}</span></div>
+
+                    <div className="avatar-actions">
+                        <label className="btn tiny outline file-btn hover-lift">
+                            <input type="file" hidden accept="image/*" onChange={handleImageSelect} />
+                            {uploadingImage ? 'Uploading…' : 'Change Image'}
+                        </label>
                         {selectedFile && !uploadingImage && (
-                            <button
-                                className="btn upload-avatar-btn"
-                                style={{ marginTop: '10px' }}
-                                onClick={() => uploadImage(selectedFile)}
-                            >
-                                Upload
-                            </button>
+                            <button className="btn tiny primary hover-lift" onClick={() => uploadImage(selectedFile)}>Upload</button>
                         )}
-                        {uploadingImage && (
-                            <div className="uploading-indicator" style={{marginTop:'10px', fontSize:'0.8rem', color:'var(--text-secondary)'}}>
-                                Uploading image...
-                            </div>
-                        )}
-                        {imageError && <div className="error-message" style={{marginTop:'8px'}}>{imageError}</div>}
-                        <p className="avatar-hint">JPG/PNG/GIF/WEBP up to 5MB.</p>
                     </div>
-                    <div className="profile-info">
-                        <div className="info-item">
-                            <label>Name:</label>
-                            <span>{user.name}</span>
-                        </div>
-                        <div className="info-item">
-                            <label>Email:</label>
-                            <span>{user.email}</span>
-                        </div>
-                        <div className="info-item">
-                            <label>Role:</label>
-                            <span className="role-badge">{user.role}</span>
-                        </div>
-                        <div className="info-item">
-                            <label>Status:</label>
-                            <span className={`status-badge ${user.status?.toLowerCase()}`}>
-                                {user.status || 'Active'}
-                            </span>
-                        </div>
-                        <div className="info-item">
-                            <label>Member Since:</label>
-                            <span>{new Date(user.created_at).toLocaleDateString()}</span>
-                        </div>
-                    </div>
+                    {imageError && <div className="inline-error shake">{imageError}</div>}
+                    <p className="hint small">JPG / PNG / WEBP up to 5MB</p>
 
-                    <div className="profile-actions">
-                        <button 
-                            className="btn change-password-btn"
-                            onClick={() => setShowPasswordForm(!showPasswordForm)}
-                        >
-                            {showPasswordForm ? 'Cancel' : 'Change Password'}
-                        </button>
-                    </div>
-
+                    <button
+                        className="btn block ghost toggle-password hover-lift"
+                        onClick={() => setShowPasswordForm(v => !v)}
+                    >
+                        {showPasswordForm ? 'Close Password Form' : 'Change Password'}
+                    </button>
                     {showPasswordForm && (
-                        <div className="password-form-section">
-                            <h3>Change Password</h3>
-                            <form onSubmit={handlePasswordSubmit}>
-                                <div className="form-group">
-                                    <label>Current Password:</label>
-                                    <input
-                                        type="password"
-                                        name="current_password"
-                                        value={passwordData.current_password}
-                                        onChange={handlePasswordChange}
-                                        required
-                                        disabled={isLoading}
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label>New Password:</label>
-                                    <input
-                                        type="password"
-                                        name="new_password"
-                                        value={passwordData.new_password}
-                                        onChange={handlePasswordChange}
-                                        required
-                                        minLength="6"
-                                        disabled={isLoading}
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label>Confirm New Password:</label>
-                                    <input
-                                        type="password"
-                                        name="confirm_password"
-                                        value={passwordData.confirm_password}
-                                        onChange={handlePasswordChange}
-                                        required
-                                        minLength="6"
-                                        disabled={isLoading}
-                                    />
-                                </div>
-
-                                {passwordError && (
-                                    <div className="error-message">{passwordError}</div>
-                                )}
-                                
-                                {passwordSuccess && (
-                                    <div className="success-message">{passwordSuccess}</div>
-                                )}
-
-                                <div className="form-actions">
-                                    <button 
-                                        type="submit" 
-                                        className="btn update-btn"
-                                        disabled={isLoading}
-                                    >
-                                        {isLoading ? 'Updating...' : 'Update Password'}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
+                        <form className="password-form sleek slide-in" onSubmit={handlePasswordSubmit}>
+                            <div className="field">
+                                <label>Current Password</label>
+                                <input type="password" name="current_password" value={passwordData.current_password} onChange={handlePasswordChange} required disabled={isLoading} />
+                            </div>
+                            <div className="field">
+                                <label>New Password</label>
+                                <input type="password" name="new_password" value={passwordData.new_password} onChange={handlePasswordChange} required minLength={6} disabled={isLoading} />
+                            </div>
+                            <div className="field">
+                                <label>Confirm Password</label>
+                                <input type="password" name="confirm_password" value={passwordData.confirm_password} onChange={handlePasswordChange} required minLength={6} disabled={isLoading} />
+                            </div>
+                            {passwordError && <div className="form-msg error shake">{passwordError}</div>}
+                            {passwordSuccess && <div className="form-msg success bounce">{passwordSuccess}</div>}
+                            <button type="submit" className="btn primary block hover-lift" disabled={isLoading}>{isLoading ? 'Updating…' : 'Update Password'}</button>
+                        </form>
                     )}
-                </div>
+                </section>
+
+                {/* Right details card */}
+                <section className="details-card slide-right">
+                    <div className="card-glow"></div>
+                    <div className="card-header">
+                        <h3 className="gradient-text">Profile Details</h3>
+                        <span className="online-indicator pulse" aria-label="online"></span>
+                    </div>
+                    <div className="details-grid">
+                        <div className="detail-row hover-glow">
+                            <span className="label">Full Name</span>
+                            <span className="value">{user.name}</span>
+                        </div>
+                        <div className="detail-row hover-glow">
+                            <span className="label">Email Address</span>
+                            <span className="value selectable">{user.email}</span>
+                        </div>
+                        <div className="detail-row hover-glow">
+                            <span className="label">Member Since</span>
+                            <span className="value">{joinedDate}</span>
+                        </div>
+                        
+                        {/* Admin-specific section */}
+                        {user.role === 'Admin' && adminData && (
+                            <>
+                                <div className="detail-row hover-glow admin-special">
+                                    <span className="label">Total Referrals</span>
+                                    <span className="value highlight-number">{adminData.referred_count || 0}</span>
+                                </div>
+                                <div className="detail-row hover-glow admin-special">
+                                    <span className="label">Access Codes</span>
+                                    <div className="access-codes-container">
+                                            <span className="value">{(adminData.access_codes || []).filter(c => !c.is_used).length} unused</span>
+                                        <button
+                                            className="btn tiny ghost hover-lift"
+                                            onClick={() => setShowAccessCodes(!showAccessCodes)}
+                                            title="View access codes"
+                                        >
+                                            {showAccessCodes ? '▼' : '▶'}
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                {showAccessCodes && adminData.access_codes && (() => {
+                                    const unusedList = (adminData.access_codes || []).filter(c => !c.is_used);
+                                    const canGenerate = unusedList.length === 0;
+                                    return (
+                                        <div className="access-codes-list slide-in">
+                                            <div className="list-header">
+                                                <span className="label">Your Referral Codes</span>
+                                                <button
+                                                    className={`btn tiny primary hover-lift ${!canGenerate ? 'disabled' : ''}`}
+                                                    onClick={generateNewCodes}
+                                                    disabled={!canGenerate}
+                                                    title={canGenerate ? 'Generate 5 new codes' : 'Use existing codes before generating more'}
+                                                >
+                                                    + Generate
+                                                </button>
+                                            </div>
+                                            {codeNotice && <div className="code-msg info fade-in" role="status">{codeNotice}</div>}
+                                            <div className="codes-grid">
+                                                {unusedList.slice(0,5).map((codeData, index) => (
+                                                    <div key={codeData.id} className="code-card" style={{animationDelay: `${index * 50}ms`}}>
+                                                        <div className="code-info" style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                                            <span className="code-value">{codeData.access_code}</span>
+                                                            <button
+                                                                className={`btn tiny outline hover-lift ${copySuccess === codeData.access_code ? 'success' : ''}`}
+                                                                onClick={() => copyAccessCode(codeData.access_code)}
+                                                            >
+                                                                {copySuccess === codeData.access_code ? '✓' : '📋'}
+                                                            </button>
+                                                        </div>
+                                                        <span className="code-status available">Available</span>
+                                                    </div>
+                                                ))}
+                                                {unusedList.length === 0 && (
+                                                    <div className="no-codes">No referral codes available.</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+                            </>
+                        )}
+                    </div>
+                </section>
             </div>
         </div>
     );
 }
+

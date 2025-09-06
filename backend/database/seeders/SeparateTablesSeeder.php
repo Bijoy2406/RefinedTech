@@ -13,29 +13,29 @@ class SeparateTablesSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create initial admin access codes
+        // Create initial admin access codes with 6-digit format
         AdminAccessCode::create([
-            'access_code' => 'ADM-SYSTEM01',
+            'access_code' => '123456',
             'description' => 'System generated admin access code #1',
             'created_by_admin_id' => null,
             'is_used' => false,
         ]);
 
         AdminAccessCode::create([
-            'access_code' => 'ADM-SYSTEM02',
+            'access_code' => '234567',
             'description' => 'System generated admin access code #2',
             'created_by_admin_id' => null,
             'is_used' => false,
         ]);
 
         AdminAccessCode::create([
-            'access_code' => 'ADM-SYSTEM03',
+            'access_code' => '345678',
             'description' => 'System generated admin access code #3',
             'created_by_admin_id' => null,
             'is_used' => false,
         ]);
 
-        $this->command->info('✅ Created 3 system admin access codes for separate tables structure.');
-        $this->command->info('Available codes: ADM-SYSTEM01, ADM-SYSTEM02, ADM-SYSTEM03');
+        $this->command->info('✅ Created 3 system admin access codes with 6-digit format.');
+        $this->command->info('Available codes: 123456, 234567, 345678');
     }
 }
