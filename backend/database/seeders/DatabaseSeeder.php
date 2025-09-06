@@ -13,11 +13,20 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Optional sample user
         // User::factory(10)->create();
+        if (!User::where('email', 'test@example.com')->exists()) {
+            User::factory()->create([
+                'name' => 'Test User',
+                'email' => 'test@example.com',
+            ]);
+        }
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        // Base data for consistent setups
+        $this->call([
+            SeparateTablesSeeder::class,
+            AdminAccessCodeSeeder::class,
+            ProductSeeder::class,
         ]);
     }
 }

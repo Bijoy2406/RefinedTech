@@ -3,19 +3,29 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
-  -webkit-backdrop-filter: blur(8px); /* Safari support */
-  backdrop-filter: blur(8px);
+  padding: var(--spacing-md) var(--spacing-xl);
+  background: var(--nav-bg);
+  backdrop-filter: var(--nav-backdrop);
+  -webkit-backdrop-filter: var(--nav-backdrop);
   position: sticky;
   top: 0;
-  border-bottom: 1px solid var(--card-border);
+  border-bottom: 1px solid var(--nav-border);
+  z-index: var(--z-sticky);
+  transition: all var(--transition-normal);
 }
 
 .brand {
   font-weight: 800;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xl);
   display: flex;
   align-items: center;
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: color var(--transition-normal);
+}
+
+.brand:hover {
+  color: var(--color-primary);
 }
 
 .brand-logo {
@@ -23,35 +33,58 @@
   width: auto;
   max-width: 200px;
   object-fit: contain;
+  transition: filter var(--transition-normal);
+}
+
+.dark-mode .brand-logo {
+  filter: brightness(1.2) contrast(1.1);
 }
 
 .links {
   display: flex;
-  gap: .5rem;
+  gap: var(--spacing-sm);
   align-items: center;
 }
 
 .profile-btn {
-    background-color: var(--secondary-btn-bg);
-    color: var(--secondary-btn-text);
+    background-color: var(--btn-secondary-bg);
+    color: var(--btn-secondary-text);
     border: 1px solid var(--card-border);
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-    transition: all 0.3s ease;
+    gap: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    transition: all var(--transition-normal);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+}
+
+.profile-btn:hover {
+    background-color: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
+    border-color: transparent;
+    transform: translateY(-2px);
+    box-shadow: var(--card-shadow-hover);
 }
 
 .avatar-btn {
   padding: 0;
-  width: 40px; /* slight increase for clarity */
-  height: 40px; /* slight increase for clarity */
-  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
   overflow: hidden;
   position: relative;
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.05);
+  box-shadow: var(--card-shadow);
+  transition: all var(--transition-normal);
+}
+
+.avatar-btn:hover {
+  background: var(--btn-primary-bg);
+  transform: translateY(-2px);
+  box-shadow: var(--card-shadow-hover);
 }
 
 /* Plain avatar button (no padding, border, background) */
@@ -62,15 +95,21 @@
   background: none;
   width: 40px;
   height: 40px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   cursor: pointer;
   display: inline-flex;
   overflow: hidden;
+  transition: all var(--transition-fast);
 }
 
 .avatar-plain:focus { 
-  outline: 2px solid var(--primary-btn-bg); 
+  outline: 2px solid var(--color-primary); 
   outline-offset: 2px; 
+}
+
+.avatar-plain:hover { 
+  filter: brightness(1.05); 
+  transform: scale(1.05);
 }
 
 .avatar-plain:hover { 

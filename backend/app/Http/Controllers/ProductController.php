@@ -380,7 +380,8 @@ class ProductController extends Controller
     public function getAllProducts(Request $request): JsonResponse
     {
         try {
-            $query = Product::where('status', 'active')
+            $query = Product::with('seller')
+                ->where('status', 'active')
                 ->where('quantity_available', '>', 0)
                 ->orderBy('created_at', 'desc');
 
@@ -419,9 +420,68 @@ class ProductController extends Controller
             $perPage = $request->get('per_page', 20);
             $products = $query->paginate($perPage);
 
+            // Normalize items for frontend consumption (decode images, include minimal seller info)
+            $items = collect($products->items())->map(function ($product) {
+                return [
+                    'id' => $product->id,
+                    'title' => $product->title,
+                    'description' => $product->description,
+                    'category' => $product->category,
+                    'subcategory' => $product->subcategory,
+                    'brand' => $product->brand,
+                    'model' => $product->model,
+                    'condition_grade' => $product->condition_grade,
+                    'condition_description' => $product->condition_description,
+                    'price' => $product->price,
+                    'original_price' => $product->original_price,
+                    'discount_percentage' => $product->discount_percentage,
+                    'quantity_available' => $product->quantity_available,
+                    'warranty_period' => $product->warranty_period,
+                    'return_policy' => $product->return_policy,
+                    'shipping_weight' => $product->shipping_weight,
+                    'dimensions' => $product->dimensions,
+                    'color' => $product->color,
+                    'storage_capacity' => $product->storage_capacity,
+                    'ram_memory' => $product->ram_memory,
+                    'processor' => $product->processor,
+                    'operating_system' => $product->operating_system,
+                    'battery_health' => $product->battery_health,
+                    'screen_size' => $product->screen_size,
+                    'connectivity' => $product->connectivity,
+                    'included_accessories' => $product->included_accessories,
+                    'defects_issues' => $product->defects_issues,
+                    'purchase_date' => $product->purchase_date,
+                    'usage_duration' => $product->usage_duration,
+                    'reason_for_selling' => $product->reason_for_selling,
+                    'tags' => $product->tags,
+                    'is_featured' => $product->is_featured,
+                    'is_urgent_sale' => $product->is_urgent_sale,
+                    'negotiable' => $product->negotiable,
+                    'minimum_price' => $product->minimum_price,
+                    'location_city' => $product->location_city,
+                    'location_state' => $product->location_state,
+                    'shipping_options' => $product->shipping_options,
+                    'status' => $product->status,
+                    'views_count' => $product->views_count,
+                    'favorites_count' => $product->favorites_count,
+                    'created_at' => $product->created_at,
+                    'updated_at' => $product->updated_at,
+                    'images' => $product->images
+                        ? (is_array($product->images)
+                            ? $product->images
+                            : ((json_decode($product->images, true)) ?: []))
+                        : [],
+                    'seller' => $product->seller ? [
+                        'id' => $product->seller->id,
+                        'shop_username' => $product->seller->shop_username,
+                        'name' => $product->seller->name,
+                    ] : null,
+                ];
+            });
+
             return response()->json([
                 'success' => true,
-                'products' => $products->items(),
+                'products' => $items,
                 'pagination' => [
                     'current_page' => $products->currentPage(),
                     'last_page' => $products->lastPage(),

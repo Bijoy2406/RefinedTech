@@ -5,7 +5,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: var(--overlay-bg);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -22,13 +22,13 @@
     max-width: 500px;
     max-height: 90vh;
     overflow-y: auto;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 20px 40px var(--shadow-light);
     animation: slideIn 0.3s ease;
 }
 
 /* Dark mode specific shadow enhancement */
 .dark-mode .profile-modal {
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 20px 40px var(--shadow-dark);
 }
 
 .profile-header {
@@ -110,8 +110,8 @@
     bottom: 4px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(0,0,0,0.6);
-    color: #fff;
+    background: var(--overlay-medium);
+    color: white;
     font-size: 0.7rem;
     padding: 4px 8px;
     border-radius: 12px;
@@ -120,7 +120,7 @@
     transition: background .2s;
 }
 
-.avatar-upload-btn:hover { background: rgba(0,0,0,0.75); }
+.avatar-upload-btn:hover { background: var(--overlay-dark); }
 
 .avatar-hint {
     font-size: 0.7rem;
@@ -142,7 +142,7 @@
     transition: background .25s, transform .25s;
 }
 .upload-avatar-btn:hover {
-    background-color: #1d4ed8;
+    background-color: var(--color-primary);
     transform: translateY(-2px);
 }
 .upload-avatar-btn:active {
@@ -211,17 +211,17 @@
 
 .status-badge.active,
 .status-badge.approved {
-    background-color: #10b981 !important;
+    background-color: var(--color-success) !important;
     color: white !important;
 }
 
 .status-badge.pending {
-    background-color: #f59e0b !important;
+    background-color: var(--color-warning) !important;
     color: white !important;
 }
 
 .status-badge.rejected {
-    background-color: #ef4444 !important;
+    background-color: var(--color-error) !important;
     color: white !important;
 }
 
@@ -292,7 +292,7 @@
 .form-group input:focus {
     outline: none;
     border-color: var(--primary-btn-bg);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    box-shadow: 0 0 0 3px var(--color-primary-alpha);
 }
 
 .form-group input:disabled {
@@ -319,9 +319,9 @@
 }
 
 .update-btn:hover:not(:disabled) {
-    background-color: #1d4ed8;
+    background-color: var(--color-primary);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    box-shadow: 0 4px 12px var(--color-primary-shadow);
 }
 
 .update-btn:disabled {
@@ -332,9 +332,9 @@
 
 /* Message Styles */
 .error-message {
-    background-color: #fef2f2;
-    border: 1px solid #fecaca;
-    color: #dc2626;
+    background-color: var(--color-error-bg);
+    border: 1px solid var(--color-error-border);
+    color: var(--color-error);
     padding: 12px 16px;
     border-radius: 8px;
     margin-bottom: 16px;
@@ -343,9 +343,9 @@
 }
 
 .success-message {
-    background-color: #f0fdf4;
-    border: 1px solid #bbf7d0;
-    color: #16a34a;
+    background-color: var(--color-success-bg);
+    border: 1px solid var(--color-success-border);
+    color: var(--color-success);
     padding: 12px 16px;
     border-radius: 8px;
     margin-bottom: 16px;
@@ -355,15 +355,15 @@
 
 /* Dark mode message styles */
 .dark-mode .error-message {
-    background-color: #450a0a;
-    border-color: #991b1b;
-    color: #fca5a5;
+    background-color: var(--color-error-dark);
+    border-color: var(--color-error-border-dark);
+    color: var(--color-error-light);
 }
 
 .dark-mode .success-message {
-    background-color: #052e16;
-    border-color: #166534;
-    color: #86efac;
+    background-color: var(--color-success-dark-bg);
+    border-color: var(--color-success-dark-border);
+    color: var(--color-success-light);
 }
 
 /* Animations */

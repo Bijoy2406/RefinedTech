@@ -78,7 +78,7 @@
   border-radius: 20px;
   font-size: 0.9rem;
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+  box-shadow: 0 4px 12px var(--color-warning-alpha);
 }
 
 /* Error Banner */
@@ -109,7 +109,7 @@
 }
 
 .error-banner button:hover {
-  background: rgba(239, 68, 68, 0.1);
+  background: var(--color-error-alpha);
 }
 
 /* Tabs */

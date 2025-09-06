@@ -289,7 +289,6 @@ export default function Profile() {
                         <div className="avatar-status-dot"></div>
                     </div>
                     <h2 className="user-name gradient-text">{user.name}</h2>
-                    <div className="membership-label pulse-text">{memberLabel}</div>
                     <div className="meta-line fade-in">Role: <span className="pill neutral glow-pill">{user.role}</span></div>
                     <div className="meta-line fade-in">Status: <span className={`pill status-${(user.status||'active').toLowerCase()} glow-pill`}>{user.status || 'Active'}</span></div>
 

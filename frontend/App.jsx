@@ -1,11 +1,10 @@
 import { Routes, Route, Link, Navigate, useNavigate } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, createContext, useContext } from 'react'
 import axios from 'axios'
 import { ThemeProvider, useTheme } from './components/Theme.jsx'
 import Home from './components/Home.jsx'
 import Login from './components/Login.jsx'
 import Signup from './components/Signup.jsx'
-import Dashboard from './components/Dashboard.jsx'
 import AdminHomepage from './components/AdminHomepage.jsx'
 import SellerHomepage from './components/SellerHomepage.jsx'
 import BuyerHomepage from './components/BuyerHomepage.jsx'
@@ -14,6 +13,9 @@ import ProductDetails from './components/ProductDetails.jsx'
 import './css/App.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
+
+// Create User Context
+export const UserContext = createContext();
 
 export default function App() {
   const navigate = useNavigate()
@@ -123,59 +125,57 @@ export default function App() {
 
   return (
     <ThemeProvider>
-      <div className="app-shell">
-      <nav className="nav">
-        <Link className="brand" to="/">
-          <img 
-            src={theme === 'dark' ? '/Assets/logo_dark.png' : '/Assets/logo_light.png'} 
-            alt="RefinedTech" 
-            className="brand-logo" 
-          />
-        </Link>
-        <div className="links">
-          <button onClick={toggleTheme} className="btn theme-toggle">
-            {theme === 'light' ? '🌙' : '☀️'}
-          </button>
-          {user ? (
-            <>
-              {user.role === 'Admin' && <Link to="/admin" className="btn">Admin Home</Link>}
-              {user.role === 'Admin' && <Link to="/dashboard" className="btn">Admin Dashboard</Link>}
-              {user.role === 'Seller' && <Link to="/seller" className="btn">Seller Dashboard</Link>}
-              {user.role === 'Buyer' && <Link to="/buyer" className="btn">Browse Products</Link>}
-              <button onClick={openProfile} className="avatar-plain" title="Profile">
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt="avatar" className="nav-avatar" />
-                ) : (
-                  <span className="nav-avatar placeholder">{(user.name||'?').charAt(0).toUpperCase()}</span>
-                )}
-              </button>
-              <button onClick={handleLogout} className="btn outline">Logout</button>
-            </>
-          ) : (
-            <>
-              <Link to="/login" className="btn">Login</Link>
-              <Link to="/signup" className="btn outline">Sign Up</Link>
-            </>
-          )}
-        </div>
-      </nav>
-      <main className="content">
-        <Routes>
-          <Route path="/" element={<Home user={user} />} />
-          <Route path="/login" element={<Login onLogin={handleLogin} />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/signup/:role" element={<Signup />} />
-          <Route path="/admin" element={user?.role === 'Admin' ? <AdminHomepage /> : <Navigate to="/" />} />
-          <Route path="/dashboard" element={user?.role === 'Admin' ? <Dashboard /> : <Navigate to="/" />} />
-          <Route path="/seller" element={user?.role === 'Seller' ? <SellerHomepage /> : <Navigate to="/" />} />
-          <Route path="/buyer" element={user?.role === 'Buyer' ? <BuyerHomepage /> : <Navigate to="/" />} />
-          <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" />} />
-          <Route path="/product/:id" element={<ProductDetails />} />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </main>
-      <footer className="footer">© {new Date().getFullYear()} RefinedTech</footer>
-    </div>
+      <UserContext.Provider value={{ user, setUser, avatarUrl, setAvatarUrl }}>
+        <div className="app-shell">
+        <nav className="nav">
+          <Link className="brand" to="/">
+            <img 
+              src={theme === 'dark' ? '/Assets/logo_dark.png' : '/Assets/logo_light.png'} 
+              alt="RefinedTech" 
+              className="brand-logo" 
+            />
+          </Link>
+          <div className="links">
+            <button onClick={toggleTheme} className="btn theme-toggle">
+              {theme === 'light' ? '🌙' : '☀️'}
+            </button>
+            {user ? (
+              <>
+                {user.role === 'Seller' && <Link to="/seller" className="btn">Seller Dashboard</Link>}
+                <button onClick={openProfile} className="avatar-plain" title="Profile">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="avatar" className="nav-avatar" />
+                  ) : (
+                    <span className="nav-avatar placeholder">{(user.name||'?').charAt(0).toUpperCase()}</span>
+                  )}
+                </button>
+                <button onClick={handleLogout} className="btn outline">Logout</button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="btn">Login</Link>
+                <Link to="/signup" className="btn outline">Sign Up</Link>
+              </>
+            )}
+          </div>
+        </nav>
+        <main className="content">
+          <Routes>
+            <Route path="/" element={user?.role === 'Admin' ? <AdminHomepage /> : <Home user={user} />} />
+            <Route path="/login" element={<Login onLogin={handleLogin} />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/signup/:role" element={<Signup />} />
+            <Route path="/admin" element={user?.role === 'Admin' ? <AdminHomepage /> : <Navigate to="/" />} />
+            <Route path="/seller" element={user?.role === 'Seller' ? <SellerHomepage /> : <Navigate to="/" />} />
+            <Route path="/buyer" element={user?.role === 'Buyer' ? <BuyerHomepage /> : <Navigate to="/" />} />
+            <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" />} />
+            <Route path="/product/:id" element={<ProductDetails />} />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </main>
+        <footer className="footer">© {new Date().getFullYear()} RefinedTech</footer>
+      </div>
+      </UserContext.Provider>
     </ThemeProvider>
   )
 }

@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import '../css/AdminHomepage.css';
-
+import { UserContext } from '../App.jsx';
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
 
-export default function AdminHomepage() {
+export default function AdminHomepage({ user }) {
+    const { user: contextUser } = useContext(UserContext);
     const [currentUser, setCurrentUser] = useState(null);
     const [pendingSellers, setPendingSellers] = useState([]);
     const [pendingAdmins, setPendingAdmins] = useState([]);
@@ -24,10 +25,10 @@ export default function AdminHomepage() {
 
     // Check if current user is Super Admin (first admin or has special permission)
     const isSuperAdmin = () => {
-        return currentUser && (
-            currentUser.id === 1 || // First admin is super admin
-            currentUser.admin_username === 'superadmin' ||
-            currentUser.email === 'admin@refinedtech.com'
+        return contextUser && (
+            contextUser.id === 1 || // First admin is super admin
+            contextUser.admin_username === 'superadmin' ||
+            contextUser.email === 'admin@refinedtech.com'
         );
     };
 
@@ -245,11 +246,8 @@ export default function AdminHomepage() {
                     <h1>Admin Dashboard</h1>
                     <div className="admin-info">
                         <span className="welcome-text">
-                            Welcome back, {currentUser?.name || 'Admin'}
+                            Welcome back, {contextUser?.name}
                         </span>
-                        {isSuperAdmin() && (
-                            <span className="super-admin-badge">Super Admin</span>
-                        )}
                     </div>
                 </div>
             </div>
@@ -280,15 +278,7 @@ export default function AdminHomepage() {
                 >
                     � Pending Admins ({pendingAdmins.length})
                 </button>
-                {isSuperAdmin() && (
-                    <button 
-                        className={`tab ${activeTab === 'buyers' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('buyers')}
-                    >
-                        � Pending Buyers ({pendingBuyers.length})
-                    </button>
-                )}
-            </div>
+                </div>
 
             <div className="dashboard-content">
                 {activeTab === 'overview' && (
@@ -298,35 +288,6 @@ export default function AdminHomepage() {
                             {renderStatsCard('Pending Approval', stats.pendingCount, '⏳', 'orange')}
                             {renderStatsCard('Approved Users', stats.approvedCount, '✅', 'green')}
                             {renderStatsCard('Total Sellers', pendingSellers.length, '🏪', 'purple')}
-                        </div>
-
-                        <div className="quick-actions">
-                            <h3>Quick Actions</h3>
-                            <div className="action-cards">
-                                <div className="action-card" onClick={() => setActiveTab('sellers')}>
-                                    <div className="action-icon">🏪</div>
-                                    <div className="action-content">
-                                        <h4>Review Sellers</h4>
-                                        <p>{pendingSellers.length} pending approval</p>
-                                    </div>
-                                </div>
-                                <div className="action-card" onClick={() => setActiveTab('admins')}>
-                                    <div className="action-icon">�</div>
-                                    <div className="action-content">
-                                        <h4>Review Admins</h4>
-                                        <p>{pendingAdmins.length} pending approval</p>
-                                    </div>
-                                </div>
-                                {isSuperAdmin() && (
-                                    <div className="action-card" onClick={() => setActiveTab('buyers')}>
-                                        <div className="action-icon">�</div>
-                                        <div className="action-content">
-                                            <h4>Review Buyers</h4>
-                                            <p>{pendingBuyers.length} pending approval</p>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
                         </div>
                     </div>
                 )}
