@@ -11,6 +11,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   position: sticky;
   top: 0;

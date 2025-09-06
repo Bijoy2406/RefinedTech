@@ -6,6 +6,9 @@ import Home from './components/Home.jsx'
 import Login from './components/Login.jsx'
 import Signup from './components/Signup.jsx'
 import Dashboard from './components/Dashboard.jsx'
+import AdminHomepage from './components/AdminHomepage.jsx'
+import SellerHomepage from './components/SellerHomepage.jsx'
+import BuyerHomepage from './components/BuyerHomepage.jsx'
 import Profile from './components/Profile.jsx'
 import ProductDetails from './components/ProductDetails.jsx'
 import './css/App.css'
@@ -135,7 +138,10 @@ export default function App() {
           </button>
           {user ? (
             <>
-              {user.role === 'Admin' && <Link to="/dashboard" className="btn">Dashboard</Link>}
+              {user.role === 'Admin' && <Link to="/admin" className="btn">Admin Home</Link>}
+              {user.role === 'Admin' && <Link to="/dashboard" className="btn">Admin Dashboard</Link>}
+              {user.role === 'Seller' && <Link to="/seller" className="btn">Seller Dashboard</Link>}
+              {user.role === 'Buyer' && <Link to="/buyer" className="btn">Browse Products</Link>}
               <button onClick={openProfile} className="avatar-plain" title="Profile">
                 {avatarUrl ? (
                   <img src={avatarUrl} alt="avatar" className="nav-avatar" />
@@ -159,7 +165,10 @@ export default function App() {
           <Route path="/login" element={<Login onLogin={handleLogin} />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/signup/:role" element={<Signup />} />
+          <Route path="/admin" element={user?.role === 'Admin' ? <AdminHomepage /> : <Navigate to="/" />} />
           <Route path="/dashboard" element={user?.role === 'Admin' ? <Dashboard /> : <Navigate to="/" />} />
+          <Route path="/seller" element={user?.role === 'Seller' ? <SellerHomepage /> : <Navigate to="/" />} />
+          <Route path="/buyer" element={user?.role === 'Buyer' ? <BuyerHomepage /> : <Navigate to="/" />} />
           <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" />} />
           <Route path="/product/:id" element={<ProductDetails />} />
           <Route path="*" element={<Navigate to="/" />} />

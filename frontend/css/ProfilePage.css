@@ -170,9 +170,22 @@ h1, h2, h3 {
   border: 1.5px solid var(--card-border);
   border-radius: var(--radius);
   padding: 24px 24px;
-  overflow: clip;
+  overflow: hidden;
   box-shadow: var(--card-shadow);
-  backdrop-filter: var(--card-backdrop);
+  /* Glass morphism alternatives */
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+
+  /* Or with better browser support */
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06));
+
+  /* Or using box-shadow for depth */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+  /* Or combining multiple effects */
+  background: rgba(var(--card-bg-rgb), 0.85);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
 }
 .profile-card {
     position: relative; 
@@ -360,7 +373,10 @@ h1, h2, h3 {
 
 .detail-row .label { color: var(--muted); font-size: .95em; }
 .detail-row .value { font-weight: 650; letter-spacing: .2px; font-size: 1em; }
-.selectable { user-select: text; }
+.selectable { 
+  -webkit-user-select: text;
+  user-select: text; 
+}
 
 .admin-special .value.highlight-number { font-size: 20px; }
 

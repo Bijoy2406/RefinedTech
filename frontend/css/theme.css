@@ -314,6 +314,7 @@
 /* === Modal Theme Classes === */
 .modal-overlay {
   background-color: var(--modal-overlay);
+  -webkit-backdrop-filter: var(--nav-backdrop);
   backdrop-filter: var(--nav-backdrop);
 }
 
@@ -355,6 +356,7 @@
 .nav-themed {
   background-color: var(--nav-bg);
   border-bottom: 1px solid var(--nav-border);
+  -webkit-backdrop-filter: var(--nav-backdrop);
   backdrop-filter: var(--nav-backdrop);
 }
 

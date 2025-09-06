@@ -23,7 +23,15 @@ export default function Login({ onLogin }) {
       localStorage.setItem('rt_user', JSON.stringify(data.user || {}))
       localStorage.setItem('rt_token', data.token || '')
       onLogin(data.user)
-      navigate('/')
+      
+      // Redirect based on user role
+      if (data.user && data.user.role === 'Admin') {
+        navigate('/admin')
+      } else if (data.user && data.user.role === 'Seller') {
+        navigate('/seller')
+      } else {
+        navigate('/')
+      }
     } catch (err) {
       setStatus(err.response?.data?.error || 'Login failed')
     } finally {
