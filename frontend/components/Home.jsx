@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import RotatingText from './RotatingText'
 import '../css/theme.css'
 import '../css/Home.css'
 
@@ -57,27 +58,20 @@ export default function Home({ user }) {
       // Navigate to buyer page with category filter
       navigate(`/buyer?category=${encodeURIComponent(categoryName)}`);
     } else {
-      // Redirect to signup for non-users
-      navigate('/signup/buyer');
+      // For non-users, navigate to buyer page which will show all products
+      // They can browse but buy buttons will redirect to login
+      navigate(`/buyer?category=${encodeURIComponent(categoryName)}`);
     }
   };
 
   const handleProductClick = (product) => {
-    if (user && user.role === 'Buyer') {
-      // Navigate to buyer page and show product details
-      navigate(`/buyer?product=${product.id}`);
-    } else {
-      // Redirect to signup for non-users
-      navigate('/signup/buyer');
-    }
+    // Allow viewing product details for everyone
+    navigate(`/product/${product.id}`);
   };
 
   const handleViewAllProducts = () => {
-    if (user && user.role === 'Buyer') {
-      navigate('/buyer');
-    } else {
-      navigate('/signup/buyer');
-    }
+    // Navigate to buyer page for browsing
+    navigate('/buyer');
   };
 
   const getConditionBadgeClass = (condition) => {
@@ -360,7 +354,16 @@ export default function Home({ user }) {
             <span className="hero-badge">🚀 Trusted Marketplace</span>
             <h1 className="hero-title">
               Smart Exchange for 
-              <span className="highlight"> Refurbished Tech</span>
+              <span className="highlight">
+                <RotatingText
+                  texts={[' Refurbished Tech', ' Premium Electronics', ' Quality Devices', ' Tech Deals']}
+                  staggerFrom={"first"}
+                  staggerDuration={0.025}
+                  transition={{ type: "spring", damping: 30, stiffness: 400 }}
+                  rotationInterval={3000}
+                  splitBy="characters"
+                />
+              </span>
             </h1>
             <p className="hero-description">
               Buy and sell premium refurbished electronics with confidence. 
@@ -394,21 +397,21 @@ export default function Home({ user }) {
               <div className="device-icon">📱</div>
               <div className="device-info">
                 <span className="device-name">iPhone 13 Pro</span>
-                <span className="device-price">৳850</span>
+                <span className="device-price">৳50,000</span>
               </div>
             </div>
             <div className="floating-card card-2">
               <div className="device-icon">💻</div>
               <div className="device-info">
                 <span className="device-name">MacBook Pro</span>
-                <span className="device-price">৳1,450</span>
+                <span className="device-price">৳145,000</span>
               </div>
             </div>
             <div className="floating-card card-3">
               <div className="device-icon">🎧</div>
               <div className="device-info">
                 <span className="device-name">Sony WH-1000XM4</span>
-                <span className="device-price">৳220</span>
+                <span className="device-price">৳22,000</span>
               </div>
             </div>
           </div>

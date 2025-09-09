@@ -1044,7 +1044,7 @@
         height: 35px;
         font-size: 0.85rem;
     }
-}
+
 
 @media (max-width: 480px) {
     .buyer-header .header-content h1 {

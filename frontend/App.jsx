@@ -8,6 +8,8 @@ import Signup from './components/Signup.jsx'
 import AdminHomepage from './components/AdminHomepage.jsx'
 import SellerHomepage from './components/SellerHomepage.jsx'
 import BuyerHomepage from './components/BuyerHomepage.jsx'
+import Cart from './components/Cart.jsx'
+import Buy from './components/Buy.jsx'
 import Profile from './components/Profile.jsx'
 import ProductDetails from './components/ProductDetails.jsx'
 import './css/App.css'
@@ -142,6 +144,7 @@ export default function App() {
             {user ? (
               <>
                 {user.role === 'Seller' && <Link to="/seller" className="btn">Seller Dashboard</Link>}
+                {user.role === 'Buyer' && <Link to="/cart" className="btn">🛒 Cart</Link>}
                 <button onClick={openProfile} className="avatar-plain" title="Profile">
                   {avatarUrl ? (
                     <img src={avatarUrl} alt="avatar" className="nav-avatar" />
@@ -167,7 +170,9 @@ export default function App() {
             <Route path="/signup/:role" element={<Signup />} />
             <Route path="/admin" element={user?.role === 'Admin' ? <AdminHomepage /> : <Navigate to="/" />} />
             <Route path="/seller" element={user?.role === 'Seller' ? <SellerHomepage /> : <Navigate to="/" />} />
-            <Route path="/buyer" element={user?.role === 'Buyer' ? <BuyerHomepage /> : <Navigate to="/" />} />
+            <Route path="/buyer" element={<BuyerHomepage />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/buy" element={<Buy />} />
             <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" />} />
             <Route path="/product/:id" element={<ProductDetails />} />
             <Route path="*" element={<Navigate to="/" />} />

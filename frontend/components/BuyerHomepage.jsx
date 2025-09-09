@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+import { UserContext } from '../App.jsx';
 import TiltedCard from './TiltedCard';
 import '../css/BuyerHomepage.css';
 
@@ -9,13 +10,12 @@ const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
 export default function BuyerHomepage() {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
+    const { user } = useContext(UserContext);
     const [currentUser, setCurrentUser] = useState(null);
     const [products, setProducts] = useState([]);
     const [filteredProducts, setFilteredProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [selectedProduct, setSelectedProduct] = useState(null);
-    const [showProductModal, setShowProductModal] = useState(false);
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
@@ -269,13 +269,12 @@ export default function BuyerHomepage() {
         try {
             // Increment view count
             await axios.get(`${API_BASE}/api/products/${product.id}`);
-
-            setSelectedProduct(product);
-            setShowProductModal(true);
+            // Navigate to product details page
+            navigate(`/product/${product.id}`);
         } catch (error) {
             console.error('Error viewing product:', error);
-            setSelectedProduct(product);
-            setShowProductModal(true);
+            // Still navigate even if view count fails
+            navigate(`/product/${product.id}`);
         }
     };
 
@@ -579,110 +578,6 @@ export default function BuyerHomepage() {
                 )}
             </div>
 
-            {/* Product Detail Modal */}
-            {showProductModal && selectedProduct && (
-                <div className="modal-overlay" onClick={() => setShowProductModal(false)}>
-                    <div className="modal-content product-detail-modal" onClick={e => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <button className="modal-close" onClick={() => setShowProductModal(false)}>×</button>
-                        </div>
-                        <div className="modal-body">
-                            <div className="product-detail-content">
-                                <div className="product-images">
-                                    {selectedProduct.images && selectedProduct.images.length > 0 ? (
-                                        <img src={`${API_BASE}${selectedProduct.images[0]}`} alt={selectedProduct.title} />
-                                    ) : (
-                                        <div className="no-image-large">📷</div>
-                                    )}
-                                    <h2 className="product-modal-title">{selectedProduct.title}</h2>
-                                </div>
-
-                                <div className="product-details">
-                                    <div className="detail-section">
-                                        <h4>Product Information</h4>
-                                        <div className="detail-grid">
-                                            <div><strong>Brand:</strong> {selectedProduct.brand}</div>
-                                            <div><strong>Model:</strong> {selectedProduct.model}</div>
-                                            <div><strong>Category:</strong> {selectedProduct.category}</div>
-                                            <div><strong>Condition:</strong>
-                                                <span className={`condition-badge ${getConditionBadgeClass(selectedProduct.condition_grade)}`}>
-                                                    {selectedProduct.condition_grade?.replace('-', ' ')}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {selectedProduct.description && (
-                                        <div className="detail-section">
-                                            <h4>Description</h4>
-                                            <p>{selectedProduct.description}</p>
-                                        </div>
-                                    )}
-
-                                    <div className="detail-section">
-                                        <h4>Specifications</h4>
-                                        <div className="detail-grid">
-                                            {selectedProduct.storage_capacity && <div><strong>Storage:</strong> {selectedProduct.storage_capacity}</div>}
-                                            {selectedProduct.ram_memory && <div><strong>RAM:</strong> {selectedProduct.ram_memory}</div>}
-                                            {selectedProduct.processor && <div><strong>Processor:</strong> {selectedProduct.processor}</div>}
-                                            {selectedProduct.operating_system && <div><strong>OS:</strong> {selectedProduct.operating_system}</div>}
-                                            {selectedProduct.screen_size && <div><strong>Screen:</strong> {selectedProduct.screen_size}</div>}
-                                            {selectedProduct.color && <div><strong>Color:</strong> {selectedProduct.color}</div>}
-                                            {selectedProduct.battery_health && <div><strong>Battery:</strong> {selectedProduct.battery_health}</div>}
-                                        </div>
-                                    </div>
-
-                                    <div className="detail-section">
-                                        <h4>Pricing & Availability</h4>
-                                        <div className="price-details">
-                                            <div className="current-price-large">{formatPrice(selectedProduct.price)}</div>
-                                            {selectedProduct.original_price && selectedProduct.original_price > selectedProduct.price && (
-                                                <div className="original-price-large">{formatPrice(selectedProduct.original_price)}</div>
-                                            )}
-                                            {selectedProduct.negotiable && (
-                                                <div className="negotiable-info">💬 Price is negotiable</div>
-                                            )}
-                                        </div>
-                                        <div><strong>Quantity Available:</strong> {selectedProduct.quantity_available}</div>
-                                        {selectedProduct.warranty_period && <div><strong>Warranty:</strong> {selectedProduct.warranty_period}</div>}
-                                    </div>
-
-                                    <div className="detail-section">
-                                        <h4>Seller Information</h4>
-                                        <div><strong>Seller:</strong> {selectedProduct.seller?.shop_username || 'Seller'}</div>
-                                        <div><strong>Location:</strong> {selectedProduct.location_city}, {selectedProduct.location_state}</div>
-                                    </div>
-
-                                    {selectedProduct.included_accessories && (
-                                        <div className="detail-section">
-                                            <h4>Included Accessories</h4>
-                                            <p>{selectedProduct.included_accessories}</p>
-                                        </div>
-                                    )}
-
-                                    {selectedProduct.defects_issues && (
-                                        <div className="detail-section">
-                                            <h4>Known Issues</h4>
-                                            <p>{selectedProduct.defects_issues}</p>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                        <div className="modal-footer">
-                            <button className="btn btn-secondary" onClick={() => setShowProductModal(false)}>
-                                Close
-                            </button>
-                            <button className="btn btn-primary">
-                                💬 Contact Seller
-                            </button>
-                            <button className="btn btn-success">
-                                🛒 Buy Now
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

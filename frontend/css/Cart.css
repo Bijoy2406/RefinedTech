@@ -1,0 +1,12 @@
+.cart-page {
+  padding: 2rem;
+  text-align: center;
+}
+
+.cart-page h1 {
+  margin-bottom: 1rem;
+}
+
+.cart-page p {
+  color: #666;
+}
