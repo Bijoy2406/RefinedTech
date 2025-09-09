@@ -132,7 +132,7 @@ export default function App() {
         <nav className="nav">
           <Link className="brand" to="/">
             <img 
-              src={theme === 'dark' ? '/Assets/logo_dark.png' : '/Assets/logo_light.png'} 
+              src={theme === 'dark' ? '../public/logo_dark.png' : '../public/logo_light.png'} 
               alt="RefinedTech" 
               className="brand-logo" 
             />
