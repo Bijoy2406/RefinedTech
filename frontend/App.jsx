@@ -131,11 +131,11 @@ export default function App() {
         <div className="app-shell">
         <nav className="nav">
           <Link className="brand" to="/">
-            <img 
-              src={theme === 'dark' ? '../public/logo_dark.png' : '../public/logo_light.png'} 
-              alt="RefinedTech" 
-              className="brand-logo" 
-            />
+            <img
+                src={theme === 'dark' ? '/logo_dark.png' : '/logo_light.png'}
+                alt="RefinedTech"
+                className="brand-logo"
+              />
           </Link>
           <div className="links">
             <button onClick={toggleTheme} className="btn theme-toggle">
