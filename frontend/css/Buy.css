@@ -1,0 +1,12 @@
+.buy-page {
+  padding: 2rem;
+  text-align: center;
+}
+
+.buy-page h1 {
+  margin-bottom: 1rem;
+}
+
+.buy-page p {
+  color: #666;
+}

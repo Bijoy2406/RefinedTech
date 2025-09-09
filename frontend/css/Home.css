@@ -566,7 +566,7 @@
   background: var(--glass-medium);
   border: 1px solid var(--glass-light);
   border-radius: var(--radius-full);
-  color: white;
+  color: inherit;
   font-size: var(--font-size-sm);
   font-weight: 600;
   margin-bottom: var(--spacing-lg);
