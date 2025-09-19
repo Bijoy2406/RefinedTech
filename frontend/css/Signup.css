@@ -1,0 +1,289 @@
+.auth-card {
+  max-width: 420px;
+  margin: var(--spacing-xl) auto;
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-lg);
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--card-shadow-hover);
+  backdrop-filter: var(--card-backdrop);
+  -webkit-backdrop-filter: var(--card-backdrop);
+  transition: all var(--transition-normal);
+}
+
+.auth-card:hover {
+  box-shadow: var(--modal-shadow);
+  transform: translateY(-2px);
+}
+
+.auth-card h2 {
+  margin-top: 0;
+  color: var(--text-primary);
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.auth-card form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+}
+
+.status.success {
+  color: var(--color-success);
+  background-color: var(--color-success-bg);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-success-border);
+  font-size: var(--font-size-sm);
+}
+
+.status.error {
+  color: var(--color-error);
+  background-color: var(--color-error-bg);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-error-border);
+  font-size: var(--font-size-sm);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+input:disabled, select:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background-color: var(--input-disabled-bg);
+  color: var(--input-disabled-text);
+}
+
+/* Lottie Loading Full-Screen Overlay */
+.lottie-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: var(--modal-overlay);
+  backdrop-filter: var(--modal-backdrop);
+  -webkit-backdrop-filter: var(--modal-backdrop);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: var(--z-modal);
+  transition: all var(--transition-normal);
+}
+
+.lottie-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xl);
+  background: var(--modal-bg);
+  padding: var(--spacing-2xl);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--modal-shadow);
+  border: 1px solid var(--card-border);
+}
+
+.lottie-animation {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.lottie-loading-text {
+  color: var(--text-primary);
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  text-align: center;
+  margin: 0;
+  text-shadow: none;
+}
+
+/* Role Selection Styles */
+.role-selection {
+  max-width: 600px;
+  text-align: center;
+  margin: 0 auto;
+  padding: var(--spacing-xl);
+}
+
+.role-selection h2 {
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-primary);
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+}
+
+.role-selection p {
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-2xl);
+  font-size: var(--font-size-lg);
+  line-height: 1.6;
+}
+
+.role-options {
+  display: flex;
+  gap: var(--spacing-xl);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.role-option {
+  padding: var(--spacing-2xl) var(--spacing-xl);
+  border: 2px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  background-color: var(--card-bg);
+  text-align: center;
+  flex: 1;
+  max-width: 200px;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  backdrop-filter: var(--card-backdrop);
+  -webkit-backdrop-filter: var(--card-backdrop);
+}
+
+.role-option:hover {
+  border-color: var(--color-primary);
+  background-color: var(--bg-secondary);
+  transform: translateY(-4px);
+  box-shadow: var(--card-shadow-hover);
+}
+
+.role-icon {
+  font-size: var(--font-size-3xl);
+  margin-bottom: var(--spacing-md);
+  opacity: 0.8;
+  transition: all var(--transition-normal);
+}
+
+.role-option:hover .role-icon {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.role-option h3 {
+  margin: 0 0 var(--spacing-sm) 0;
+  color: var(--text-primary);
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+}
+
+.role-option p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: 1.4;
+}
+
+/* Signup page: image + form layout */
+.signup-with-image {
+  display: flex;
+  gap: var(--spacing-xl);
+  align-items: center;
+  max-width: 900px;
+  padding: var(--spacing-lg);
+  margin: 0 auto;
+}
+
+.signup-image img {
+  width: 260px;
+  height: auto;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--card-shadow-hover);
+  display: block;
+  transition: all var(--transition-normal);
+}
+
+.signup-image img:hover {
+  transform: scale(1.02);
+  box-shadow: var(--modal-shadow);
+}
+
+.signup-form {
+  flex: 1 1 1;
+}
+
+.form-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+}
+
+.back-button {
+  background: var(--btn-secondary-bg);
+  border: 1px solid var(--card-border);
+  color: var(--text-secondary);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  transition: all var(--transition-fast);
+}
+
+.back-button:hover {
+  background-color: var(--btn-secondary-hover);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--card-shadow);
+}
+
+.form-header h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+}
+
+.form-description {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin: var(--spacing-sm) 0 var(--spacing-md) 0;
+  padding: var(--spacing-md);
+  background-color: var(--color-info-bg);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--color-info);
+}
+
+@media (max-width: 880px) {
+  .signup-with-image {
+    flex-direction: column;
+    max-width: 420px;
+    padding: var(--spacing-md);
+  }
+  
+  .role-options {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+  
+  .role-option {
+    max-width: none;
+    min-height: auto;
+  }
+  
+  .signup-image img {
+    width: 100%;
+    max-width: 360px;
+  }
+  
+  .role-option {
+    max-width: 300px;
+    width: 100%;
+  }
+}
+
+/*hi*/
