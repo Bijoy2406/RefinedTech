@@ -3,6 +3,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\CartController;
 
 // Authentication Routes
 Route::post('/signup', [AuthController::class, 'signup']);
@@ -62,3 +64,39 @@ Route::middleware(['multi.auth', 'seller'])->prefix('seller')->group(function ()
 // Public product routes
 Route::get('/products', [App\Http\Controllers\ProductController::class, 'getAllProducts']);
 Route::get('/products/{id}', [App\Http\Controllers\ProductController::class, 'getProduct']);
+
+// Cart Management (Buyers only)
+Route::middleware(['multi.auth'])->group(function () {
+    Route::get('/cart', [CartController::class, 'getCart']);
+    Route::post('/cart/add', [CartController::class, 'addToCart']);
+    Route::put('/cart/{cartItemId}', [CartController::class, 'updateCartItem']);
+    Route::delete('/cart/{cartItemId}', [CartController::class, 'removeFromCart']);
+    Route::delete('/cart', [CartController::class, 'clearCart']);
+    Route::get('/cart/summary', [CartController::class, 'getCartSummary']);
+});
+
+// Order Management
+Route::middleware(['multi.auth'])->group(function () {
+    // Buyer order routes
+    Route::get('/orders/buyer', [OrderController::class, 'getBuyerOrders']);
+    Route::post('/orders/create', [OrderController::class, 'createOrder']);
+    Route::put('/orders/{orderId}/cancel', [OrderController::class, 'cancelOrder']);
+    
+    // Seller order routes  
+    Route::get('/orders/seller', [OrderController::class, 'getSellerOrders']);
+    Route::put('/orders/{orderId}/status', [OrderController::class, 'updateOrderStatus']);
+    
+    // Common order routes (accessible by buyers, sellers, and admins)
+    Route::get('/orders/{orderId}', [OrderController::class, 'getOrderDetails']);
+});
+
+// Wishlist Management (Buyers only)
+Route::middleware(['multi.auth'])->group(function () {
+    Route::get('/wishlist', [App\Http\Controllers\WishlistController::class, 'getWishlist']);
+    Route::post('/wishlist/add', [App\Http\Controllers\WishlistController::class, 'addToWishlist']);
+    Route::delete('/wishlist/{productId}', [App\Http\Controllers\WishlistController::class, 'removeFromWishlist']);
+    Route::get('/wishlist/check/{productId}', [App\Http\Controllers\WishlistController::class, 'checkWishlistStatus']);
+    Route::delete('/wishlist', [App\Http\Controllers\WishlistController::class, 'clearWishlist']);
+});
+
+Route::get('/categories', [App\Http\Controllers\ProductController::class, 'getCategoryStats']);

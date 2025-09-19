@@ -69,4 +69,28 @@ class Buyer extends Authenticatable
     {
         return 'Buyer';
     }
+
+    /**
+     * Get the orders for the buyer
+     */
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    /**
+     * Get the cart items for the buyer
+     */
+    public function cartItems()
+    {
+        return $this->hasMany(CartItem::class);
+    }
+
+    /**
+     * Get the wishlist items for the buyer
+     */
+    public function wishlists()
+    {
+        return $this->hasMany(Wishlist::class);
+    }
 }

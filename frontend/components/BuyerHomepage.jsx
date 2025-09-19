@@ -16,6 +16,13 @@ export default function BuyerHomepage() {
     const [filteredProducts, setFilteredProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    
+    // Tab state
+    const [activeTab, setActiveTab] = useState('products');
+    
+    // Order history state
+    const [orders, setOrders] = useState([]);
+    const [ordersLoading, setOrdersLoading] = useState(false);
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
@@ -61,12 +68,17 @@ export default function BuyerHomepage() {
         // Handle URL parameters
         const categoryParam = searchParams.get('category');
         const productParam = searchParams.get('product');
+        const tabParam = searchParams.get('tab');
 
         if (categoryParam) {
             setFilters(prev => ({
                 ...prev,
                 category: categoryParam
             }));
+        }
+        
+        if (tabParam && ['products', 'orders', 'cart', 'wishlist'].includes(tabParam)) {
+            setActiveTab(tabParam);
         }
 
         if (productParam) {
@@ -147,6 +159,39 @@ export default function BuyerHomepage() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const fetchOrders = async () => {
+        try {
+            setOrdersLoading(true);
+            const token = localStorage.getItem('rt_token');
+            const response = await axios.get(`${API_BASE}/api/orders/buyer`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            if (response.data.success) {
+                setOrders(response.data.orders);
+            }
+        } catch (error) {
+            console.error('Error fetching orders:', error);
+            setError('Failed to fetch order history');
+        } finally {
+            setOrdersLoading(false);
+        }
+    };
+
+    const handleTabChange = (tab) => {
+        setActiveTab(tab);
+        
+        // Fetch orders when switching to orders tab
+        if (tab === 'orders' && orders.length === 0) {
+            fetchOrders();
+        }
+        
+        // Update URL
+        const newSearchParams = new URLSearchParams(searchParams);
+        newSearchParams.set('tab', tab);
+        setSearchParams(newSearchParams, { replace: true });
     };
 
     const applyFilters = () => {
@@ -388,6 +433,78 @@ export default function BuyerHomepage() {
         );
     };
 
+    const getStatusColor = (status) => {
+        const statusColors = {
+            'pending': '#ffc107',
+            'confirmed': '#17a2b8',
+            'processing': '#6f42c1',
+            'shipped': '#fd7e14',
+            'delivered': '#28a745',
+            'cancelled': '#dc3545',
+            'refunded': '#6c757d'
+        };
+        return statusColors[status] || '#6c757d';
+    };
+
+    const renderOrderCard = (order) => {
+        return (
+            <div key={order.id} className="order-card">
+                <div className="order-header">
+                    <div className="order-info">
+                        <h3>Order #{order.order_number}</h3>
+                        <p className="order-date">{new Date(order.created_at).toLocaleDateString()}</p>
+                    </div>
+                    <div className="order-status">
+                        <span 
+                            className="status-badge" 
+                            style={{ backgroundColor: getStatusColor(order.status) }}
+                        >
+                            {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        </span>
+                    </div>
+                </div>
+                
+                <div className="order-items">
+                    {order.items.map((item, index) => (
+                        <div key={index} className="order-item">
+                            {item.product_image_url && (
+                                <img 
+                                    src={`${API_BASE}/storage/products/${item.product_image_url}`}
+                                    alt={item.product_title}
+                                    className="order-item-image"
+                                />
+                            )}
+                            <div className="order-item-details">
+                                <h4>{item.product_title}</h4>
+                                <p>Quantity: {item.quantity}</p>
+                                <p className="order-item-price">${item.total_price}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                
+                <div className="order-footer">
+                    <div className="order-total">
+                        <strong>Total: ${order.final_amount}</strong>
+                    </div>
+                    <div className="order-actions">
+                        <button 
+                            className="btn btn-outline btn-small"
+                            onClick={() => navigate(`/orders/${order.id}`)}
+                        >
+                            View Details
+                        </button>
+                        {order.tracking_number && (
+                            <span className="tracking-info">
+                                📦 {order.tracking_number}
+                            </span>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     if (loading) {
         return (
             <div className="buyer-homepage loading-state">
@@ -404,7 +521,33 @@ export default function BuyerHomepage() {
             {/* Header */}
             <div className="buyer-header">
                 <div className="header-content">
-                    <h1>Discover Refurbished Tech</h1>
+                    <h1>Buyer Dashboard</h1>
+                    <div className="tab-navigation">
+                        <button 
+                            className={`tab-btn ${activeTab === 'products' ? 'active' : ''}`}
+                            onClick={() => handleTabChange('products')}
+                        >
+                            🛍️ Browse Products
+                        </button>
+                        <button 
+                            className={`tab-btn ${activeTab === 'orders' ? 'active' : ''}`}
+                            onClick={() => handleTabChange('orders')}
+                        >
+                            📦 My Orders
+                        </button>
+                        <button 
+                            className={`tab-btn ${activeTab === 'cart' ? 'active' : ''}`}
+                            onClick={() => navigate('/cart')}
+                        >
+                            🛒 Shopping Cart
+                        </button>
+                        <button 
+                            className={`tab-btn ${activeTab === 'wishlist' ? 'active' : ''}`}
+                            onClick={() => navigate('/wishlist')}
+                        >
+                            ❤️ Wishlist
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -415,9 +558,12 @@ export default function BuyerHomepage() {
                 </div>
             )}
 
-            {/* Filters Section */}
-            <div className="filters-section">
-                <div className="filters-header">
+            {/* Tab Content */}
+            {activeTab === 'products' && (
+                <>
+                    {/* Filters Section */}
+                    <div className="filters-section">
+                        <div className="filters-header">
                     <h3>🔍 Filter Products</h3>
                     <button className="clear-filters-btn" onClick={clearFilters}>
                         Clear All Filters
@@ -570,13 +716,46 @@ export default function BuyerHomepage() {
                                         Next ➡️
                                     </button>
                                 </div>
-
-
                             </div>
                         )}
                     </>
                 )}
-            </div>
+                </div>
+            </>
+            )}
+
+            {/* Orders Tab */}
+            {activeTab === 'orders' && (
+                <div className="orders-section">
+                    <div className="section-header">
+                        <h2>Order History</h2>
+                        <p>Track your purchases and order status</p>
+                    </div>
+
+                    {ordersLoading ? (
+                        <div className="loading-state">
+                            <div className="spinner"></div>
+                            <p>Loading your orders...</p>
+                        </div>
+                    ) : orders.length === 0 ? (
+                        <div className="empty-state">
+                            <div className="empty-icon">📦</div>
+                            <h3>No orders yet</h3>
+                            <p>Start shopping to see your order history here</p>
+                            <button 
+                                className="btn btn-primary"
+                                onClick={() => handleTabChange('products')}
+                            >
+                                Browse Products
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="orders-grid">
+                            {orders.map(renderOrderCard)}
+                        </div>
+                    )}
+                </div>
+            )}
 
         </div>
     );

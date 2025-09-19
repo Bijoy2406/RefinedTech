@@ -12,6 +12,7 @@ import Cart from './components/Cart.jsx'
 import Buy from './components/Buy.jsx'
 import Profile from './components/Profile.jsx'
 import ProductDetails from './components/ProductDetails.jsx'
+import Wishlist from './components/Wishlist.jsx'
 import './css/App.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
@@ -130,7 +131,7 @@ export default function App() {
       <UserContext.Provider value={{ user, setUser, avatarUrl, setAvatarUrl }}>
         <div className="app-shell">
         <nav className="nav">
-          <Link className="brand" to="/">
+          <Link className="brand" to={user?.role === 'Seller' ? '/seller' : user?.role === 'Buyer' ? '/buyer' : user?.role === 'Admin' ? '/admin' : '/'}>
             <img
                 src={theme === 'dark' ? '/logo_dark.png' : '/logo_light.png'}
                 alt="RefinedTech"
@@ -144,7 +145,12 @@ export default function App() {
             {user ? (
               <>
                 {user.role === 'Seller' && <Link to="/seller" className="btn">Seller Dashboard</Link>}
-                {user.role === 'Buyer' && <Link to="/cart" className="btn">🛒 Cart</Link>}
+                {user.role === 'Buyer' && (
+                  <>
+                    <Link to="/cart" className="btn">🛒 Cart</Link>
+                    <Link to="/wishlist" className="btn">❤️ Wishlist</Link>
+                  </>
+                )}
                 <button onClick={openProfile} className="avatar-plain" title="Profile">
                   {avatarUrl ? (
                     <img src={avatarUrl} alt="avatar" className="nav-avatar" />
@@ -172,6 +178,7 @@ export default function App() {
             <Route path="/seller" element={user?.role === 'Seller' ? <SellerHomepage /> : <Navigate to="/" />} />
             <Route path="/buyer" element={<BuyerHomepage />} />
             <Route path="/cart" element={<Cart />} />
+            <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/buy" element={<Buy />} />
             <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" />} />
             <Route path="/product/:id" element={<ProductDetails />} />

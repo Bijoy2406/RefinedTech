@@ -13,10 +13,18 @@ function ProductDetails() {
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [addingToCart, setAddingToCart] = useState(false)
+  const [cartMessage, setCartMessage] = useState('')
+  const [isInWishlist, setIsInWishlist] = useState(false)
+  const [wishlistLoading, setWishlistLoading] = useState(false)
+  const [wishlistMessage, setWishlistMessage] = useState('')
 
   useEffect(() => {
     fetchProduct()
-  }, [id])
+    if (user && user.role === 'Buyer') {
+      checkWishlistStatus()
+    }
+  }, [id, user])
 
   const fetchProduct = async () => {
     try {
@@ -31,22 +39,125 @@ function ProductDetails() {
     }
   }
 
-  const handleAddToCart = () => {
-    if (!user) {
-      navigate('/login')
-      return
+  const checkWishlistStatus = async () => {
+    try {
+      const token = localStorage.getItem('rt_token')
+      const response = await axios.get(`${API_BASE}/api/wishlist/check/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setIsInWishlist(response.data.in_wishlist)
+    } catch (error) {
+      console.error('Error checking wishlist status:', error)
     }
-    // TODO: Implement add to cart functionality
-    alert('Add to cart functionality will be implemented here')
   }
 
-  const handleBuyNow = () => {
+  const handleAddToCart = async (quantity = 1) => {
     if (!user) {
       navigate('/login')
       return
     }
-    // TODO: Implement buy now functionality
-    navigate('/buy')
+
+    if (user.role !== 'Buyer') {
+      setCartMessage('Only buyers can add items to cart')
+      return
+    }
+
+    setAddingToCart(true)
+    setCartMessage('')
+
+    try {
+      const token = localStorage.getItem('rt_token')
+      const response = await axios.post(`${API_BASE}/api/cart/add`, {
+        product_id: product.id,
+        quantity: quantity
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+
+      if (response.data.success) {
+        setCartMessage('✅ Added to cart successfully!')
+        
+        // Clear message after 3 seconds
+        setTimeout(() => {
+          setCartMessage('')
+        }, 3000)
+      }
+    } catch (error) {
+      console.error('Error adding to cart:', error)
+      if (error.response?.data?.message) {
+        setCartMessage(`❌ ${error.response.data.message}`)
+      } else {
+        setCartMessage('❌ Failed to add to cart')
+      }
+    } finally {
+      setAddingToCart(false)
+    }
+  }
+
+  const handleBuyNow = (quantity = 1) => {
+    if (!user) {
+      navigate('/login')
+      return
+    }
+
+    if (user.role !== 'Buyer') {
+      alert('Only buyers can purchase items')
+      return
+    }
+
+    navigate(`/buy?product=${product.id}&quantity=${quantity}`)
+  }
+
+  const handleWishlistToggle = async () => {
+    if (!user) {
+      navigate('/login')
+      return
+    }
+
+    if (user.role !== 'Buyer') {
+      setWishlistMessage('Only buyers can manage wishlists')
+      return
+    }
+
+    setWishlistLoading(true)
+    setWishlistMessage('')
+
+    try {
+      const token = localStorage.getItem('rt_token')
+      
+      if (isInWishlist) {
+        // Remove from wishlist
+        await axios.delete(`${API_BASE}/api/wishlist/remove/${product.id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        setIsInWishlist(false)
+        setWishlistMessage('💔 Removed from wishlist')
+      } else {
+        // Add to wishlist
+        await axios.post(`${API_BASE}/api/wishlist/add`, {
+          product_id: product.id
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        setIsInWishlist(true)
+        setWishlistMessage('❤️ Added to wishlist!')
+      }
+
+      // Clear message after 3 seconds
+      setTimeout(() => {
+        setWishlistMessage('')
+      }, 3000)
+
+    } catch (error) {
+      console.error('Error toggling wishlist:', error)
+      if (error.response?.data?.message) {
+        setWishlistMessage(`❌ ${error.response.data.message}`)
+      } else {
+        setWishlistMessage('❌ Failed to update wishlist')
+      }
+    } finally {
+      setWishlistLoading(false)
+    }
   }
 
   if (loading) {
@@ -163,11 +274,41 @@ function ProductDetails() {
             <button className="btn primary large" onClick={handleBuyNow}>
               {user ? 'Buy Now' : 'Login to Buy'}
             </button>
-            <button className="btn secondary large" onClick={handleAddToCart}>
-              {user ? 'Add to Cart' : 'Login to Add Cart'}
+            <button 
+              className="btn secondary large" 
+              onClick={handleAddToCart}
+              disabled={addingToCart}
+            >
+              {addingToCart ? 'Adding...' : (user ? 'Add to Cart' : 'Login to Add Cart')}
             </button>
-            <button className="btn outline large">Add to Favorites</button>
+            <button 
+              className={`btn outline large wishlist-btn ${isInWishlist ? 'in-wishlist' : ''}`}
+              onClick={handleWishlistToggle}
+              disabled={wishlistLoading}
+              title={isInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
+            >
+              {wishlistLoading ? (
+                '⏳'
+              ) : (
+                <>
+                  {isInWishlist ? '❤️' : '🤍'} 
+                  {user ? (isInWishlist ? 'In Wishlist' : 'Add to Wishlist') : 'Login to Wishlist'}
+                </>
+              )}
+            </button>
           </div>
+
+          {cartMessage && (
+            <div className={`cart-message ${cartMessage.includes('✅') ? 'success' : 'error'}`}>
+              {cartMessage}
+            </div>
+          )}
+
+          {wishlistMessage && (
+            <div className={`wishlist-message ${wishlistMessage.includes('❤️') || wishlistMessage.includes('💔') ? 'success' : 'error'}`}>
+              {wishlistMessage}
+            </div>
+          )}
 
           {/* Quick Info Cards */}
           <div className="quick-info-grid">

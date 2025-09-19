@@ -48,6 +48,166 @@
 
 .header-content h1 {
     margin: 0 0 0.5rem;
+}
+
+/* Tab Navigation */
+.tab-navigation {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.tab-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.tab-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.tab-btn.active {
+    background: white;
+    color: var(--color-primary);
+    border-color: white;
+}
+
+/* Orders Section */
+.orders-section {
+    padding: 2rem;
+}
+
+.orders-grid {
+    display: grid;
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.order-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.order-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid #f0f0f0;
+    background: #f8f9fa;
+}
+
+.order-info h3 {
+    margin: 0 0 0.25rem 0;
+    color: #333;
+    font-size: 1.1rem;
+}
+
+.order-date {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.order-items {
+    padding: 1.5rem;
+}
+
+.order-item {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    align-items: center;
+}
+
+.order-item:last-child {
+    margin-bottom: 0;
+}
+
+.order-item-image {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #eee;
+}
+
+.order-item-details h4 {
+    margin: 0 0 0.25rem 0;
+    color: #333;
+    font-size: 0.9rem;
+}
+
+.order-item-details p {
+    margin: 0.25rem 0;
+    color: #666;
+    font-size: 0.8rem;
+}
+
+.order-item-price {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.order-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-top: 1px solid #f0f0f0;
+    background: #f8f9fa;
+}
+
+.order-total {
+    color: var(--color-primary);
+    font-size: 1.1rem;
+}
+
+.order-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.tracking-info {
+    color: #666;
+    font-size: 0.8rem;
+    background: #e9ecef;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+}
+
+.btn-small {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+}
+
+.header-content h1 {
     font-size: 2.5rem;
     font-weight: 700;
 }
@@ -268,6 +428,7 @@
     height: 100% !important;
     padding: 0 !important;
     background: none !important;
+    -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;
     transform: none !important;
     display: block !important;
@@ -336,6 +497,7 @@
     font-size: 11px;
     font-weight: 600;
     color: white;
+    -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
     width: fit-content;
 }
@@ -388,6 +550,7 @@
     font-size: 11px;
     font-weight: 600;
     color: white;
+    -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
     width: fit-content;
 }
