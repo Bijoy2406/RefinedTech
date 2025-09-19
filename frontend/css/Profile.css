@@ -1,0 +1,439 @@
+/* Profile Modal Styles */
+.profile-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--overlay-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.3s ease;
+}
+
+.profile-modal {
+    background-color: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 40px var(--shadow-light);
+    animation: slideIn 0.3s ease;
+}
+
+/* Dark mode specific shadow enhancement */
+.dark-mode .profile-modal {
+    box-shadow: 0 20px 40px var(--shadow-dark);
+}
+
+.profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 24px 16px 24px;
+    border-bottom: 1px solid var(--card-border);
+}
+
+.profile-header h2 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+}
+
+.close-btn:hover {
+    background-color: var(--secondary-btn-bg);
+    color: var(--text-primary);
+}
+
+.profile-content {
+    padding: 24px;
+}
+
+.profile-avatar-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 32px;
+    text-align: center;
+}
+
+.avatar-wrapper {
+    position: relative;
+    width: 128px;
+    height: 128px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid var(--card-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--card-bg), var(--background));
+}
+
+.profile-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.avatar-placeholder {
+    font-size: 3rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.avatar-upload-btn {
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--overlay-medium);
+    color: white;
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    border-radius: 12px;
+    cursor: pointer;
+    backdrop-filter: blur(2px);
+    transition: background .2s;
+}
+
+.avatar-upload-btn:hover { background: var(--overlay-dark); }
+
+.avatar-hint {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-top: 8px;
+}
+
+/* Explicit upload button */
+.upload-avatar-btn {
+    background-color: var(--primary-btn-bg);
+    color: var(--primary-btn-text);
+    border: none;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: background .25s, transform .25s;
+}
+.upload-avatar-btn:hover {
+    background-color: var(--color-primary);
+    transform: translateY(-2px);
+}
+.upload-avatar-btn:active {
+    transform: translateY(0);
+}
+
+.profile-loading {
+    padding: 40px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+/* Profile Information Styles */
+.profile-info {
+    margin-bottom: 32px;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--card-border);
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-item label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    min-width: 120px;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.info-item span {
+    color: var(--text-primary);
+    font-size: 1rem;
+    flex: 1;
+    text-align: right;
+}
+
+.role-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: capitalize;
+    background-color: var(--primary-btn-bg) !important;
+    color: var(--primary-btn-text) !important;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.status-badge.active,
+.status-badge.approved {
+    background-color: var(--color-success) !important;
+    color: white !important;
+}
+
+.status-badge.pending {
+    background-color: var(--color-warning) !important;
+    color: white !important;
+}
+
+.status-badge.rejected {
+    background-color: var(--color-error) !important;
+    color: white !important;
+}
+
+/* Profile Actions */
+.profile-actions {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.change-password-btn {
+    background-color: var(--secondary-btn-bg);
+    color: var(--secondary-btn-text);
+    border: 1px solid var(--card-border);
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+}
+
+.change-password-btn:hover {
+    background-color: var(--primary-btn-bg);
+    color: var(--primary-btn-text);
+    border-color: var(--primary-btn-bg);
+    transform: translateY(-1px);
+}
+
+/* Password Form Styles */
+.password-form-section {
+    background-color: var(--background);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-top: 24px;
+}
+
+.password-form-section h3 {
+    margin: 0 0 20px 0;
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--input-border);
+    border-radius: 8px;
+    background-color: var(--input-bg);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary-btn-bg);
+    box-shadow: 0 0 0 3px var(--color-primary-alpha);
+}
+
+.form-group input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.form-actions {
+    margin-top: 24px;
+    text-align: center;
+}
+
+.update-btn {
+    background-color: var(--primary-btn-bg);
+    color: var(--primary-btn-text);
+    border: none;
+    padding: 12px 32px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    min-width: 140px;
+}
+
+.update-btn:hover:not(:disabled) {
+    background-color: var(--color-primary);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px var(--color-primary-shadow);
+}
+
+.update-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Message Styles */
+.error-message {
+    background-color: var(--color-error-bg);
+    border: 1px solid var(--color-error-border);
+    color: var(--color-error);
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.success-message {
+    background-color: var(--color-success-bg);
+    border: 1px solid var(--color-success-border);
+    color: var(--color-success);
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* Dark mode message styles */
+.dark-mode .error-message {
+    background-color: var(--color-error-dark);
+    border-color: var(--color-error-border-dark);
+    color: var(--color-error-light);
+}
+
+.dark-mode .success-message {
+    background-color: var(--color-success-dark-bg);
+    border-color: var(--color-success-dark-border);
+    color: var(--color-success-light);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    .profile-modal {
+        width: 95%;
+        margin: 20px;
+        max-height: calc(100vh - 40px);
+    }
+    
+    .profile-header,
+    .profile-content {
+        padding: 20px;
+    }
+    
+    .info-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .info-item label {
+        min-width: auto;
+    }
+    
+    .info-item span {
+        text-align: left;
+    }
+    
+    .password-form-section {
+        padding: 20px;
+    }
+}
+
+/* Custom scrollbar for the modal */
+.profile-modal::-webkit-scrollbar {
+    width: 6px;
+}
+
+.profile-modal::-webkit-scrollbar-track {
+    background: var(--background);
+}
+
+.profile-modal::-webkit-scrollbar-thumb {
+    background-color: var(--text-secondary);
+    border-radius: 3px;
+    opacity: 0.5;
+}
+
+.profile-modal::-webkit-scrollbar-thumb:hover {
+    opacity: 0.8;
+}
