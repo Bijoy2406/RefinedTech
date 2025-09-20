@@ -1,33 +1,22 @@
-# --- Stage 1: Composer with PHP extensions ---
-FROM php:8.3-cli-alpine AS vendor
-WORKDIR /app
-
-# Install system dependencies and PHP extensions for Composer
-RUN apk add --no-cache git unzip libzip-dev libpng-dev freetype-dev libjpeg-turbo-dev icu-dev postgresql-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install zip gd intl pdo_pgsql bcmath
-
-# Install Composer
-COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
-
-# Copy composer files and install dependencies
-COPY composer.json composer.lock ./
-RUN composer install --no-dev --prefer-dist --no-progress --no-interaction --optimize-autoloader
-
-# --- Stage 2: Runtime ---
+# Use PHP 8.3 with necessary extensions pre-built
 FROM php:8.3-cli-alpine AS app
 WORKDIR /var/www/html
 
-# Runtime dependencies only
+# Install system dependencies and PHP extensions
 RUN apk add --no-cache bash icu-libs libzip libpng freetype libjpeg-turbo libpq \
     && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS icu-dev libzip-dev postgresql-dev libpng-dev freetype-dev libjpeg-turbo-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) pdo_pgsql bcmath intl zip gd pcntl opcache \
     && apk del .build-deps
 
-# Copy application and vendor from previous stage
+# Install Composer
+COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
+
+# Copy application files
 COPY . .
-COPY --from=vendor /app/vendor ./vendor
+
+# Install PHP dependencies
+RUN composer install --no-dev --prefer-dist --no-progress --no-interaction --optimize-autoloader
 
 # Set permissions
 RUN chown -R www-data:www-data storage bootstrap/cache
