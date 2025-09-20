@@ -4,9 +4,14 @@ use Laravel\Sanctum\Sanctum;
 
 return [
     'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(
+<<<<<<< HEAD
         '%s%s%s',
         'localhost,localhost:3000,localhost:5173,localhost:5174,127.0.0.1,127.0.0.1:8000,::1,',
         'refinedtech.netlify.app,',
+=======
+        '%s%s',
+        'localhost,localhost:3000,localhost:5173,localhost:5174,127.0.0.1,127.0.0.1:8000,::1',
+>>>>>>> dev
         Sanctum::currentApplicationUrlWithPort()
     ))),
     'guard' => ['web'],

@@ -2,15 +2,21 @@
   min-height: 100vh;
   display: grid;
   grid-template-rows: auto 1fr auto;
+<<<<<<< HEAD
   background-color: var(--bg-primary);
   color: var(--text-primary);
   transition: all var(--transition-normal);
+=======
+  background-color: var(--background);
+  color: var(--text-primary);
+>>>>>>> dev
 }
 
 .nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
+<<<<<<< HEAD
   padding: var(--spacing-md) var(--spacing-xl);
   background: var(--nav-bg);
   backdrop-filter: var(--nav-backdrop);
@@ -20,15 +26,29 @@
   border-bottom: 1px solid var(--nav-border);
   z-index: var(--z-sticky);
   transition: all var(--transition-normal);
+=======
+  padding: 1rem 2rem;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  border-bottom: 1px solid var(--card-border);
+>>>>>>> dev
 }
 
 .brand {
   font-weight: 800;
+<<<<<<< HEAD
   font-size: var(--font-size-xl);
   display: flex;
   align-items: center;
   color: var(--text-primary);
   transition: color var(--transition-normal);
+=======
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+>>>>>>> dev
 }
 
 .brand-logo {
@@ -36,29 +56,43 @@
   width: auto;
   max-width: 200px;
   object-fit: contain;
+<<<<<<< HEAD
   transition: filter var(--transition-normal);
 }
 
 .dark-mode .brand-logo {
   filter: brightness(1.2) contrast(1.1);
+=======
+>>>>>>> dev
 }
 
 .links {
   display: flex;
+<<<<<<< HEAD
   gap: var(--spacing-sm);
+=======
+  gap: .5rem;
+>>>>>>> dev
   align-items: center;
 }
 
 .theme-toggle {
+<<<<<<< HEAD
     background: var(--btn-secondary-bg);
     border: 1px solid var(--btn-outline-border);
     border-radius: var(--radius-full);
+=======
+    background: transparent;
+    border: 1px solid var(--input-border);
+    border-radius: 50%;
+>>>>>>> dev
     width: 40px;
     height: 40px;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
+<<<<<<< HEAD
     color: var(--text-primary);
     transition: all var(--transition-normal);
     box-shadow: var(--card-shadow);
@@ -81,19 +115,43 @@
     transition: all var(--transition-normal);
     padding: var(--spacing-sm) var(--spacing-md);
     border-radius: var(--radius-md);
+=======
+    font-size: 1.2rem;
+}
+
+.profile-btn {
+    background-color: var(--secondary-btn-bg);
+    color: var(--secondary-btn-text);
+    border: 1px solid var(--card-border);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+>>>>>>> dev
 }
 
 .avatar-btn {
   padding: 0;
+<<<<<<< HEAD
   width: 40px;
   height: 40px;
   border-radius: var(--radius-full);
+=======
+  width: 40px; /* slight increase for clarity */
+  height: 40px; /* slight increase for clarity */
+  border-radius: 50%;
+>>>>>>> dev
   overflow: hidden;
   position: relative;
   background: var(--card-bg);
   border: 1px solid var(--card-border);
+<<<<<<< HEAD
   box-shadow: var(--card-shadow);
   transition: all var(--transition-normal);
+=======
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.05);
+>>>>>>> dev
 }
 
 /* Plain avatar button (no padding, border, background) */
@@ -104,6 +162,7 @@
   background: none;
   width: 40px;
   height: 40px;
+<<<<<<< HEAD
   border-radius: var(--radius-full);
   cursor: pointer;
   display: inline-flex;
@@ -125,6 +184,18 @@
   background: var(--btn-primary-bg);
   transform: translateY(-2px);
   box-shadow: var(--card-shadow-hover);
+=======
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-flex;
+  overflow: hidden;
+}
+.avatar-plain:focus { outline: 2px solid var(--primary-btn-bg); outline-offset: 2px; }
+.avatar-plain:hover { filter: brightness(1.05); }
+
+.avatar-btn:hover {
+  background: var(--primary-btn-bg);
+>>>>>>> dev
 }
 
 .nav-avatar {
@@ -133,23 +204,37 @@
   object-fit: cover;
   object-position: center center;
   display: flex;
+<<<<<<< HEAD
   border-radius: var(--radius-full);
   font-size: var(--font-size-sm);
   font-weight: 600;
   text-transform: uppercase;
   background: none;
+=======
+  border-radius: 50%;
+  font-size: 0.8rem; /* adjusted for new size */
+  font-weight: 600;
+  text-transform: uppercase;
+  background: none; /* remove gradient to keep image crisp; placeholder handled separately */
+>>>>>>> dev
   color: var(--text-primary);
   align-items: center;
   justify-content: center;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
+<<<<<<< HEAD
   transform: translateZ(0);
   image-rendering: auto;
   transition: all var(--transition-fast);
+=======
+  transform: translateZ(0); /* prevent blurring on some GPUs */
+  image-rendering: auto;
+>>>>>>> dev
 }
 
 /* Placeholder variant (when no image src) */
 .nav-avatar.placeholder {
+<<<<<<< HEAD
   background: var(--bg-gradient);
   letter-spacing: 1px;
   color: var(--text-inverse);
@@ -179,11 +264,38 @@
   text-align: center;
   background: var(--bg-secondary);
   transition: all var(--transition-normal);
+=======
+  background: linear-gradient(135deg, var(--secondary-btn-bg), var(--card-bg));
+  letter-spacing: 1px;
+}
+
+/* Remove duplicate placeholder rule above (merged) */
+
+.profile-btn:hover {
+    background-color: var(--primary-btn-bg);
+    color: var(--primary-btn-text);
+    border-color: var(--primary-btn-bg);
+    transform: translateY(-1px);
+}
+
+.content {
+  padding: 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.footer {
+  padding: 1rem 2rem;
+  border-top: 1px solid var(--card-border);
+  color: var(--text-secondary);
+  text-align: center;
+>>>>>>> dev
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
   .nav {
+<<<<<<< HEAD
     padding: var(--spacing-md);
   }
 
@@ -198,6 +310,18 @@
 
   .content {
     padding: var(--spacing-md);
+=======
+    padding: 1rem;
+  }
+
+  .links {
+    gap: 0.3rem;
+  }
+
+  .profile-btn {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.8rem;
+>>>>>>> dev
   }
 
   .profile-btn span {
@@ -205,10 +329,18 @@
   }
 
   .content {
+<<<<<<< HEAD
     padding: var(--spacing-md);
   }
 
   .footer {
     padding: var(--spacing-md);
+=======
+    padding: 1rem;
+  }
+
+  .footer {
+    padding: 1rem;
+>>>>>>> dev
   }
 }

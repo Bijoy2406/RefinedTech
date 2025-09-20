@@ -60,6 +60,7 @@ return [
             'report' => false,
         ],
 
+<<<<<<< HEAD
         'cloudinary' => [
             'driver' => 'cloudinary',
             'cloud' => env('CLOUDINARY_CLOUD_NAME'),
@@ -68,6 +69,8 @@ return [
             'url' => env('CLOUDINARY_URL'),
         ],
 
+=======
+>>>>>>> dev
     ],
 
     /*

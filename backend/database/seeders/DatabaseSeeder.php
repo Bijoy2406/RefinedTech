@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+<<<<<<< HEAD
         // Optional sample user
         // User::factory(10)->create();
         if (!User::where('email', 'test@example.com')->exists()) {
@@ -27,6 +28,13 @@ class DatabaseSeeder extends Seeder
             SeparateTablesSeeder::class,
             AdminAccessCodeSeeder::class,
             ProductSeeder::class,
+=======
+        // User::factory(10)->create();
+
+        User::factory()->create([
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+>>>>>>> dev
         ]);
     }
 }

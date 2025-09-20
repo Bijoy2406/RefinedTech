@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+<<<<<<< HEAD
 import LottieLoading from './LottieLoading';
+=======
+>>>>>>> dev
 import '../css/ProfilePage.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
@@ -290,6 +293,10 @@ export default function Profile() {
                         <div className="avatar-status-dot"></div>
                     </div>
                     <h2 className="user-name gradient-text">{user.name}</h2>
+<<<<<<< HEAD
+=======
+                    <div className="membership-label pulse-text">{memberLabel}</div>
+>>>>>>> dev
                     <div className="meta-line fade-in">Role: <span className="pill neutral glow-pill">{user.role}</span></div>
                     <div className="meta-line fade-in">Status: <span className={`pill status-${(user.status||'active').toLowerCase()} glow-pill`}>{user.status || 'Active'}</span></div>
 

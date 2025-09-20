@@ -270,9 +270,9 @@ export default function AdminHomepage({ user }) {
                     className={`tab ${activeTab === 'admins' ? 'active' : ''}`}
                     onClick={() => setActiveTab('admins')}
                 >
-                    � Pending Admins ({pendingAdmins.length})
+                    👤 Pending Admins ({pendingAdmins.length})
                 </button>
-                </div>
+            </div>
 
             <div className="dashboard-content">
                 {activeTab === 'overview' && (
@@ -426,5 +426,3 @@ export default function AdminHomepage({ user }) {
         </div>
     );
 }
-
-/*hi*/

@@ -4,7 +4,11 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
+<<<<<<< HEAD
     "content-hash": "f83dedac2f9694e0ff03fca6d8c6af6c",
+=======
+    "content-hash": "9e8009f62639975c287d610dda66cb45",
+>>>>>>> dev
     "packages": [
         {
             "name": "brick/math",
@@ -136,6 +140,7 @@
             "time": "2024-02-09T16:56:22+00:00"
         },
         {
+<<<<<<< HEAD
             "name": "cloudinary-labs/cloudinary-laravel",
             "version": "3.0.1",
             "source": {
@@ -330,6 +335,8 @@
             "time": "2025-02-03T11:14:03+00:00"
         },
         {
+=======
+>>>>>>> dev
             "name": "dflydev/dot-access-data",
             "version": "v3.0.3",
             "source": {

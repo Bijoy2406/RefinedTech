@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Laravel Framework
 /vendor
 /node_modules
@@ -153,3 +154,7 @@ public/images/
 
 # Session files
 /storage/framework/sessions/*
+=======
+/vendor
+
+>>>>>>> dev

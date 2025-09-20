@@ -10,7 +10,10 @@ use App\Models\Buyer;
 use App\Models\Seller;
 use App\Models\Admin;
 use App\Models\AdminAccessCode;
+<<<<<<< HEAD
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+=======
+>>>>>>> dev
 
 class AuthController extends Controller
 {
@@ -257,6 +260,7 @@ class AuthController extends Controller
     {
         $user = $request->user();
         $imageUrl = null;
+<<<<<<< HEAD
         
         // Priority: Cloudinary URL, then fallback to legacy route
         if ($user && $user->profile_image_url) {
@@ -266,6 +270,13 @@ class AuthController extends Controller
                 $imageUrl = route('profile.image', ['id' => $user->id, 'type' => strtolower($user->role)]);
             } catch (\Throwable $e) {
                 $imageUrl = null;
+=======
+        if ($user && $user->profile_image) {
+            try {
+                $imageUrl = route('profile.image', ['id' => $user->id, 'type' => strtolower($user->role)]);
+            } catch (\Throwable $e) {
+                $imageUrl = null; // route helper failure fallback
+>>>>>>> dev
             }
         }
         
@@ -359,7 +370,11 @@ class AuthController extends Controller
     }
 
     /**
+<<<<<<< HEAD
      * Upload or replace profile image (stored on Cloudinary)
+=======
+     * Upload or replace profile image (stored as BLOB in respective user table)
+>>>>>>> dev
      */
     public function uploadProfileImage(Request $request)
     {
@@ -373,7 +388,12 @@ class AuthController extends Controller
             }
 
             $user = $request->user();
+<<<<<<< HEAD
             $imageData = null;
+=======
+            $binary = null;
+            $mime = null;
+>>>>>>> dev
 
             if ($hasFile) {
                 $validator = Validator::make($request->all(), [
@@ -383,6 +403,7 @@ class AuthController extends Controller
                     return response()->json(['errors' => $validator->errors()], 422);
                 }
                 $file = $request->file('image');
+<<<<<<< HEAD
                 $imageData = $file->getRealPath();
             } else {
                 // Handle base64 data
@@ -395,6 +416,24 @@ class AuthController extends Controller
                 $data = preg_replace('/[^A-Za-z0-9+\/=]/', '', $data);
                 
                 // Validate base64
+=======
+                $binary = file_get_contents($file->getRealPath());
+                $mime = $file->getMimeType();
+            } else {
+                // Handle base64 data with proper UTF-8 handling
+                $data = $base64;
+                if (preg_match('/^data:(image\/(?:png|jpeg|jpg|gif|webp));base64,(.*)$/i', $data, $matches)) {
+                    $mime = strtolower($matches[1]);
+                    $data = $matches[2];
+                } else {
+                    $mime = 'image/png';
+                }
+                
+                // Clean the base64 string to remove any invalid characters
+                $data = preg_replace('/[^A-Za-z0-9+\/=]/', '', $data);
+                
+                // Validate approximate size (<=5MB)
+>>>>>>> dev
                 $decoded = base64_decode($data, true);
                 if ($decoded === false) {
                     return response()->json(['errors' => ['base64Image' => ['Invalid base64 encoding']]], 422);
@@ -403,6 +442,7 @@ class AuthController extends Controller
                     return response()->json(['errors' => ['base64Image' => ['Image exceeds 5MB']]], 422);
                 }
                 
+<<<<<<< HEAD
                 $imageData = 'data:image/png;base64,' . $data;
             }
 
@@ -442,13 +482,41 @@ class AuthController extends Controller
             $responseData = [
                 'message' => 'Profile image updated',
                 'profile_image_url' => $user->profile_image_url,
+=======
+                $binary = $decoded;
+                
+                // Quick mime type detection
+                $sig = substr($binary, 0, 4);
+                if ($sig === "\x89PNG") $mime = 'image/png';
+                elseif (substr($binary, 0, 3) === "GIF") $mime = 'image/gif';
+                elseif (substr($binary, 0, 2) === "\xFF\xD8") $mime = 'image/jpeg';
+                elseif (strncmp($binary, 'RIFF', 4)===0 && substr($binary,8,4)==='WEBP') $mime = 'image/webp';
+            }
+
+            // Ensure we have valid binary data
+            if (!$binary || strlen($binary) === 0) {
+                return response()->json(['errors' => ['image' => ['Invalid image data']]], 422);
+            }
+
+            $user->profile_image = $binary;
+            $user->profile_image_mime = $mime;
+            $user->save();
+
+            // Create a clean response without any binary data
+            $responseData = [
+                'message' => 'Profile image updated',
+                'profile_image_url' => route('profile.image', ['id' => $user->id, 'type' => strtolower($user->role)]),
+>>>>>>> dev
                 'user' => [
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
                     'role' => $user->role,
                     'status' => $user->status,
+<<<<<<< HEAD
                     'profile_image_url' => $user->profile_image_url,
+=======
+>>>>>>> dev
                 ]
             ];
 
@@ -480,6 +548,7 @@ class AuthController extends Controller
                     return response()->json(['error' => 'Invalid user type'], 404);
             }
 
+<<<<<<< HEAD
             if (!$model) {
                 return response()->json(['error' => 'User not found'], 404);
             }
@@ -491,6 +560,9 @@ class AuthController extends Controller
 
             // Fallback to legacy BLOB data
             if (!$model->profile_image) {
+=======
+            if (!$model || !$model->profile_image) {
+>>>>>>> dev
                 return response()->json(['error' => 'Image not found'], 404);
             }
 
@@ -528,6 +600,10 @@ class AuthController extends Controller
         
         // Parse data URI
         if (preg_match('/^data:(image\/(?:png|jpeg|jpg|gif|webp));base64,(.*)$/i', $base64Data, $matches)) {
+<<<<<<< HEAD
+=======
+            $mime = strtolower($matches[1]);
+>>>>>>> dev
             $data = $matches[2];
         } else {
             return response()->json(['error' => 'Invalid image format'], 422);
@@ -543,6 +619,7 @@ class AuthController extends Controller
             return response()->json(['error' => 'Image exceeds 5MB limit'], 422);
         }
         
+<<<<<<< HEAD
         try {
             // Delete old image from Cloudinary if exists
             if ($user->profile_image_public_id) {
@@ -589,6 +666,23 @@ class AuthController extends Controller
             \Log::error('Profile picture update error: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to update profile picture'], 500);
         }
+=======
+        // Store in database
+        $user->profile_image = $decoded;
+        $user->profile_image_mime = $mime;
+        $user->save();
+        
+        // Return user data with profile_picture field for frontend compatibility
+        $userData = $user->toArray();
+        if ($user->profile_image) {
+            $userData['profile_picture'] = route('profile.image', ['id' => $user->id, 'type' => strtolower($user->role)]);
+        }
+        
+        return response()->json([
+            'message' => 'Profile picture updated successfully',
+            'user' => $userData
+        ], 200);
+>>>>>>> dev
     }
 
     /**

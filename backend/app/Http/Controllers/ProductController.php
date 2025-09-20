@@ -380,8 +380,12 @@ class ProductController extends Controller
     public function getAllProducts(Request $request): JsonResponse
     {
         try {
+<<<<<<< HEAD
             $query = Product::with('seller')
                 ->where('status', 'active')
+=======
+            $query = Product::where('status', 'active')
+>>>>>>> dev
                 ->where('quantity_available', '>', 0)
                 ->orderBy('created_at', 'desc');
 
@@ -420,6 +424,7 @@ class ProductController extends Controller
             $perPage = $request->get('per_page', 20);
             $products = $query->paginate($perPage);
 
+<<<<<<< HEAD
             // Normalize items for frontend consumption (decode images, include minimal seller info)
             $items = collect($products->items())->map(function ($product) {
                 return [
@@ -482,6 +487,11 @@ class ProductController extends Controller
             return response()->json([
                 'success' => true,
                 'products' => $items,
+=======
+            return response()->json([
+                'success' => true,
+                'products' => $products->items(),
+>>>>>>> dev
                 'pagination' => [
                     'current_page' => $products->currentPage(),
                     'last_page' => $products->lastPage(),
@@ -504,8 +514,12 @@ class ProductController extends Controller
     public function getProduct(Request $request, $id): JsonResponse
     {
         try {
+<<<<<<< HEAD
             $product = Product::with('seller')
                 ->where('id', $id)
+=======
+            $product = Product::where('id', $id)
+>>>>>>> dev
                 ->where('status', 'active')
                 ->first();
 
@@ -531,6 +545,7 @@ class ProductController extends Controller
             ], 500);
         }
     }
+<<<<<<< HEAD
 
     /**
      * Get category statistics (product count per category)
@@ -582,4 +597,6 @@ class ProductController extends Controller
             ], 500);
         }
     }
+=======
+>>>>>>> dev
 }
