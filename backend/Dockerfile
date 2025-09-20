@@ -1,4 +1,3 @@
-# Use PHP 8.3 with necessary extensions pre-built
 FROM php:8.3-cli-alpine AS app
 WORKDIR /var/www/html
 
@@ -15,11 +14,16 @@ COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
 # Copy application files
 COPY . .
 
-# Install PHP dependencies
-RUN composer install --no-dev --prefer-dist --no-progress --no-interaction --optimize-autoloader
+# Create bootstrap/cache directory and set permissions BEFORE running composer
+RUN mkdir -p bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache
 
-# Set permissions
-RUN chown -R www-data:www-data storage bootstrap/cache
+# Install PHP dependencies with --no-scripts to avoid permission issues
+RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --prefer-dist --no-progress --no-interaction --optimize-autoloader --no-scripts
+
+# Run Laravel setup commands manually after permissions are set
+RUN php artisan package:discover --ansi
 
 # Copy and set up start script
 COPY docker/start.sh /usr/local/bin/start.sh
