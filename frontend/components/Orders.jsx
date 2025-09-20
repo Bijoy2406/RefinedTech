@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { UserContext } from '../App.jsx';
 import axios from 'axios';
+import LottieLoading from './LottieLoading';
 import '../css/Orders.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
@@ -108,14 +109,7 @@ export default function Orders() {
   };
 
   if (loading) {
-    return (
-      <div className="orders-page">
-        <div className="loading">
-          <div className="loading-spinner"></div>
-          Loading your orders...
-        </div>
-      </div>
-    );
+    return <LottieLoading message="Loading your orders..." />
   }
 
   return (

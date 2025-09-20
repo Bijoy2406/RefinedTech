@@ -70,3 +70,47 @@ label {
   margin-top: 1rem;
   color: var(--text-secondary);
 }
+
+/* Lottie Loading Full-Screen Overlay */
+.lottie-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: var(--modal-overlay);
+  backdrop-filter: var(--modal-backdrop);
+  -webkit-backdrop-filter: var(--modal-backdrop);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: var(--z-modal);
+  transition: all var(--transition-normal);
+}
+
+.lottie-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xl);
+  background: var(--modal-bg);
+  padding: var(--spacing-2xl);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--modal-shadow);
+  border: 1px solid var(--card-border);
+}
+
+.lottie-animation {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.lottie-loading-text {
+  color: var(--text-primary);
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  text-align: center;
+  margin: 0;
+  text-shadow: none;
+}

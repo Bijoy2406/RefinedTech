@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import axios from 'axios';
+import LottieLoading from './LottieLoading';
 import '../css/PublicProductList.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
@@ -55,36 +56,36 @@ export default function PublicProductList() {
   };
 
   return (
-    <div className="public-product-list">
-      <div className="container">
-        <h1>Browse Products</h1>
+    <>
+      {loading && <LottieLoading message="Loading products..." />}
+      <div className="public-product-list">
+        <div className="container">
+          <h1>Browse Products</h1>
 
-        {/* Category Filter */}
-        <div className="category-filter">
-          <button
-            className={selectedCategory === '' ? 'active' : ''}
-            onClick={() => handleCategoryChange('')}
-          >
-            All Categories
-          </button>
-          {categories.map(category => (
+          {/* Category Filter */}
+          <div className="category-filter">
             <button
-              key={category}
-              className={selectedCategory === category ? 'active' : ''}
-              onClick={() => handleCategoryChange(category)}
+              className={selectedCategory === '' ? 'active' : ''}
+              onClick={() => handleCategoryChange('')}
             >
-              {category}
+              All Categories
             </button>
-          ))}
-        </div>
+            {categories.map(category => (
+              <button
+                key={category}
+                className={selectedCategory === category ? 'active' : ''}
+                onClick={() => handleCategoryChange(category)}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
 
-        {/* Products Grid */}
-        {loading ? (
-          <div className="loading">Loading products...</div>
-        ) : (
-          <div className="products-grid">
-            {products.length > 0 ? (
-              products.map(product => (
+          {/* Products Grid */}
+          {!loading && (
+            <div className="products-grid">
+              {products.length > 0 ? (
+                products.map(product => (
                 <div
                   key={product.id}
                   className="product-card"
@@ -130,7 +131,8 @@ export default function PublicProductList() {
           <Link to="/login" className="btn primary">Login to Purchase</Link>
           <Link to="/signup/buyer" className="btn secondary">Create Account</Link>
         </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

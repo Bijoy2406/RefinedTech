@@ -2,6 +2,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect, useContext } from 'react'
 import { UserContext } from '../App.jsx'
 import axios from 'axios'
+import LottieLoading from './LottieLoading'
 import '../css/ProductDetails.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
@@ -213,11 +214,7 @@ function ProductDetails() {
   }
 
   if (loading) {
-    return (
-      <div className="product-details-container">
-        <div className="loading">Loading product details...</div>
-      </div>
-    )
+    return <LottieLoading message="Loading product details..." />
   }
 
   if (error || !product) {

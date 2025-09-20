@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import RotatingText from './RotatingText'
+import LottieLoading from './LottieLoading'
 import '../css/theme.css'
 import '../css/Home.css'
 

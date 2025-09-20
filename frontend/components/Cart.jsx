@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import LottieLoading from './LottieLoading';
 import '../css/Cart.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
@@ -154,11 +155,7 @@ export default function Cart() {
   };
 
   if (loading) {
-    return (
-      <div className="cart-page">
-        <div className="loading">Loading your cart...</div>
-      </div>
-    );
+    return <LottieLoading message="Loading your cart..." />
   }
 
   return (

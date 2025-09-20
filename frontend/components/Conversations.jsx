@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../App.jsx';
 import axios from 'axios';
+import LottieLoading from './LottieLoading';
 import '../css/Conversations.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
@@ -117,11 +118,7 @@ function Conversations() {
   };
 
   if (loading) {
-    return (
-      <div className="conversations-container">
-        <div className="loading">Loading conversations...</div>
-      </div>
-    );
+    return <LottieLoading message="Loading conversations..." />
   }
 
   return (

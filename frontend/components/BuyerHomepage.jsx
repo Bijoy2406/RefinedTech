@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { UserContext } from '../App.jsx';
 import TiltedCard from './TiltedCard';
+import LottieLoading from './LottieLoading';
 import '../css/BuyerHomepage.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
@@ -406,14 +407,7 @@ export default function BuyerHomepage() {
     };
 
     if (loading) {
-        return (
-            <div className="buyer-homepage loading-state">
-                <div className="loading-spinner">
-                    <div className="spinner"></div>
-                    <p>Loading products...</p>
-                </div>
-            </div>
-        );
+        return <LottieLoading message="Loading products..." />
     }
 
     return (

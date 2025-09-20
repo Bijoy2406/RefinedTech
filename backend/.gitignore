@@ -1,0 +1,155 @@
+# Laravel Framework
+/vendor
+/node_modules
+/public/hot
+/public/storage
+/storage/*.key
+/storage/app/public/*
+!/storage/app/public/.gitkeep
+/storage/framework/cache/*
+!/storage/framework/cache/.gitkeep
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitkeep
+/storage/framework/testing/*
+!/storage/framework/testing/.gitkeep
+/storage/framework/views/*
+!/storage/framework/views/.gitkeep
+/storage/logs/*
+!/storage/logs/.gitkeep
+
+# Environment files
+.env
+.env.backup
+.env.production
+.env.local
+.env.testing
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Laravel specific
+/bootstrap/cache/*.php
+!/bootstrap/cache/.gitkeep
+/bootstrap/cache/config.php
+/bootstrap/cache/packages.php
+/bootstrap/cache/services.php
+
+# Database
+*.sqlite
+*.sqlite3
+/database/database.sqlite
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+/storage/logs/*.log
+
+# Compiled assets
+/public/build
+/public/mix-manifest.json
+/public/js/app.js
+/public/css/app.css
+
+# Composer
+composer.phar
+auth.json
+
+# NPM
+npm-debug.log
+yarn-error.log
+
+# Test files and debugging scripts
+test_*.php
+debug_*.php
+chatbot_diagnostic.php
+check_products.php
+
+# Temporary files
+*.tmp
+*.temp
+
+# Coverage reports
+/coverage/
+.phpunit.result.cache
+
+# Laravel Mix
+/public/hot
+/public/storage
+/storage/app/public
+mix-manifest.json
+
+# Cache files
+.phpunit.cache
+.cache/
+*.cache
+
+# Backup files
+*.backup
+*.bak
+
+# Security
+.htaccess
+.htpasswd
+
+# Laravel Telescope (if installed)
+/public/vendor/telescope/
+
+# Laravel Horizon (if installed)  
+/storage/horizon/
+
+# Package managers
+package-lock.json
+yarn.lock
+
+# Error logs
+error_log
+php_errors.log
+
+# Session files
+/storage/framework/sessions/
+/storage/framework/cache/
+
+# Compiled Views
+/storage/framework/views/
+
+# Asset compilation
+public/js/
+public/css/
+public/fonts/
+public/images/
+!public/index.php
+!public/favicon.ico
+!public/robots.txt
+
+# Custom uploads and user content
+/public/uploads/
+/storage/app/uploads/
+
+# Configuration cache
+/bootstrap/cache/config.php
+/bootstrap/cache/packages.php
+/bootstrap/cache/services.php
+
+# Route cache
+/bootstrap/cache/routes-*.php
+
+# View cache
+/storage/framework/views/*.php
+
+# Session files
+/storage/framework/sessions/*

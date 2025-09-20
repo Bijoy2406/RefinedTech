@@ -6,6 +6,15 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\CartController;
 
+// Health check endpoint for Railway
+Route::get('/health', function () {
+    return response()->json([
+        'status' => 'OK',
+        'timestamp' => now(),
+        'app' => 'RefinedTech Backend'
+    ]);
+});
+
 // Authentication Routes
 Route::post('/signup', [AuthController::class, 'signup']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -109,3 +118,6 @@ Route::middleware(['multi.auth'])->group(function () {
 });
 
 Route::get('/categories', [App\Http\Controllers\ProductController::class, 'getCategoryStats']);
+
+// Chatbot (Public endpoint)
+Route::post('/chatbot', [App\Http\Controllers\ChatbotController::class, 'chat']);

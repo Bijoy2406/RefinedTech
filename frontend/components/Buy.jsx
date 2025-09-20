@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import LottieLoading from './LottieLoading';
 import '../css/Buy.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
@@ -231,6 +232,10 @@ export default function Buy() {
         </div>
       </div>
     );
+  }
+
+  if (loading) {
+    return <LottieLoading message="Processing your order..." />
   }
 
   return (

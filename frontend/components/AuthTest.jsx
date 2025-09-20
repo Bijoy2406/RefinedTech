@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
+import LottieLoading from './LottieLoading';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
 
@@ -78,6 +79,7 @@ export default function AuthTest() {
 
     return (
         <div style={{ padding: '20px', background: '#f5f5f5', margin: '20px', borderRadius: '8px' }}>
+            {loading && <LottieLoading message="Testing authentication..." />}
             <h3>Authentication Test</h3>
             
             <div style={{ marginBottom: '15px' }}>
