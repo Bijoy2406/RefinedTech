@@ -1,57 +1,38 @@
-# syntax=docker/dockerfile:1.6
-
-# --- Stage 1: Composer dependencies layer ---
-FROM composer:2 AS vendor
-
+# --- Stage 1: deps (composer) ---
+FROM composer:2.7 AS vendor
 WORKDIR /app
 
-# Copy only composer manifests first for better caching
+# Copy only composer files to leverage build cache
 COPY composer.json composer.lock ./
 
-# Install PHP dependencies without running scripts (no artisan available in this stage)
-RUN composer install --no-dev --no-scripts --prefer-dist --no-progress --no-interaction
+# Install PHP deps for production
+RUN composer install --no-dev --prefer-dist --no-progress --no-interaction --optimize-autoloader
 
-# --- Stage 2: PHP runtime ---
-FROM php:8.2-fpm-alpine AS runtime
-
-ENV APP_ENV=production \
-    APP_DEBUG=false \
-    COMPOSER_ALLOW_SUPERUSER=1 \
-    PHP_OPCACHE_VALIDATE_TIMESTAMPS=0 \
-    PHP_OPCACHE_ENABLE=1 \
-    PHP_OPCACHE_ENABLE_CLI=1
-
+# --- Stage 2: runtime (php) ---
+FROM php:8.3-cli-alpine AS app
 WORKDIR /var/www/html
 
-# System dependencies and PHP extensions
+# System libs and build deps
 RUN apk add --no-cache \
-        bash curl git unzip libzip-dev icu-data-full icu-dev oniguruma-dev postgresql-dev libpng-dev libjpeg-turbo-dev libwebp-dev freetype-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
-    && docker-php-ext-install -j$(nproc) bcmath mbstring zip intl gd pdo pdo_pgsql opcache \
-    && apk del --no-cache icu-dev oniguruma-dev libzip-dev libpng-dev libjpeg-turbo-dev libwebp-dev freetype-dev
+    bash git icu-libs libzip libpng freetype libjpeg-turbo libpq \
+    && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
+       icu-dev libzip-dev postgresql-dev libpng-dev freetype-dev libjpeg-turbo-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) pdo_pgsql bcmath intl zip gd pcntl opcache \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && apk del .build-deps
 
-# Copy application code
-COPY . /var/www/html
+# Copy app and composer vendor from builder
+COPY . .
+COPY --from=vendor /app/vendor ./vendor
 
-# Copy vendor from build stage
-COPY --from=vendor /app/vendor /var/www/html/vendor
+# Ensure storage is writable
+RUN chown -R www-data:www-data storage bootstrap/cache
 
-# Copy start script
+# Add start script
 COPY docker/start.sh /usr/local/bin/start.sh
 RUN chmod +x /usr/local/bin/start.sh
 
-# Ensure correct permissions for storage and cache
-RUN mkdir -p storage/framework/{cache,sessions,views} \
-    && mkdir -p bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache \
-    && find storage -type d -exec chmod 775 {} \; \
-    && find bootstrap/cache -type d -exec chmod 775 {} \;
-
-# Expose port for Render (Render sets $PORT env var; we’ll use PHP's built-in server)
-EXPOSE 8080
-
-# Healthcheck (optional; simple HTTP check)
-HEALTHCHECK --interval=30s --timeout=5s --start-period=30s CMD curl -fsS http://127.0.0.1:${PORT:-8080}/ || exit 1
-
-# Default command: run start script (Render uses this to start the service)
+# Expose nothing; Render sets $PORT and we bind to it in start.sh
 CMD ["/usr/local/bin/start.sh"]
