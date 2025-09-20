@@ -1,0 +1,28 @@
+# Ignore local dev and build artifacts
+node_modules
+npm-debug.log
+yarn.lock
+pnpm-lock.yaml
+
+# Composer local vendor will be installed in build stage
+/vendor
+
+# Environment & secrets
+.env
+.env.*
+
+# Laravel caches and logs
+/storage/*.key
+/storage/logs/
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/testing/*
+/storage/framework/views/*
+/bootstrap/cache/*.php
+
+# OS/editor files
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
