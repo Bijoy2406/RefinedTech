@@ -15,12 +15,6 @@ class Seller extends Authenticatable
 
     protected function getProfileImageBase64Attribute()
     {
-        // Priority: Return Cloudinary URL if available
-        if ($this->profile_image_url) {
-            return $this->profile_image_url;
-        }
-        
-        // Fallback to legacy BLOB data
         if (!$this->profile_image) return null;
         $mime = $this->profile_image_mime ?? 'image/jpeg';
         return 'data:' . $mime . ';base64,' . base64_encode($this->profile_image);
@@ -50,16 +44,13 @@ class Seller extends Authenticatable
 
     /**
      * The attributes that should be hidden for serialization.
-        'profile_image_url',
-        'profile_image_public_id',
-    ];
+     *
      * @var array<int, string>
      */
     protected $hidden = [
         'password',
-        'profile_image',
-        'profile_image_mime',
-        'profile_image_public_id',
+        'remember_token',
+    'profile_image',
     'profile_image_mime',
     ];
 

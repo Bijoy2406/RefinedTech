@@ -56,36 +56,36 @@ export default function PublicProductList() {
   };
 
   return (
-    <>
-      {loading && <LottieLoading message="Loading products..." />}
-      <div className="public-product-list">
-        <div className="container">
-          <h1>Browse Products</h1>
+    <div className="public-product-list">
+      <div className="container">
+        <h1>Browse Products</h1>
 
-          {/* Category Filter */}
-          <div className="category-filter">
+        {/* Category Filter */}
+        <div className="category-filter">
+          <button
+            className={selectedCategory === '' ? 'active' : ''}
+            onClick={() => handleCategoryChange('')}
+          >
+            All Categories
+          </button>
+          {categories.map(category => (
             <button
-              className={selectedCategory === '' ? 'active' : ''}
-              onClick={() => handleCategoryChange('')}
+              key={category}
+              className={selectedCategory === category ? 'active' : ''}
+              onClick={() => handleCategoryChange(category)}
             >
-              All Categories
+              {category}
             </button>
-            {categories.map(category => (
-              <button
-                key={category}
-                className={selectedCategory === category ? 'active' : ''}
-                onClick={() => handleCategoryChange(category)}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
+          ))}
+        </div>
 
-          {/* Products Grid */}
-          {!loading && (
-            <div className="products-grid">
-              {products.length > 0 ? (
-                products.map(product => (
+        {/* Products Grid */}
+        {loading ? (
+          <LottieLoading message="Loading products..." />
+        ) : (
+          <div className="products-grid">
+            {products.length > 0 ? (
+              products.map(product => (
                 <div
                   key={product.id}
                   className="product-card"
@@ -131,8 +131,7 @@ export default function PublicProductList() {
           <Link to="/login" className="btn primary">Login to Purchase</Link>
           <Link to="/signup/buyer" className="btn secondary">Create Account</Link>
         </div>
-        </div>
       </div>
-    </>
+    </div>
   );
 }

@@ -15,26 +15,10 @@ import ProductDetails from './components/ProductDetails.jsx'
 import Wishlist from './components/Wishlist.jsx'
 import Orders from './components/Orders.jsx'
 import Conversations from './components/Conversations.jsx'
-import Chatbot from './components/Chatbot.jsx'
 import './css/App.css'
+import Chatbot from './components/Chatbot.jsx'
 
-// API Base URL Configuration
-const getApiBase = () => {
-  // Production environment variable from Netlify
-  if (import.meta.env.VITE_API_BASE) {
-    return import.meta.env.VITE_API_BASE;
-  }
-  
-  // Auto-detect based on hostname
-  if (window.location.hostname === 'refinedtech.netlify.app') {
-    return 'https://your-project-name.up.railway.app'; // Replace with your Railway URL
-  }
-  
-  // Default to local development
-  return 'http://127.0.0.1:8000';
-};
-
-const API_BASE = getApiBase();
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
 
 // Create User Context
 export const UserContext = createContext();
@@ -214,8 +198,6 @@ export default function App() {
           </Routes>
         </main>
         <footer className="footer">© {new Date().getFullYear()} RefinedTech</footer>
-        
-        {/* Chatbot - Available on all pages */}
         <Chatbot />
       </div>
       </UserContext.Provider>

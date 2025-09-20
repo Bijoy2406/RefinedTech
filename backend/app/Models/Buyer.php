@@ -41,21 +41,21 @@ class Buyer extends Authenticatable
         'phone_number',
         'status',
         'admin_access_code',
-        'profile_image_url',
-        'profile_image_public_id',
     ];
 
     /**
      * The attributes that should be hidden for serialization.
-     *
+        'profile_image_url',
+        'profile_image_public_id',
+    ];
      * @var array<int, string>
      */
     protected $hidden = [
+        'password',
         'profile_image',
         'profile_image_mime',
         'profile_image_public_id',
-        'password',
-        'remember_token',
+    'profile_image_mime',
     ];
 
     /**
@@ -68,6 +68,7 @@ class Buyer extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'date_of_birth' => 'date',
         ];
     }
 
@@ -77,29 +78,5 @@ class Buyer extends Authenticatable
     public function getRoleAttribute()
     {
         return 'Buyer';
-    }
-
-    /**
-     * Get the orders for the buyer
-     */
-    public function orders()
-    {
-        return $this->hasMany(Order::class);
-    }
-
-    /**
-     * Get the cart items for the buyer
-     */
-    public function cartItems()
-    {
-        return $this->hasMany(CartItem::class);
-    }
-
-    /**
-     * Get the wishlist items for the buyer
-     */
-    public function wishlists()
-    {
-        return $this->hasMany(Wishlist::class);
     }
 }

@@ -1,24 +1,17 @@
-<<<<<<< HEAD
 import { Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import RotatingText from './RotatingText'
 import LottieLoading from './LottieLoading'
 import '../css/theme.css'
-=======
-import { Link } from 'react-router-dom'
-import { useState, useEffect } from 'react'
-import axios from 'axios'
->>>>>>> dev
 import '../css/Home.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
 
 export default function Home({ user }) {
-<<<<<<< HEAD
   const navigate = useNavigate();
   const [realProducts, setRealProducts] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [categories, setCategories] = useState([
     { name: "Smartphones", icon: "📱", count: 0, color: "#E53935" },
@@ -37,27 +30,13 @@ export default function Home({ user }) {
   useEffect(() => {
     fetchProducts();
     fetchCategoryCounts();
-=======
-  const [realProducts, setRealProducts] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  // Fetch real products if user is a buyer
-  useEffect(() => {
-    if (user && user.role === 'Buyer') {
-      fetchProducts();
-    }
->>>>>>> dev
   }, [user]);
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
       const response = await axios.get(`${API_BASE}/api/products`);
-<<<<<<< HEAD
       const products = response.data.data || response.data.products || [];
-=======
-      const products = response.data.products || [];
->>>>>>> dev
       // Show only first 4 products for homepage
       setRealProducts(products.slice(0, 4));
     } catch (error) {
@@ -69,7 +48,6 @@ export default function Home({ user }) {
     }
   };
 
-<<<<<<< HEAD
   const fetchCategoryCounts = async () => {
     try {
       setCategoriesLoading(true);
@@ -176,75 +154,6 @@ export default function Home({ user }) {
   const handleViewAllProducts = () => {
     // Navigate to buyer page for browsing
     navigate('/buyer');
-=======
-  // Hardcoded product data (fallback for non-buyers or API failure)
-  const featuredProducts = [
-    {
-      id: 1,
-      name: "iPhone 13 Pro Max",
-      price: 850,
-      originalPrice: 1200,
-      condition: "Excellent",
-      category: "Phones",
-      location: "Dhaka, Bangladesh",
-      seller: "TechTrader",
-      rating: 4.8,
-      image: "/Assets/placeholders/phone1.jpg",
-      description: "Barely used iPhone 13 Pro Max in excellent condition. Comes with original box and accessories."
-    },
-    {
-      id: 2,
-      name: "MacBook Pro M2",
-      price: 1450,
-      originalPrice: 2000,
-      condition: "Good",
-      category: "Laptops",
-      location: "Chittagong, Bangladesh",
-      seller: "GadgetGuru",
-      rating: 4.9,
-      image: "/Assets/placeholders/laptop1.jpg",
-      description: "Powerful MacBook Pro M2 with 16GB RAM. Perfect for work and creative tasks."
-    },
-    {
-      id: 3,
-      name: "Sony WH-1000XM4",
-      price: 220,
-      originalPrice: 350,
-      condition: "Very Good",
-      category: "Audio",
-      location: "Sylhet, Bangladesh",
-      seller: "AudioExpert",
-      rating: 4.7,
-      image: "/Assets/placeholders/headphones1.jpg",
-      description: "Premium noise-canceling headphones. Crystal clear sound quality."
-    },
-    {
-      id: 4,
-      name: "iPad Air 5th Gen",
-      price: 480,
-      originalPrice: 600,
-      condition: "Like New",
-      category: "Tablets",
-      location: "Khulna, Bangladesh",
-      seller: "TabletTrader",
-      rating: 4.6,
-      image: "/Assets/placeholders/tablet1.jpg",
-      description: "Latest iPad Air with M1 chip. Perfect for students and professionals."
-    }
-  ];
-
-  const categories = [
-    { name: "Phones", icon: "📱", count: 245 },
-    { name: "Laptops", icon: "💻", count: 189 },
-    { name: "Tablets", icon: "📱", count: 67 },
-    { name: "Audio", icon: "🎧", count: 134 },
-    { name: "Gaming", icon: "🎮", count: 98 },
-    { name: "Accessories", icon: "🔌", count: 312 }
-  ];
-
-  const formatPrice = (price) => {
-    return `$${parseFloat(price).toFixed(2)}`;
->>>>>>> dev
   };
 
   const getConditionBadgeClass = (condition) => {
@@ -258,7 +167,6 @@ export default function Home({ user }) {
   };
 
   const renderRealProduct = (product) => {
-<<<<<<< HEAD
     const discount = product.original_price && product.original_price > product.price ? 
       Math.round(((product.original_price - product.price) / product.original_price) * 100) : 0;
 
@@ -272,19 +180,11 @@ export default function Home({ user }) {
         <div className="product-image">
           {product.images && product.images.length > 0 ? (
             <img src={`${API_BASE}${product.images[0]}`} alt={product.title} style={{width: '100%', height: '200px', objectFit: 'cover'}} />
-=======
-    return (
-      <div key={product.id} className="product-card">
-        <div className="product-image">
-          {product.images && product.images.length > 0 ? (
-            <img src={product.images[0]} alt={product.title} style={{width: '100%', height: '200px', objectFit: 'cover'}} />
->>>>>>> dev
           ) : (
             <div className="product-placeholder">
               {product.category === 'Smartphones' && '📱'}
               {product.category === 'Laptops' && '💻'}
               {product.category === 'Tablets' && '📱'}
-<<<<<<< HEAD
               {product.category === 'Desktop Computers' && '🖥️'}
               {product.category === 'Audio & Headphones' && '🎧'}
               {product.category === 'Gaming' && '🎮'}
@@ -308,26 +208,12 @@ export default function Home({ user }) {
               </span>
             )}
           </div>
-=======
-              {product.category === 'Audio & Headphones' && '🎧'}
-              {product.category === 'Gaming' && '🎮'}
-              {!['Smartphones', 'Laptops', 'Tablets', 'Audio & Headphones', 'Gaming'].includes(product.category) && '📦'}
-            </div>
-          )}
-          {product.is_featured && (
-            <div className="featured-badge">⭐ Featured</div>
-          )}
-          {product.is_urgent_sale && (
-            <div className="urgent-badge">🔥 Urgent</div>
-          )}
->>>>>>> dev
         </div>
         <div className="product-info">
           <h3 className="product-name">{product.title}</h3>
           <div className="product-price">
             <span className="current-price">{formatPrice(product.price)}</span>
             {product.original_price && product.original_price > product.price && (
-<<<<<<< HEAD
               <>
                 <span className="original-price">{formatPrice(product.original_price)}</span>
                 <span className="discount">{discount}% OFF</span>
@@ -337,20 +223,6 @@ export default function Home({ user }) {
           <div className="product-details">
             <span className="location">📍 {product.location_city}, {product.location_state}</span>
             <span className="seller">👤 {product.seller?.shop_username || 'Seller'}</span>
-=======
-              <span className="original-price">{formatPrice(product.original_price)}</span>
-            )}
-          </div>
-          <div className="product-details">
-            <span className={`condition ${getConditionBadgeClass(product.condition_grade)}`}>
-              {product.condition_grade?.replace('-', ' ') || 'Good'}
-            </span>
-            <span className="location">📍 {product.location_city}, {product.location_state}</span>
-          </div>
-          <div className="seller-info">
-            <span className="seller">Seller: {product.seller?.shop_username || 'Seller'}</span>
-            <span className="rating">👁️ {product.views_count || 0} views</span>
->>>>>>> dev
           </div>
           <p className="product-description">
             {product.description ? 
@@ -362,7 +234,6 @@ export default function Home({ user }) {
             }
           </p>
           <div className="product-actions">
-<<<<<<< HEAD
             <button 
               className="btn primary small"
               onClick={(e) => {
@@ -381,20 +252,20 @@ export default function Home({ user }) {
             >
               ❤️ Save
             </button>
-=======
-            <Link to={`/buyer`} className="btn small primary">View Details</Link>
-            <button className="btn small outline">Contact Seller</button>
->>>>>>> dev
           </div>
         </div>
       </div>
     );
   };
 
+  // Show loading state during initial data fetch
+  if (loading && categoriesLoading) {
+    return <LottieLoading message="Loading homepage..." />;
+  }
+
   if (user) {
     // Logged-in user homepage
     return (
-<<<<<<< HEAD
       <section className="home buyer-home">
         {/* Hero Section for Buyers */}
         <div className="buyer-hero">
@@ -432,28 +303,11 @@ export default function Home({ user }) {
                 ❤️ My Favorites
               </Link>
             </div>
-=======
-      <section className="home">
-        <div className="hero">
-          <h1>Welcome back, {user.name}!</h1>
-          <p>
-            {user.role === 'Buyer' 
-              ? "Discover amazing deals on quality refurbished electronics from trusted sellers." 
-              : "Discover amazing deals on quality gadgets from trusted sellers."
-            }
-          </p>
-          <div className="cta">
-            <Link to={user.role === 'Buyer' ? '/buyer' : '/marketplace'} className="btn primary">
-              {user.role === 'Buyer' ? 'Browse All Products' : 'Browse All Products'}
-            </Link>
-            <Link to="/sell" className="btn ghost">Sell Your Gadgets</Link>
->>>>>>> dev
           </div>
         </div>
 
         {/* Categories Section */}
         <div className="categories-section">
-<<<<<<< HEAD
           <div className="section-header">
             <h2>Shop by Category</h2>
             <p>Find exactly what you're looking for</p>
@@ -493,26 +347,12 @@ export default function Home({ user }) {
                 </div>
               ))
             )}
-=======
-          <h2>Shop by Category</h2>
-          <div className="categories-grid">
-            {categories.map((category, index) => (
-              <Link key={index} to={`/category/${category.name.toLowerCase()}`} className="category-card">
-                <div className="category-icon">{category.icon}</div>
-                <div className="category-info">
-                  <h3>{category.name}</h3>
-                  <span className="category-count">{category.count} items</span>
-                </div>
-              </Link>
-            ))}
->>>>>>> dev
           </div>
         </div>
 
         {/* Featured Products Section */}
         <div className="products-section">
           <div className="section-header">
-<<<<<<< HEAD
             <h2>Latest Products</h2>
             <p>Fresh arrivals from verified sellers</p>
             <button 
@@ -547,60 +387,11 @@ export default function Home({ user }) {
                 <div className="no-products-message">
                   <p>No products available at the moment. Please check back later!</p>
                 </div>
-=======
-            <h2>{user.role === 'Buyer' ? 'Latest Products' : 'Featured Products'}</h2>
-            <Link to={user.role === 'Buyer' ? '/buyer' : '/marketplace'} className="view-all">View All →</Link>
-          </div>
-          
-          {user.role === 'Buyer' && loading ? (
-            <div className="loading-products">
-              <div className="spinner"></div>
-              <p>Loading latest products...</p>
-            </div>
-          ) : (
-            <div className="products-grid">
-              {user.role === 'Buyer' && realProducts.length > 0 ? (
-                realProducts.map(renderRealProduct)
-              ) : (
-                featuredProducts.map((product) => (
-                  <div key={product.id} className="product-card">
-                    <div className="product-image">
-                      <div className="product-placeholder">
-                        {product.category === 'Phones' && '📱'}
-                        {product.category === 'Laptops' && '💻'}
-                        {product.category === 'Tablets' && '📱'}
-                        {product.category === 'Audio' && '🎧'}
-                      </div>
-                    </div>
-                    <div className="product-info">
-                      <h3 className="product-name">{product.name}</h3>
-                      <div className="product-price">
-                        <span className="current-price">${product.price}</span>
-                        <span className="original-price">${product.originalPrice}</span>
-                      </div>
-                      <div className="product-details">
-                        <span className="condition">{product.condition}</span>
-                        <span className="location">📍 {product.location}</span>
-                      </div>
-                      <div className="seller-info">
-                        <span className="seller">Seller: {product.seller}</span>
-                        <span className="rating">⭐ {product.rating}</span>
-                      </div>
-                      <p className="product-description">{product.description}</p>
-                      <div className="product-actions">
-                        <Link to={`/product/${product.id}`} className="btn small primary">View Details</Link>
-                        <button className="btn small outline">Contact Seller</button>
-                      </div>
-                    </div>
-                  </div>
-                ))
->>>>>>> dev
               )}
             </div>
           )}
         </div>
 
-<<<<<<< HEAD
         {/* Quick Actions Section */}
         <div className="quick-actions-section">
           <h2>Quick Actions</h2>
@@ -655,27 +446,6 @@ export default function Home({ user }) {
               </div>
             </div>
           </div>
-=======
-        {/* Quick Actions */}
-        <div className="features">
-          <div className="card">
-            <h3>Quick Actions</h3>
-            <p>Manage your listings, check messages, or update your profile.</p>
-            <div className="quick-actions">
-              <Link to="/my-listings" className="btn small">My Listings</Link>
-              <Link to="/favorites" className="btn small outline">Favorites</Link>
-              <Link to="/messages" className="btn small outline">Messages</Link>
-            </div>
-          </div>
-          <div className="card">
-            <h3>Marketplace Tips</h3>
-            <p>Get the best deals by checking seller ratings and product conditions.</p>
-          </div>
-          <div className="card">
-            <h3>Recent Activity</h3>
-            <p>Stay updated with your latest interactions and deals.</p>
-          </div>
->>>>>>> dev
         </div>
       </section>
     )
@@ -691,7 +461,6 @@ export default function Home({ user }) {
             <span className="hero-badge">🚀 Trusted Marketplace</span>
             <h1 className="hero-title">
               Smart Exchange for 
-<<<<<<< HEAD
               <span className="highlight">
                 <RotatingText
                   texts={[' Refurbished Tech', ' Premium Electronics', ' Quality Devices', ' Tech Deals']}
@@ -702,9 +471,6 @@ export default function Home({ user }) {
                   splitBy="characters"
                 />
               </span>
-=======
-              <span className="highlight"> Refurbished Tech</span>
->>>>>>> dev
             </h1>
             <p className="hero-description">
               Buy and sell premium refurbished electronics with confidence. 
@@ -738,33 +504,21 @@ export default function Home({ user }) {
               <div className="device-icon">📱</div>
               <div className="device-info">
                 <span className="device-name">iPhone 13 Pro</span>
-<<<<<<< HEAD
                 <span className="device-price">৳50,000</span>
-=======
-                <span className="device-price">$850</span>
->>>>>>> dev
               </div>
             </div>
             <div className="floating-card card-2">
               <div className="device-icon">💻</div>
               <div className="device-info">
                 <span className="device-name">MacBook Pro</span>
-<<<<<<< HEAD
                 <span className="device-price">৳145,000</span>
-=======
-                <span className="device-price">$1,450</span>
->>>>>>> dev
               </div>
             </div>
             <div className="floating-card card-3">
               <div className="device-icon">🎧</div>
               <div className="device-info">
                 <span className="device-name">Sony WH-1000XM4</span>
-<<<<<<< HEAD
                 <span className="device-price">৳22,000</span>
-=======
-                <span className="device-price">$220</span>
->>>>>>> dev
               </div>
             </div>
           </div>
@@ -819,27 +573,19 @@ export default function Home({ user }) {
         </div>
         <div className="categories-showcase">
           {categories.map((category, index) => (
-<<<<<<< HEAD
             <div 
               key={index} 
               className="category-showcase-card"
               style={{ cursor: 'pointer' }}
               onClick={() => handleCategoryClick(category.name)}
             >
-=======
-            <Link key={index} to="/signup" className="category-showcase-card">
->>>>>>> dev
               <div className="category-icon-large">{category.icon}</div>
               <h4>{category.name}</h4>
               <span className="category-count">{category.count}+ items</span>
               <div className="category-overlay">
                 <span>Explore Now →</span>
               </div>
-<<<<<<< HEAD
             </div>
-=======
-            </Link>
->>>>>>> dev
           ))}
         </div>
       </div>
@@ -912,7 +658,6 @@ export default function Home({ user }) {
     </section>
   )
 }
-<<<<<<< HEAD
 
 /*hi */
 /*hi */
@@ -925,5 +670,3 @@ export default function Home({ user }) {
 
 
 
-=======
->>>>>>> dev

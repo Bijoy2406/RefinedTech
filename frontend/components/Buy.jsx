@@ -234,12 +234,10 @@ export default function Buy() {
     );
   }
 
-  if (loading) {
-    return <LottieLoading message="Processing your order..." />
-  }
-
   return (
-    <div className="buy-page">
+    <>
+      {loading && <LottieLoading message="Processing your order..." />}
+      <div className="buy-page">
       <div className="buy-container">
         <h1>Checkout</h1>
         
@@ -462,5 +460,6 @@ export default function Buy() {
         </div>
       </div>
     </div>
+    </>
   );
 }

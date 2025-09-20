@@ -118,7 +118,7 @@ function Conversations() {
   };
 
   if (loading) {
-    return <LottieLoading message="Loading conversations..." />
+    return <LottieLoading message="Loading conversations..." />;
   }
 
   return (

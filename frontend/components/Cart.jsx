@@ -155,7 +155,7 @@ export default function Cart() {
   };
 
   if (loading) {
-    return <LottieLoading message="Loading your cart..." />
+    return <LottieLoading message="Loading your cart..." />;
   }
 
   return (

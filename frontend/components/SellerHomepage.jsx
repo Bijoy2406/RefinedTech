@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-<<<<<<< HEAD
 import LottieLoading from './LottieLoading';
-=======
->>>>>>> dev
 import '../css/SellerHomepage.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
@@ -285,18 +282,7 @@ export default function SellerHomepage() {
     );
 
     if (loading && products.length === 0) {
-<<<<<<< HEAD
-        return <LottieLoading message="Loading seller dashboard..." />
-=======
-        return (
-            <div className="seller-homepage loading-state">
-                <div className="loading-spinner">
-                    <div className="spinner"></div>
-                    <p>Loading seller dashboard...</p>
-                </div>
-            </div>
-        );
->>>>>>> dev
+        return <LottieLoading message="Loading seller dashboard..." />;
     }
 
     return (
@@ -795,18 +781,3 @@ export default function SellerHomepage() {
 }
 
  //comment0
-<<<<<<< HEAD
-=======
- //comment1
- //comment2
- //comment3
- //comment4
- //comment5
- //comment6
- //comment7
- //hi
- //hi
- //hi
- //hi
- 
->>>>>>> dev

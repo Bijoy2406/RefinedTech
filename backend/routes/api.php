@@ -5,19 +5,14 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\CartController;
-
-// Health check endpoint for Railway
-Route::get('/health', function () {
-    return response()->json([
-        'status' => 'OK',
-        'timestamp' => now(),
-        'app' => 'RefinedTech Backend'
-    ]);
-});
+use App\Http\Controllers\ChatbotController;
 
 // Authentication Routes
 Route::post('/signup', [AuthController::class, 'signup']);
 Route::post('/login', [AuthController::class, 'login']);
+
+// Chatbot route (public access)
+Route::post('/chatbot', [ChatbotController::class, 'chat']);
 
 // Test endpoint to debug auth
 Route::middleware(['auth:sanctum'])->get('/test-auth', function (Request $request) {
@@ -118,6 +113,3 @@ Route::middleware(['multi.auth'])->group(function () {
 });
 
 Route::get('/categories', [App\Http\Controllers\ProductController::class, 'getCategoryStats']);
-
-// Chatbot (Public endpoint)
-Route::post('/chatbot', [App\Http\Controllers\ChatbotController::class, 'chat']);

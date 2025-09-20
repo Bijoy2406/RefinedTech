@@ -109,7 +109,7 @@ export default function Orders() {
   };
 
   if (loading) {
-    return <LottieLoading message="Loading your orders..." />
+    return <LottieLoading message="Loading your orders..." />;
   }
 
   return (

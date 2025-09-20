@@ -1,5 +1,49 @@
-<<<<<<< HEAD
-=======
+# .gitignore for RefinedTech project
 
->>>>>>> dev
-/frontend/node_modules
+# === Backend (Laravel/PHP) ===
+/backend/vendor/
+/backend/node_modules/
+/backend/storage/*
+!/backend/storage/.gitignore
+/backend/bootstrap/cache/*
+!/backend/bootstrap/cache/.gitignore
+/backend/.env
+/backend/.env.*
+/backend/.phpunit.result.cache
+/backend/.DS_Store
+/backend/public/storage
+/backend/.idea/
+backend/.vscode/
+backend/.sass-cache
+backend/npm-debug.log
+backend/yarn-error.log
+backend/.cache/
+backend/.coverage
+backend/.php_cs.cache
+
+# === Frontend (React/Vite) ===
+/frontend/node_modules/
+/frontend/dist/
+/frontend/.env
+/frontend/.env.*
+/frontend/.DS_Store
+/frontend/.idea/
+frontend/.vscode/
+frontend/npm-debug.log
+frontend/yarn-error.log
+frontend/.cache/
+frontend/.coverage
+
+# === Global ===
+*.log
+*.tmp
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+.env
+.env.*
+.idea/
+.vscode/
+.cache/
+coverage/

@@ -107,7 +107,7 @@ export default function Wishlist() {
   };
 
   if (loading) {
-    return <LottieLoading message="Loading your wishlist..." />
+    return <LottieLoading message="Loading your wishlist..." />;
   }
 
   return (

@@ -53,11 +53,8 @@ class Product extends Model
         'location_state',
         'shipping_options',
         'status',
-<<<<<<< HEAD
         'sold_at',
         'sold_to',
-=======
->>>>>>> dev
         'approval_date',
         'rejection_reason',
         'views_count',
@@ -76,13 +73,9 @@ class Product extends Model
         'views_count' => 'integer',
         'favorites_count' => 'integer',
         'purchase_date' => 'date',
-<<<<<<< HEAD
         'approval_date' => 'datetime',
         'sold_at' => 'datetime',
         'sold_to' => 'integer'
-=======
-        'approval_date' => 'datetime'
->>>>>>> dev
     ];
 
     protected $attributes = [
