@@ -1,36 +1,38 @@
-# --- Stage 1: dependencies (Composer) ---
-FROM composer:2.7 AS vendor
+# --- Stage 1: Composer with PHP extensions ---
+FROM php:8.3-cli-alpine AS vendor
 WORKDIR /app
 
-# Use Composer cache effectively
+# Install system dependencies and PHP extensions for Composer
+RUN apk add --no-cache git unzip libzip-dev libpng-dev freetype-dev libjpeg-turbo-dev icu-dev postgresql-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install zip gd intl pdo_pgsql bcmath
+
+# Install Composer
+COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
+
+# Copy composer files and install dependencies
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --prefer-dist --no-progress --no-interaction --optimize-autoloader
 
-# --- Stage 2: runtime (PHP 8.3 on Alpine) ---
+# --- Stage 2: Runtime ---
 FROM php:8.3-cli-alpine AS app
 WORKDIR /var/www/html
 
-# Runtime libs only (no git here)
-RUN apk add --no-cache \
-    bash icu-libs libzip libpng freetype libjpeg-turbo libpq
+# Runtime dependencies only
+RUN apk add --no-cache bash icu-libs libzip libpng freetype libjpeg-turbo libpq \
+    && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS icu-dev libzip-dev postgresql-dev libpng-dev freetype-dev libjpeg-turbo-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) pdo_pgsql bcmath intl zip gd pcntl opcache \
+    && apk del .build-deps
 
-# Build deps to compile PHP extensions, then remove them
-RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
-      icu-dev libzip-dev postgresql-dev libpng-dev freetype-dev libjpeg-turbo-dev \
-  && docker-php-ext-configure gd --with-freetype --with-jpeg \
-  && docker-php-ext-install -j$(nproc) pdo_pgsql bcmath intl zip gd pcntl opcache \
-  && pecl install redis \
-  && docker-php-ext-enable redis \
-  && apk del .build-deps
-
-# Copy app and vendors
+# Copy application and vendor from previous stage
 COPY . .
 COPY --from=vendor /app/vendor ./vendor
 
-# Permissions
+# Set permissions
 RUN chown -R www-data:www-data storage bootstrap/cache
 
-# Start script
+# Copy and set up start script
 COPY docker/start.sh /usr/local/bin/start.sh
 RUN chmod +x /usr/local/bin/start.sh
 
