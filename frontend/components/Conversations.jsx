@@ -22,6 +22,7 @@ function Conversations() {
   const [isActiveTab, setIsActiveTab] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState('connected');
   const [backgroundLoading, setBackgroundLoading] = useState(false);
+  const [pollingPaused, setPollingPaused] = useState(false);
 
   useEffect(() => {
     // Wait for auth loading to complete before checking authentication
@@ -65,7 +66,7 @@ function Conversations() {
   useEffect(() => {
     let messageInterval;
     
-    if (selectedConversation && isActiveTab) {
+    if (selectedConversation && isActiveTab && !pollingPaused) {
       messageInterval = setInterval(() => {
         fetchNewMessages(selectedConversation.id);
       }, 3000); // Check for new messages every 3 seconds
@@ -76,7 +77,7 @@ function Conversations() {
         clearInterval(messageInterval);
       }
     };
-  }, [selectedConversation, isActiveTab]);
+  }, [selectedConversation, isActiveTab, pollingPaused]);
 
   const fetchConversations = async () => {
     try {
@@ -148,18 +149,27 @@ function Conversations() {
         
         if (newMessages.length > 0) {
           setMessages(prev => {
-            // If we have lastMessageId, append new messages
+            // Get current message IDs to prevent duplicates
+            const currentMessageIds = new Set(prev.map(msg => msg.id));
+            
             if (lastMessageId) {
-              const filteredNew = newMessages.filter(msg => msg.id > lastMessageId);
+              // Filter out duplicates and messages we already have
+              const filteredNew = newMessages.filter(msg => 
+                msg.id > lastMessageId && !currentMessageIds.has(msg.id)
+              );
               if (filteredNew.length > 0) {
                 setLastMessageId(filteredNew[filteredNew.length - 1].id);
                 return [...prev, ...filteredNew];
               }
               return prev;
             } else {
-              // If no lastMessageId, replace all messages
-              setLastMessageId(newMessages[newMessages.length - 1].id);
-              return newMessages;
+              // For initial load, filter out any duplicates
+              const uniqueMessages = newMessages.filter(msg => !currentMessageIds.has(msg.id));
+              if (uniqueMessages.length > 0) {
+                setLastMessageId(newMessages[newMessages.length - 1].id);
+                return [...prev, ...uniqueMessages];
+              }
+              return prev;
             }
           });
           
@@ -175,9 +185,11 @@ function Conversations() {
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation) return;
+    if (!newMessage.trim() || !selectedConversation || sendingMessage) return;
 
     setSendingMessage(true);
+    setPollingPaused(true); // Pause polling while sending
+    
     try {
       const token = localStorage.getItem('rt_token');
       const response = await axios.post(
@@ -188,7 +200,14 @@ function Conversations() {
 
       if (response.data.success) {
         const newMsg = response.data.data;
-        setMessages(prev => [...prev, newMsg]);
+        setMessages(prev => {
+          // Check if message already exists to prevent duplicates
+          const messageExists = prev.some(msg => msg.id === newMsg.id);
+          if (!messageExists) {
+            return [...prev, newMsg];
+          }
+          return prev;
+        });
         setLastMessageId(newMsg.id);
         setNewMessage('');
         
@@ -208,6 +227,10 @@ function Conversations() {
       alert('Failed to send message');
     } finally {
       setSendingMessage(false);
+      // Resume polling after a short delay
+      setTimeout(() => {
+        setPollingPaused(false);
+      }, 1000);
     }
   };
 
@@ -396,7 +419,7 @@ function Conversations() {
                     rows="3"
                     maxLength="2000"
                     onKeyPress={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
+                      if (e.key === 'Enter' && !e.shiftKey && !sendingMessage) {
                         e.preventDefault();
                         sendMessage();
                       }
