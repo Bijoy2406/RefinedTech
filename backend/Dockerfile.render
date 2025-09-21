@@ -69,8 +69,8 @@ RUN echo '#!/bin/bash' > /start.sh && \
     echo 'php artisan route:cache' >> /start.sh && \
     echo 'php artisan view:cache' >> /start.sh && \
     echo 'php artisan migrate --force' >> /start.sh && \
-    echo 'echo "Seeding products..."' >> /start.sh && \
-    echo 'php artisan db:seed --class=ProductSeeder --force' >> /start.sh && \
+    echo 'echo "Seeding database (admin, products, etc.)..."' >> /start.sh && \
+    echo 'php artisan db:seed --force' >> /start.sh && \
     echo 'echo "Starting server on port ${PORT:-10000}..."' >> /start.sh && \
     echo 'php artisan serve --host=0.0.0.0 --port=${PORT:-10000}' >> /start.sh && \
     chmod +x /start.sh

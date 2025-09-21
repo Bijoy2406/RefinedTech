@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             SeparateTablesSeeder::class,
             AdminAccessCodeSeeder::class,
+            AdminSeeder::class, // Add default admin
             ProductSeeder::class,
         ]);
     }
