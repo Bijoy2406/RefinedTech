@@ -34,7 +34,7 @@ class AdminSeeder extends Seeder
             ]
         );
 
-        // Create corresponding access code if admin was created
+        // Create corresponding access code if admin was created (and code doesn't exist)
         if ($admin->wasRecentlyCreated) {
             AdminAccessCode::firstOrCreate(
                 ['access_code' => 'SEED-ADMIN-001'],
@@ -52,7 +52,13 @@ class AdminSeeder extends Seeder
 
             $this->command?->info('✅ Created default admin: bijoy@refinedtech.com (password: 123456)');
         } else {
-            $this->command?->info('ℹ️  Default admin already exists: bijoy@refinedtech.com');
+            // Ensure the existing admin has proper status and access code
+            $admin->update([
+                'status' => 'approved',
+                'password' => Hash::make('123456'), // Ensure password is correct
+            ]);
+            
+            $this->command?->info('ℹ️  Default admin already exists: bijoy@refinedtech.com (updated password and status)');
         }
     }
 }

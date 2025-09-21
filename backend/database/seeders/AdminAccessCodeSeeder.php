@@ -13,6 +13,14 @@ class AdminAccessCodeSeeder extends Seeder
      */
     public function run(): void
     {
+        // Check if we already have access codes to avoid conflicts
+        $existingCount = AdminAccessCode::count();
+        
+        if ($existingCount > 0) {
+            $this->command?->info("ℹ️  Found {$existingCount} existing admin access codes, skipping seeding to avoid conflicts.");
+            return;
+        }
+
         // Create some initial admin access codes (system generated)
         $codes = [
             [
@@ -40,7 +48,7 @@ class AdminAccessCodeSeeder extends Seeder
             );
         }
 
-        // Generate 3 additional unique codes
+        // Generate 3 additional unique codes only if no existing codes
         for ($i = 1; $i <= 3; $i++) {
             $uniqueCode = AdminAccessCode::generateUniqueCode();
             AdminAccessCode::firstOrCreate(
