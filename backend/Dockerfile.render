@@ -58,12 +58,20 @@ RUN mkdir -p storage/logs storage/framework/cache storage/framework/sessions sto
 # Generate optimized autoloader
 RUN composer dump-autoload --optimize
 
-# Expose port (Render will set PORT environment variable)
-EXPOSE $PORT
+# Expose port 10000 (Render's default, but will use PORT env var at runtime)
+EXPOSE 10000
+
+# Create start script
+RUN echo '#!/bin/bash' > /start.sh && \
+    echo 'set -e' >> /start.sh && \
+    echo 'echo "Starting Laravel application..."' >> /start.sh && \
+    echo 'php artisan config:cache' >> /start.sh && \
+    echo 'php artisan route:cache' >> /start.sh && \
+    echo 'php artisan view:cache' >> /start.sh && \
+    echo 'php artisan migrate --force' >> /start.sh && \
+    echo 'echo "Starting server on port ${PORT:-10000}..."' >> /start.sh && \
+    echo 'php artisan serve --host=0.0.0.0 --port=${PORT:-10000}' >> /start.sh && \
+    chmod +x /start.sh
 
 # Start script
-CMD php artisan config:cache && \
-    php artisan route:cache && \
-    php artisan view:cache && \
-    php artisan migrate --force && \
-    php artisan serve --host=0.0.0.0 --port=$PORT
+CMD ["/start.sh"]
