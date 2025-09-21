@@ -14,13 +14,14 @@ function Conversations() {
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [sendingMessage, setSendingMessage] = useState(false);
   const [error, setError] = useState(null);
   const [lastMessageId, setLastMessageId] = useState(null);
   const [isActiveTab, setIsActiveTab] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState('connected');
+  const [backgroundLoading, setBackgroundLoading] = useState(false);
 
   useEffect(() => {
     // Wait for auth loading to complete before checking authentication
@@ -67,7 +68,7 @@ function Conversations() {
     if (selectedConversation && isActiveTab) {
       messageInterval = setInterval(() => {
         fetchNewMessages(selectedConversation.id);
-      }, 30); // Check for new messages every 3 seconds
+      }, 3000); // Check for new messages every 3 seconds
     }
 
     return () => {
@@ -79,7 +80,13 @@ function Conversations() {
 
   const fetchConversations = async () => {
     try {
-      setLoading(true);
+      // Only set loading to true for initial load if we have no conversations
+      if (conversations.length === 0) {
+        setLoading(true);
+      } else {
+        // Show subtle background loading for subsequent refreshes
+        setBackgroundLoading(true);
+      }
       const token = localStorage.getItem('rt_token');
       const response = await axios.get(`${API_BASE}/api/conversations`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -93,6 +100,7 @@ function Conversations() {
       setError('Failed to load conversations');
     } finally {
       setLoading(false);
+      setBackgroundLoading(false);
     }
   };
 
@@ -231,10 +239,6 @@ function Conversations() {
     }
   };
 
-  if (loading) {
-    return <LottieLoading message="Loading conversations..." />;
-  }
-
   return (
     <div className="conversations-container">
       <div className="conversations-header">
@@ -252,7 +256,12 @@ function Conversations() {
         </div>
       )}
 
-      {conversations.length === 0 ? (
+      {loading && conversations.length === 0 ? (
+        <div className="loading-state">
+          <div className="loading-spinner"></div>
+          <p>Loading conversations...</p>
+        </div>
+      ) : conversations.length === 0 ? (
         <div className="empty-state">
           <div className="empty-icon">💬</div>
           <h3>No conversations yet</h3>
@@ -267,7 +276,14 @@ function Conversations() {
         <div className="conversations-layout">
           {/* Conversations List */}
           <div className="conversations-list">
-            <h3>Conversations ({conversations.length})</h3>
+            <div className="conversations-list-header">
+              <h3>Conversations ({conversations.length})</h3>
+              {backgroundLoading && (
+                <div className="background-loading">
+                  <div className="small-spinner"></div>
+                </div>
+              )}
+            </div>
             {conversations.map((conversation) => (
               <div
                 key={conversation.id}
@@ -338,22 +354,29 @@ function Conversations() {
                 </div>
 
                 <div className="messages-content">
-                  {messagesLoading ? (
+                  {messagesLoading && messages.length === 0 ? (
                     <div className="loading">Loading messages...</div>
                   ) : (
-                    messages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={`message ${message.sender_type === (user.role === 'Buyer' ? 'buyer' : 'seller') ? 'sent' : 'received'}`}
-                      >
-                        <div className="message-content">
-                          <p>{message.message}</p>
-                          <span className="message-time">
-                            {formatDate(message.created_at)}
-                          </span>
+                    <>
+                      {messages.map((message) => (
+                        <div
+                          key={message.id}
+                          className={`message ${message.sender_type === (user.role === 'Buyer' ? 'buyer' : 'seller') ? 'sent' : 'received'}`}
+                        >
+                          <div className="message-content">
+                            <p>{message.message}</p>
+                            <span className="message-time">
+                              {formatDate(message.created_at)}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    ))
+                      ))}
+                      {messagesLoading && messages.length > 0 && (
+                        <div className="messages-loading-indicator">
+                          <div className="small-spinner"></div>
+                        </div>
+                      )}
+                    </>
                   )}
                   {sendingMessage && (
                     <div className="message sent sending">

@@ -21,6 +21,32 @@
   color: var(--text-secondary);
 }
 
+.loading-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--text-secondary);
+}
+
+.loading-state .loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border-color);
+  border-top: 3px solid var(--accent-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+.loading-state p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 .live-indicator {
   position: absolute;
   top: 0;
@@ -108,13 +134,40 @@
   overflow: hidden;
 }
 
-.conversations-list h3 {
-  margin: 0;
+.conversations-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 1.5rem;
   border-bottom: 1px solid var(--card-border);
   background: var(--bg-secondary);
+}
+
+.conversations-list h3 {
+  margin: 0;
   color: var(--text-primary);
   font-size: 1rem;
+}
+
+.background-loading {
+  display: flex;
+  align-items: center;
+}
+
+.small-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-color);
+  border-top: 2px solid var(--accent-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.messages-loading-indicator {
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem;
+  opacity: 0.7;
 }
 
 .conversation-item {
