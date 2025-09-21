@@ -1,5 +1,5 @@
 import { useState, useEffect, createContext, useContext } from 'react'
-import '../css/Theme.css'
+import '../css/theme.css'
 
 // Create Theme Context
 const ThemeContext = createContext()

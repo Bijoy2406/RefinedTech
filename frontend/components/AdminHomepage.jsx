@@ -1,5 +1,6 @@
 import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
+import LottieLoading from './LottieLoading';
 import '../css/AdminHomepage.css';
 import { UserContext } from '../App.jsx';
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
@@ -229,14 +230,7 @@ export default function AdminHomepage({ user }) {
     );
 
     if (loading) {
-        return (
-            <div className="admin-homepage loading-state">
-                <div className="loading-spinner">
-                    <div className="spinner"></div>
-                    <p>Loading dashboard...</p>
-                </div>
-            </div>
-        );
+        return <LottieLoading message="Loading dashboard..." />;
     }
 
     return (

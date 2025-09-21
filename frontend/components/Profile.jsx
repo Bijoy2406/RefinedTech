@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import LottieLoading from './LottieLoading';
 import '../css/ProfilePage.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
@@ -9,7 +10,7 @@ export default function Profile() {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [showPasswordForm, setShowPasswordForm] = useState(false);
-    const [uploadingImage, setUploadingImage] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const [imageError, setImageError] = useState('');
     const [imagePreview, setImagePreview] = useState(null);
     const [selectedFile, setSelectedFile] = useState(null);
@@ -20,7 +21,6 @@ export default function Profile() {
     });
     const [passwordError, setPasswordError] = useState('');
     const [passwordSuccess, setPasswordSuccess] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
     const [adminData, setAdminData] = useState(null);
     const [showAccessCodes, setShowAccessCodes] = useState(false);
     const [copySuccess, setCopySuccess] = useState(false);
@@ -158,7 +158,7 @@ export default function Profile() {
 
     const uploadImage = async (fileParam) => {
         try {
-            setUploadingImage(true);
+            setIsLoading(true);
             setImageError('');
             const token = localStorage.getItem('rt_token');
             
@@ -192,7 +192,7 @@ export default function Profile() {
             console.error('Upload error:', err);
             setImageError(err.response?.data?.errors?.image?.[0] || err.response?.data?.message || 'Upload failed');
         } finally {
-            setUploadingImage(false);
+            setIsLoading(false);
         }
     };
 
@@ -264,7 +264,9 @@ export default function Profile() {
     const joinedDate = new Date(user.created_at).toLocaleDateString();
     const memberLabel = user.status === 'Active' ? 'Active User' : (user.status || 'User');
     return (
-        <div className="profile-container profile-page-root compact animated-entrance">
+        <>
+            {isLoading && <LottieLoading message="Uploading image..." />}
+            <div className="profile-container profile-page-root compact animated-entrance">
             <div className="floating-particles">
                 <div className="particle"></div>
                 <div className="particle"></div>
@@ -295,9 +297,9 @@ export default function Profile() {
                     <div className="avatar-actions">
                         <label className="btn tiny outline file-btn hover-lift">
                             <input type="file" hidden accept="image/*" onChange={handleImageSelect} />
-                            {uploadingImage ? 'Uploading…' : 'Change Image'}
+                            {isLoading ? 'Uploading…' : 'Change Image'}
                         </label>
-                        {selectedFile && !uploadingImage && (
+                        {selectedFile && !isLoading && (
                             <button className="btn tiny primary hover-lift" onClick={() => uploadImage(selectedFile)}>Upload</button>
                         )}
                     </div>
@@ -418,6 +420,7 @@ export default function Profile() {
                 </section>
             </div>
         </div>
+        </>
     );
 }
 

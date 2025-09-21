@@ -2,6 +2,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect, useContext } from 'react'
 import { UserContext } from '../App.jsx'
 import axios from 'axios'
+import LottieLoading from './LottieLoading'
 import '../css/ProductDetails.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
@@ -13,10 +14,21 @@ function ProductDetails() {
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [addingToCart, setAddingToCart] = useState(false)
+  const [cartMessage, setCartMessage] = useState('')
+  const [isInWishlist, setIsInWishlist] = useState(false)
+  const [wishlistLoading, setWishlistLoading] = useState(false)
+  const [wishlistMessage, setWishlistMessage] = useState('')
+  const [showContactModal, setShowContactModal] = useState(false)
+  const [contactMessage, setContactMessage] = useState('')
+  const [sendingMessage, setSendingMessage] = useState(false)
 
   useEffect(() => {
     fetchProduct()
-  }, [id])
+    if (user && user.role === 'Buyer') {
+      checkWishlistStatus()
+    }
+  }, [id, user])
 
   const fetchProduct = async () => {
     try {
@@ -31,30 +43,178 @@ function ProductDetails() {
     }
   }
 
-  const handleAddToCart = () => {
-    if (!user) {
-      navigate('/login')
-      return
+  const checkWishlistStatus = async () => {
+    try {
+      const token = localStorage.getItem('rt_token')
+      const response = await axios.get(`${API_BASE}/api/wishlist/check/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setIsInWishlist(response.data.in_wishlist)
+    } catch (error) {
+      console.error('Error checking wishlist status:', error)
     }
-    // TODO: Implement add to cart functionality
-    alert('Add to cart functionality will be implemented here')
   }
 
-  const handleBuyNow = () => {
+  const handleAddToCart = async (quantity = 1) => {
     if (!user) {
       navigate('/login')
       return
     }
-    // TODO: Implement buy now functionality
-    navigate('/buy')
+
+    if (user.role !== 'Buyer') {
+      setCartMessage('Only buyers can add items to cart')
+      return
+    }
+
+    setAddingToCart(true)
+    setCartMessage('')
+
+    try {
+      const token = localStorage.getItem('rt_token')
+      const response = await axios.post(`${API_BASE}/api/cart/add`, {
+        product_id: product.id,
+        quantity: quantity
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+
+      if (response.data.success) {
+        setCartMessage('✅ Added to cart successfully!')
+        
+        // Clear message after 3 seconds
+        setTimeout(() => {
+          setCartMessage('')
+        }, 3000)
+      }
+    } catch (error) {
+      console.error('Error adding to cart:', error)
+      if (error.response?.data?.message) {
+        setCartMessage(`❌ ${error.response.data.message}`)
+      } else {
+        setCartMessage('❌ Failed to add to cart')
+      }
+    } finally {
+      setAddingToCart(false)
+    }
+  }
+
+  const handleBuyNow = (quantity = 1) => {
+    if (!user) {
+      navigate('/login')
+      return
+    }
+
+    if (user.role !== 'Buyer') {
+      alert('Only buyers can purchase items')
+      return
+    }
+
+    navigate(`/buy?product=${product.id}&quantity=${quantity}`)
+  }
+
+  const handleWishlistToggle = async () => {
+    if (!user) {
+      navigate('/login')
+      return
+    }
+
+    if (user.role !== 'Buyer') {
+      setWishlistMessage('Only buyers can manage wishlists')
+      return
+    }
+
+    setWishlistLoading(true)
+    setWishlistMessage('')
+
+    try {
+      const token = localStorage.getItem('rt_token')
+      
+      if (isInWishlist) {
+        // Remove from wishlist
+        await axios.delete(`${API_BASE}/api/wishlist/remove/${product.id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        setIsInWishlist(false)
+        setWishlistMessage('💔 Removed from wishlist')
+      } else {
+        // Add to wishlist
+        await axios.post(`${API_BASE}/api/wishlist/add`, {
+          product_id: product.id
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        setIsInWishlist(true)
+        setWishlistMessage('❤️ Added to wishlist!')
+      }
+
+      // Clear message after 3 seconds
+      setTimeout(() => {
+        setWishlistMessage('')
+      }, 3000)
+
+    } catch (error) {
+      console.error('Error toggling wishlist:', error)
+      if (error.response?.data?.message) {
+        setWishlistMessage(`❌ ${error.response.data.message}`)
+      } else {
+        setWishlistMessage('❌ Failed to update wishlist')
+      }
+    } finally {
+      setWishlistLoading(false)
+    }
+  }
+
+  const handleContactSeller = () => {
+    if (!user) {
+      navigate('/login')
+      return
+    }
+
+    if (user.role !== 'Buyer') {
+      alert('Only buyers can contact sellers')
+      return
+    }
+
+    setShowContactModal(true)
+  }
+
+  const handleSendMessage = async () => {
+    if (!contactMessage.trim()) {
+      alert('Please enter a message')
+      return
+    }
+
+    setSendingMessage(true)
+
+    try {
+      const token = localStorage.getItem('rt_token')
+      const response = await axios.post(`${API_BASE}/api/conversations/start`, {
+        product_id: product.id,
+        message: contactMessage,
+        subject: `Inquiry about ${product.title}`
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+
+      if (response.data.success) {
+        alert('Message sent successfully! You can view the conversation in your messages.')
+        setShowContactModal(false)
+        setContactMessage('')
+      }
+    } catch (error) {
+      console.error('Error sending message:', error)
+      if (error.response?.data?.message) {
+        alert(`Failed to send message: ${error.response.data.message}`)
+      } else {
+        alert('Failed to send message. Please try again.')
+      }
+    } finally {
+      setSendingMessage(false)
+    }
   }
 
   if (loading) {
-    return (
-      <div className="product-details-container">
-        <div className="loading">Loading product details...</div>
-      </div>
-    )
+    return <LottieLoading message="Loading product details..." />;
   }
 
   if (error || !product) {
@@ -160,14 +320,44 @@ function ProductDetails() {
           </div>
 
           <div className="action-buttons">
-            <button className="btn primary large" onClick={handleBuyNow}>
+            <button className="btn primary large" onClick={() => handleBuyNow()}>
               {user ? 'Buy Now' : 'Login to Buy'}
             </button>
-            <button className="btn secondary large" onClick={handleAddToCart}>
-              {user ? 'Add to Cart' : 'Login to Add Cart'}
+            <button 
+              className="btn secondary large" 
+              onClick={() => handleAddToCart()}
+              disabled={addingToCart}
+            >
+              {addingToCart ? 'Adding...' : (user ? 'Add to Cart' : 'Login to Add Cart')}
             </button>
-            <button className="btn outline large">Add to Favorites</button>
+            <button 
+              className={`btn outline large wishlist-btn ${isInWishlist ? 'in-wishlist' : ''}`}
+              onClick={handleWishlistToggle}
+              disabled={wishlistLoading}
+              title={isInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
+            >
+              {wishlistLoading ? (
+                '⏳'
+              ) : (
+                <>
+                  {isInWishlist ? '❤️' : '🤍'} 
+                  {user ? (isInWishlist ? 'In Wishlist' : 'Add to Wishlist') : 'Login to Wishlist'}
+                </>
+              )}
+            </button>
           </div>
+
+          {cartMessage && (
+            <div className={`cart-message ${cartMessage.includes('✅') ? 'success' : 'error'}`}>
+              {cartMessage}
+            </div>
+          )}
+
+          {wishlistMessage && (
+            <div className={`wishlist-message ${wishlistMessage.includes('❤️') || wishlistMessage.includes('💔') ? 'success' : 'error'}`}>
+              {wishlistMessage}
+            </div>
+          )}
 
           {/* Quick Info Cards */}
           <div className="quick-info-grid">
@@ -263,36 +453,114 @@ function ProductDetails() {
           </div>
         )}
 
-        {/* Seller Info - Compact */}
+        {/* Seller Info - Detailed */}
         <div className="info-section">
           <h3>👤 Seller Information</h3>
-          <div className="seller-compact">
+          <div className="seller-detailed">
             <div className="seller-profile">
               <div className="seller-avatar">
                 <span>{product.seller?.shop_username?.charAt(0) || 'S'}</span>
               </div>
-              <div className="seller-info-compact">
-                <h4>{product.seller?.shop_username || 'Seller'}</h4>
-                <div className="seller-meta">
-                  📍 {product.location_city}, {product.location_state}
-                  {product.seller?.email && <span>📧 Contact available</span>}
+              <div className="seller-info-detailed">
+                <h4>🏪 {product.seller?.shop_username || 'Seller'}</h4>
+                
+                {/* Personal Information */}
+                <div className="seller-section">
+                  <h5>Personal Information</h5>
+                  <div className="seller-details">
+                    {product.seller?.first_name && product.seller?.last_name && (
+                      <div className="seller-detail-item">
+                        <strong>� Full Name:</strong> {product.seller.first_name} {product.seller.last_name}
+                      </div>
+                    )}
+                    {product.seller?.email && (
+                      <div className="seller-detail-item">
+                        <strong>📧 Email:</strong> {product.seller.email}
+                      </div>
+                    )}
+                    {product.seller?.phone_number && (
+                      <div className="seller-detail-item">
+                        <strong>📞 Phone:</strong> {product.seller.phone_number}
+                      </div>
+                    )}
+                    {product.seller?.date_of_birth && (
+                      <div className="seller-detail-item">
+                        <strong>🎂 Date of Birth:</strong> {new Date(product.seller.date_of_birth).toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
                 </div>
+
+                {/* Business Information */}
+                <div className="seller-section">
+                  <h5>Business Information</h5>
+                  <div className="seller-details">
+                    {product.seller?.country && (
+                      <div className="seller-detail-item">
+                        <strong>🌍 Country:</strong> {product.seller.country}
+                      </div>
+                    )}
+                    <div className="seller-detail-item">
+                      <strong>📍 Product Location:</strong> {product.location_city}, {product.location_state}
+                    </div>
+                    {product.seller?.business_address && (
+                      <div className="seller-detail-item">
+                        <strong>🏢 Business Address:</strong> {product.seller.business_address}
+                      </div>
+                    )}
+                    {product.seller?.status && (
+                      <div className="seller-detail-item">
+                        <strong>✅ Account Status:</strong> 
+                        <span className={`status-badge ${product.seller.status}`}>
+                          {product.seller.status.charAt(0).toUpperCase() + product.seller.status.slice(1)}
+                        </span>
+                      </div>
+                    )}
+                    {product.seller?.created_at && (
+                      <div className="seller-detail-item">
+                        <strong>📅 Member Since:</strong> {new Date(product.seller.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Verification Status */}
+                <div className="seller-section">
+                  <h5>Verification Status</h5>
+                  <div className="seller-details">
+                    <div className="seller-detail-item">
+                      <strong>📄 Email Verified:</strong> 
+                      <span className={`verification-badge ${product.seller?.email_verified_at ? 'verified' : 'unverified'}`}>
+                        {product.seller?.email_verified_at ? '✅ Verified' : '❌ Not Verified'}
+                      </span>
+                    </div>
+                    <div className="seller-detail-item">
+                      <strong>🆔 ID Verification:</strong> 
+                      <span className={`verification-badge ${product.seller?.national_id_path ? 'verified' : 'unverified'}`}>
+                        {product.seller?.national_id_path ? '✅ Submitted' : '❌ Not Submitted'}
+                      </span>
+                    </div>
+                    <div className="seller-detail-item">
+                      <strong>🏪 Business Verification:</strong> 
+                      <span className={`verification-badge ${product.seller?.proof_of_ownership_path ? 'verified' : 'unverified'}`}>
+                        {product.seller?.proof_of_ownership_path ? '✅ Submitted' : '❌ Not Submitted'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contact Seller Section - Only for Buyers */}
+                {user && user.role === 'Buyer' && (
+                  <div className="seller-contact-section">
+                    <button 
+                      className="btn primary contact-seller-btn"
+                      onClick={handleContactSeller}
+                    >
+                      💬 Contact Seller
+                    </button>
+                  </div>
+                )}
               </div>
-            </div>
-            <div className="seller-actions-compact">
-              <button 
-                className="btn primary small"
-                onClick={() => {
-                  if (!user) {
-                    navigate('/login');
-                    return;
-                  }
-                  alert('Contact seller functionality will be implemented here');
-                }}
-              >
-                💬 {user ? 'Contact' : 'Login to Contact'}
-              </button>
-              <button className="btn outline small">View Profile</button>
             </div>
           </div>
         </div>
@@ -328,6 +596,52 @@ function ProductDetails() {
           </div>
         )}
       </div>      
+
+      {/* Contact Seller Modal */}
+      {showContactModal && (
+        <div className="modal-overlay" onClick={() => setShowContactModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>💬 Contact Seller</h3>
+              <button className="modal-close" onClick={() => setShowContactModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="product-info-mini">
+                <h4>📦 {product.title}</h4>
+                <p>🏪 Seller: {product.seller?.shop_username}</p>
+              </div>
+              <div className="form-group">
+                <label htmlFor="contactMessage">Your Message:</label>
+                <textarea
+                  id="contactMessage"
+                  value={contactMessage}
+                  onChange={(e) => setContactMessage(e.target.value)}
+                  placeholder="Hi! I'm interested in this product. Could you provide more details?"
+                  rows="4"
+                  maxLength="2000"
+                />
+                <small>{contactMessage.length}/2000 characters</small>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="btn outline" 
+                onClick={() => setShowContactModal(false)}
+                disabled={sendingMessage}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn primary" 
+                onClick={handleSendMessage}
+                disabled={sendingMessage || !contactMessage.trim()}
+              >
+                {sendingMessage ? 'Sending...' : 'Send Message'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

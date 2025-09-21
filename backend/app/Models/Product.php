@@ -53,6 +53,8 @@ class Product extends Model
         'location_state',
         'shipping_options',
         'status',
+        'sold_at',
+        'sold_to',
         'approval_date',
         'rejection_reason',
         'views_count',
@@ -71,7 +73,9 @@ class Product extends Model
         'views_count' => 'integer',
         'favorites_count' => 'integer',
         'purchase_date' => 'date',
-        'approval_date' => 'datetime'
+        'approval_date' => 'datetime',
+        'sold_at' => 'datetime',
+        'sold_to' => 'integer'
     ];
 
     protected $attributes = [

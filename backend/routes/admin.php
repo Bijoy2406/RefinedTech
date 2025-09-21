@@ -9,3 +9,5 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::put('/users/{user}/approve', [AdminController::class, 'approveUser']);
     Route::put('/users/{user}/reject', [AdminController::class, 'rejectUser']);
 });
+
+/*hiii*/ 

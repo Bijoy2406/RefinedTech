@@ -21,6 +21,12 @@ class Admin extends Authenticatable
 
     protected function getProfileImageBase64Attribute()
     {
+        // Priority: Return Cloudinary URL if available
+        if ($this->profile_image_url) {
+            return $this->profile_image_url;
+        }
+        
+        // Fallback to legacy BLOB data
         if (!$this->profile_image) return null;
         $mime = $this->profile_image_mime ?? 'image/jpeg';
         return 'data:' . $mime . ';base64,' . base64_encode($this->profile_image);
@@ -42,6 +48,10 @@ class Admin extends Authenticatable
         'country',
         'id_proof_reference',
         'status',
+        'profile_image_url',
+        'profile_image_public_id',
+        'profile_image',
+        'profile_image_mime',
     ];
 
     /**
@@ -50,10 +60,11 @@ class Admin extends Authenticatable
      * @var array<int, string>
      */
     protected $hidden = [
+        'profile_image',
+        'profile_image_mime',
+        'profile_image_public_id',
         'password',
         'remember_token',
-    'profile_image',
-    'profile_image_mime',
     ];
 
     /**

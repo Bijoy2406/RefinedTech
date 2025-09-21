@@ -46,6 +46,115 @@
   align-items: center;
 }
 
+/* Enhanced navbar button styles */
+.links .btn {
+  background: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  border: 1px solid var(--card-border);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  text-decoration: none;
+  transition: all var(--transition-normal);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.links .btn:hover {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border-color: var(--btn-primary-bg);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.links .btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Enhanced emoji styling for conversations button */
+.links .btn[href="/conversations"] {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  position: relative;
+  overflow: hidden;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  animation: conversations-pulse 3s ease-in-out infinite;
+  padding: var(--spacing-sm) calc(var(--spacing-md) + 2px);
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+}
+
+/* Special styling for conversations button */
+.links .btn[href="/conversations"] {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  position: relative;
+  overflow: hidden;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  animation: conversations-pulse 3s ease-in-out infinite;
+}
+
+@keyframes conversations-pulse {
+  0%, 100% {
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.6);
+  }
+}
+
+.links .btn[href="/conversations"]:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.6s;
+}
+
+.links .btn[href="/conversations"]:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+  filter: brightness(1.1);
+  animation: none; /* Stop pulsing on hover */
+}
+
+.links .btn[href="/conversations"]:hover:before {
+  left: 100%;
+}
+
+.links .btn[href="/conversations"]:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* Theme toggle button specific styling */
+.links .theme-toggle {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  font-size: 1.2rem;
+}
+
 .profile-btn {
     background-color: var(--btn-secondary-bg);
     color: var(--btn-secondary-text);
@@ -161,6 +270,50 @@
 
   .links {
     gap: 0.3rem;
+  }
+
+  .links .btn {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 0.75rem;
+    gap: 4px;
+  }
+
+  /* Hide text labels on mobile, keep only emojis/icons */
+  .links .btn[href="/cart"]:after { content: "🛒"; }
+  .links .btn[href="/wishlist"]:after { content: "❤️"; }
+  .links .btn[href="/orders"]:after { content: "📦"; }
+  .links .btn[href="/conversations"]:after { content: "💬"; }
+  
+  .links .btn[href="/cart"],
+  .links .btn[href="/wishlist"], 
+  .links .btn[href="/orders"],
+  .links .btn[href="/conversations"] {
+    font-size: 0;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+  
+  .links .btn[href="/cart"]:after,
+  .links .btn[href="/wishlist"]:after,
+  .links .btn[href="/orders"]:after,
+  .links .btn[href="/conversations"]:after {
+    font-size: 1.1rem;
+  }
+
+  /* Special mobile styling for conversations button */
+  .links .btn[href="/conversations"] {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 3px 12px rgba(102, 126, 234, 0.5);
+  }
+
+  .links .btn[href="/conversations"]:after {
+    font-size: 1.3rem;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
   }
 
   .profile-btn {

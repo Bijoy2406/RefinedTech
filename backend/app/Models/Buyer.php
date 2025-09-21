@@ -15,6 +15,12 @@ class Buyer extends Authenticatable
 
     protected function getProfileImageBase64Attribute()
     {
+        // Priority: Return Cloudinary URL if available
+        if ($this->profile_image_url) {
+            return $this->profile_image_url;
+        }
+        
+        // Fallback to legacy BLOB data
         if (!$this->profile_image) return null;
         $mime = $this->profile_image_mime ?? 'image/jpeg';
         return 'data:' . $mime . ';base64,' . base64_encode($this->profile_image);
@@ -35,6 +41,10 @@ class Buyer extends Authenticatable
         'phone_number',
         'status',
         'admin_access_code',
+        'profile_image_url',
+        'profile_image_public_id',
+        'profile_image',
+        'profile_image_mime',
     ];
 
     /**
@@ -44,9 +54,9 @@ class Buyer extends Authenticatable
      */
     protected $hidden = [
         'password',
-        'remember_token',
-    'profile_image',
-    'profile_image_mime',
+        'profile_image',
+        'profile_image_mime',
+        'profile_image_public_id',
     ];
 
     /**
@@ -59,6 +69,7 @@ class Buyer extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'date_of_birth' => 'date',
         ];
     }
 

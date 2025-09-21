@@ -12,7 +12,11 @@ import Cart from './components/Cart.jsx'
 import Buy from './components/Buy.jsx'
 import Profile from './components/Profile.jsx'
 import ProductDetails from './components/ProductDetails.jsx'
+import Wishlist from './components/Wishlist.jsx'
+import Orders from './components/Orders.jsx'
+import Conversations from './components/Conversations.jsx'
 import './css/App.css'
+import Chatbot from './components/Chatbot.jsx'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
 
@@ -143,8 +147,20 @@ export default function App() {
             </button>
             {user ? (
               <>
-                {user.role === 'Seller' && <Link to="/seller" className="btn">Seller Dashboard</Link>}
-                {user.role === 'Buyer' && <Link to="/cart" className="btn">🛒 Cart</Link>}
+                {user.role === 'Seller' && (
+                  <>
+                    <Link to="/seller" className="btn">Seller Dashboard</Link>
+                    <Link to="/conversations" className="btn">💬 Messages</Link>
+                  </>
+                )}
+                {user.role === 'Buyer' && (
+                  <>
+                    <Link to="/cart" className="btn">🛒 Cart</Link>
+                    <Link to="/wishlist" className="btn">❤️ Wishlist</Link>
+                    <Link to="/orders" className="btn">📦 Orders</Link>
+                    <Link to="/conversations" className="btn">💬 Messages</Link>
+                  </>
+                )}
                 <button onClick={openProfile} className="avatar-plain" title="Profile">
                   {avatarUrl ? (
                     <img src={avatarUrl} alt="avatar" className="nav-avatar" />
@@ -172,6 +188,9 @@ export default function App() {
             <Route path="/seller" element={user?.role === 'Seller' ? <SellerHomepage /> : <Navigate to="/" />} />
             <Route path="/buyer" element={<BuyerHomepage />} />
             <Route path="/cart" element={<Cart />} />
+            <Route path="/wishlist" element={<Wishlist />} />
+            <Route path="/orders" element={<Orders />} />
+            <Route path="/conversations" element={<Conversations />} />
             <Route path="/buy" element={<Buy />} />
             <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" />} />
             <Route path="/product/:id" element={<ProductDetails />} />
@@ -179,6 +198,7 @@ export default function App() {
           </Routes>
         </main>
         <footer className="footer">© {new Date().getFullYear()} RefinedTech</footer>
+        <Chatbot />
       </div>
       </UserContext.Provider>
     </ThemeProvider>

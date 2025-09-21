@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import RotatingText from './RotatingText'
+import LottieLoading from './LottieLoading'
 import '../css/theme.css'
 import '../css/Home.css'
 
@@ -10,20 +11,32 @@ const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
 export default function Home({ user }) {
   const navigate = useNavigate();
   const [realProducts, setRealProducts] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categories, setCategories] = useState([
+    { name: "Smartphones", icon: "📱", count: 0, color: "#E53935" },
+    { name: "Laptops", icon: "💻", count: 0, color: "#1976D2" },
+    { name: "Tablets", icon: "📱", count: 0, color: "#388E3C" },
+    { name: "Desktop Computers", icon: "🖥️", count: 0, color: "#7B1FA2" },
+    { name: "Gaming", icon: "🎮", count: 0, color: "#F57C00" },
+    { name: "Smart Watches", icon: "⌚", count: 0, color: "#C2185B" },
+    { name: "Audio & Headphones", icon: "🎧", count: 0, color: "#5D4037" },
+    { name: "Cameras", icon: "📷", count: 0, color: "#455A64" },
+    { name: "Accessories", icon: "🔌", count: 0, color: "#424242" },
+    { name: "Other Electronics", icon: "📦", count: 0, color: "#37474F" }
+  ]);
 
-  // Fetch real products if user is a buyer
+  // Fetch real products and category counts
   useEffect(() => {
-    if (user && user.role === 'Buyer') {
-      fetchProducts();
-    }
+    fetchProducts();
+    fetchCategoryCounts();
   }, [user]);
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
       const response = await axios.get(`${API_BASE}/api/products`);
-      const products = response.data.products || [];
+      const products = response.data.data || response.data.products || [];
       // Show only first 4 products for homepage
       setRealProducts(products.slice(0, 4));
     } catch (error) {
@@ -35,22 +48,91 @@ export default function Home({ user }) {
     }
   };
 
-  // Real categories from ProductSeeder with proper icons and item counts
-  const categories = [
-    { name: "Smartphones", icon: "📱", count: 5, color: "#E53935" },
-    { name: "Laptops", icon: "💻", count: 5, color: "#1976D2" },
-    { name: "Tablets", icon: "📱", count: 5, color: "#388E3C" },
-    { name: "Desktop Computers", icon: "🖥️", count: 5, color: "#7B1FA2" },
-    { name: "Gaming", icon: "🎮", count: 5, color: "#F57C00" },
-    { name: "Smart Watches", icon: "⌚", count: 5, color: "#C2185B" },
-    { name: "Audio & Headphones", icon: "🎧", count: 5, color: "#5D4037" },
-    { name: "Cameras", icon: "📷", count: 5, color: "#455A64" },
-    { name: "Accessories", icon: "🔌", count: 5, color: "#424242" },
-    { name: "Other Electronics", icon: "📦", count: 5, color: "#37474F" }
-  ];
+  const fetchCategoryCounts = async () => {
+    try {
+      setCategoriesLoading(true);
+      const response = await axios.get(`${API_BASE}/api/categories`);
+      
+      if (response.data.success && response.data.categories) {
+        setCategories(response.data.categories);
+      } else {
+        // Fallback to default categories with 0 counts
+        const defaultCategories = [
+          { name: "Smartphones", icon: "📱", count: 0, color: "#E53935" },
+          { name: "Laptops", icon: "💻", count: 0, color: "#1976D2" },
+          { name: "Tablets", icon: "📱", count: 0, color: "#388E3C" },
+          { name: "Desktop Computers", icon: "🖥️", count: 0, color: "#7B1FA2" },
+          { name: "Gaming", icon: "🎮", count: 0, color: "#F57C00" },
+          { name: "Smart Watches", icon: "⌚", count: 0, color: "#C2185B" },
+          { name: "Audio & Headphones", icon: "🎧", count: 0, color: "#5D4037" },
+          { name: "Cameras", icon: "📷", count: 0, color: "#455A64" },
+          { name: "Accessories", icon: "🔌", count: 0, color: "#424242" },
+          { name: "Other Electronics", icon: "📦", count: 0, color: "#37474F" }
+        ];
+        setCategories(defaultCategories);
+      }
+    } catch (error) {
+      console.error('Error fetching category counts:', error);
+      // Fallback to default categories with 0 counts on error
+      const defaultCategories = [
+        { name: "Smartphones", icon: "📱", count: 0, color: "#E53935" },
+        { name: "Laptops", icon: "💻", count: 0, color: "#1976D2" },
+        { name: "Tablets", icon: "📱", count: 0, color: "#388E3C" },
+        { name: "Desktop Computers", icon: "🖥️", count: 0, color: "#7B1FA2" },
+        { name: "Gaming", icon: "🎮", count: 0, color: "#F57C00" },
+        { name: "Smart Watches", icon: "⌚", count: 0, color: "#C2185B" },
+        { name: "Audio & Headphones", icon: "🎧", count: 0, color: "#5D4037" },
+        { name: "Cameras", icon: "📷", count: 0, color: "#455A64" },
+        { name: "Accessories", icon: "🔌", count: 0, color: "#424242" },
+        { name: "Other Electronics", icon: "📦", count: 0, color: "#37474F" }
+      ];
+      setCategories(defaultCategories);
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
 
   const formatPrice = (price) => {
     return `৳${parseFloat(price).toFixed(2)}`;
+  };
+
+  const handleAddToWishlist = async (productId) => {
+    if (!user || user.role !== 'Buyer') {
+      alert('Please login as a buyer to save products to wishlist');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('rt_token');
+      if (!token) {
+        alert('Please login to save products');
+        return;
+      }
+
+      const response = await axios.post(
+        `${API_BASE}/api/wishlist/add`,
+        { product_id: productId },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.success) {
+        alert('Product added to wishlist successfully!');
+      } else {
+        alert(response.data.message || 'Failed to add product to wishlist');
+      }
+    } catch (error) {
+      console.error('Error adding to wishlist:', error);
+      if (error.response?.data?.message) {
+        alert(error.response.data.message);
+      } else {
+        alert('Failed to add product to wishlist. Please try again.');
+      }
+    }
   };
 
   const handleCategoryClick = (categoryName) => {
@@ -163,7 +245,10 @@ export default function Home({ user }) {
             </button>
             <button 
               className="btn outline small"
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAddToWishlist(product.id);
+              }}
             >
               ❤️ Save
             </button>
@@ -172,6 +257,11 @@ export default function Home({ user }) {
       </div>
     );
   };
+
+  // Show loading state during initial data fetch
+  if (loading && categoriesLoading) {
+    return <LottieLoading message="Loading homepage..." />;
+  }
 
   if (user) {
     // Logged-in user homepage
@@ -209,7 +299,7 @@ export default function Home({ user }) {
               <Link to="/buyer" className="btn primary large">
                 🔍 Browse All Products
               </Link>
-              <Link to="/favorites" className="btn secondary large">
+              <Link to="/wishlist" className="btn secondary large">
                 ❤️ My Favorites
               </Link>
             </div>
@@ -223,23 +313,40 @@ export default function Home({ user }) {
             <p>Find exactly what you're looking for</p>
           </div>
           <div className="categories-grid modern">
-            {categories.map((category, index) => (
-              <div
-                key={index} 
-                className="category-card modern"
-                style={{ '--category-color': category.color, cursor: 'pointer' }}
-                onClick={() => handleCategoryClick(category.name)}
-              >
-                <div className="category-icon-wrapper">
-                  <div className="category-icon">{category.icon}</div>
+            {categoriesLoading ? (
+              // Loading skeleton for categories
+              Array.from({ length: 10 }).map((_, index) => (
+                <div key={`loading-${index}`} className="category-card modern loading">
+                  <div className="category-icon-wrapper">
+                    <div className="category-icon loading-placeholder"></div>
+                  </div>
+                  <div className="category-info">
+                    <div className="loading-line large"></div>
+                    <div className="loading-line small"></div>
+                  </div>
                 </div>
-                <div className="category-info">
-                  <h3>{category.name}</h3>
-                  <span className="category-count">{category.count} items available</span>
+              ))
+            ) : (
+              categories.map((category, index) => (
+                <div
+                  key={index} 
+                  className="category-card modern"
+                  style={{ '--category-color': category.color, cursor: 'pointer' }}
+                  onClick={() => handleCategoryClick(category.name)}
+                >
+                  <div className="category-icon-wrapper">
+                    <div className="category-icon">{category.icon}</div>
+                  </div>
+                  <div className="category-info">
+                    <h3>{category.name}</h3>
+                    <span className="category-count">
+                      {category.count > 0 ? `${category.count} items available` : 'No items available'}
+                    </span>
+                  </div>
+                  <div className="category-arrow">→</div>
                 </div>
-                <div className="category-arrow">→</div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
@@ -289,12 +396,12 @@ export default function Home({ user }) {
         <div className="quick-actions-section">
           <h2>Quick Actions</h2>
           <div className="actions-grid">
-            <Link to="/buyer/search" className="action-card">
+            <Link to="/buyer" className="action-card">
               <div className="action-icon">🔍</div>
               <h3>Advanced Search</h3>
               <p>Find specific products with detailed filters</p>
             </Link>
-            <Link to="/favorites" className="action-card">
+            <Link to="/wishlist" className="action-card">
               <div className="action-icon">❤️</div>
               <h3>My Favorites</h3>
               <p>View your saved products and wishlist</p>
@@ -551,3 +658,8 @@ export default function Home({ user }) {
     </section>
   )
 }
+
+/*iiiiiii */
+
+
+

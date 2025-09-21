@@ -504,7 +504,8 @@ class ProductController extends Controller
     public function getProduct(Request $request, $id): JsonResponse
     {
         try {
-            $product = Product::where('id', $id)
+            $product = Product::with('seller')
+                ->where('id', $id)
                 ->where('status', 'active')
                 ->first();
 
@@ -527,6 +528,57 @@ class ProductController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch product: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get category statistics (product count per category)
+     */
+    public function getCategoryStats(Request $request): JsonResponse
+    {
+        try {
+            $categoryStats = Product::where('status', 'active')
+                ->where('quantity_available', '>', 0)
+                ->select('category', DB::raw('count(*) as count'))
+                ->groupBy('category')
+                ->get()
+                ->pluck('count', 'category')
+                ->toArray();
+
+            // Define all available categories with their display information
+            $allCategories = [
+                'Smartphones' => ['icon' => '📱', 'color' => '#E53935'],
+                'Laptops' => ['icon' => '💻', 'color' => '#1976D2'],
+                'Tablets' => ['icon' => '📱', 'color' => '#388E3C'],
+                'Desktop Computers' => ['icon' => '🖥️', 'color' => '#7B1FA2'],
+                'Gaming' => ['icon' => '🎮', 'color' => '#F57C00'],
+                'Smart Watches' => ['icon' => '⌚', 'color' => '#C2185B'],
+                'Audio & Headphones' => ['icon' => '🎧', 'color' => '#5D4037'],
+                'Cameras' => ['icon' => '📷', 'color' => '#455A64'],
+                'Accessories' => ['icon' => '🔌', 'color' => '#424242'],
+                'Other Electronics' => ['icon' => '📦', 'color' => '#37474F']
+            ];
+
+            // Merge with actual counts from database
+            $categories = collect($allCategories)->map(function ($categoryInfo, $categoryName) use ($categoryStats) {
+                return [
+                    'name' => $categoryName,
+                    'icon' => $categoryInfo['icon'],
+                    'color' => $categoryInfo['color'],
+                    'count' => $categoryStats[$categoryName] ?? 0
+                ];
+            })->values();
+
+            return response()->json([
+                'success' => true,
+                'categories' => $categories
+            ]);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch category statistics: ' . $e->getMessage()
             ], 500);
         }
     }

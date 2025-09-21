@@ -21,12 +21,17 @@ return new class extends Migration
                 'updated_at' => now()
             ]);
 
-        // Modify the products table to change default status from 'pending' to 'active'
-        Schema::table('products', function (Blueprint $table) {
-            $table->enum('status', ['pending', 'active', 'rejected', 'sold', 'draft'])
-                  ->default('active')
-                  ->change();
-        });
+        // For PostgreSQL, we need to alter the default value directly
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement("ALTER TABLE products ALTER COLUMN status SET DEFAULT 'active'");
+        } elseif (DB::getDriverName() === 'mysql') {
+            // For MySQL/other databases
+            Schema::table('products', function (Blueprint $table) {
+                $table->enum('status', ['pending', 'active', 'rejected', 'sold', 'draft'])
+                      ->default('active')
+                      ->change();
+            });
+        }
     }
 
     /**
@@ -34,12 +39,17 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Revert the default status back to 'pending'
-        Schema::table('products', function (Blueprint $table) {
-            $table->enum('status', ['pending', 'active', 'rejected', 'sold', 'draft'])
-                  ->default('pending')
-                  ->change();
-        });
+        // For PostgreSQL, we need to alter the default value directly
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement("ALTER TABLE products ALTER COLUMN status SET DEFAULT 'pending'");
+        } elseif (DB::getDriverName() === 'mysql') {
+            // For MySQL/other databases
+            Schema::table('products', function (Blueprint $table) {
+                $table->enum('status', ['pending', 'active', 'rejected', 'sold', 'draft'])
+                      ->default('pending')
+                      ->change();
+            });
+        }
 
         // Optionally revert existing products back to pending (uncomment if needed)
         // DB::table('products')

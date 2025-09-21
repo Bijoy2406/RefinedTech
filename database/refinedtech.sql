@@ -94,7 +94,7 @@ CREATE TABLE admin_access_codes (
     FOREIGN KEY (created_by_admin_id) REFERENCES admins(id) ON DELETE SET NULL,
     FOREIGN KEY (used_by_admin_id) REFERENCES admins(id) ON DELETE SET NULL
 );
-select * from admin_access_codes;
+select * from personal_access_tokens;
 
 
 -- drop table admins;
@@ -352,11 +352,202 @@ CREATE TABLE admin_approvals (
 
 select * from admin_approvals;
 
+-- Orders Table for Purchase Management
+CREATE TABLE orders (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    order_number VARCHAR(50) UNIQUE NOT NULL,
+    buyer_id BIGINT UNSIGNED NOT NULL,
+    seller_id BIGINT UNSIGNED NOT NULL,
+    total_amount DECIMAL(10,2) NOT NULL,
+    shipping_cost DECIMAL(8,2) DEFAULT 0.00,
+    tax_amount DECIMAL(8,2) DEFAULT 0.00,
+    discount_amount DECIMAL(8,2) DEFAULT 0.00,
+    final_amount DECIMAL(10,2) NOT NULL,
+    
+    -- Shipping Information
+    shipping_address_line1 VARCHAR(255) NOT NULL,
+    shipping_address_line2 VARCHAR(255),
+    shipping_city VARCHAR(100) NOT NULL,
+    shipping_state VARCHAR(100) NOT NULL,
+    shipping_postal_code VARCHAR(20) NOT NULL,
+    shipping_country VARCHAR(100) NOT NULL,
+    shipping_phone VARCHAR(20),
+    
+    -- Billing Information
+    billing_address_line1 VARCHAR(255),
+    billing_address_line2 VARCHAR(255),
+    billing_city VARCHAR(100),
+    billing_state VARCHAR(100),
+    billing_postal_code VARCHAR(20),
+    billing_country VARCHAR(100),
+    billing_phone VARCHAR(20),
+    
+    -- Order Status
+    status ENUM('pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded') DEFAULT 'pending',
+    payment_status ENUM('pending', 'paid', 'failed', 'refunded', 'partial_refund') DEFAULT 'pending',
+    payment_method ENUM('credit_card', 'debit_card', 'paypal', 'bank_transfer', 'cash_on_delivery') NOT NULL,
+    
+    -- Payment Information
+    payment_reference VARCHAR(255),
+    payment_gateway VARCHAR(50),
+    transaction_id VARCHAR(255),
+    
+    -- Tracking Information
+    tracking_number VARCHAR(100),
+    shipping_carrier VARCHAR(100),
+    estimated_delivery_date DATE,
+    actual_delivery_date DATE,
+    
+    -- Notes and Communication
+    buyer_notes TEXT,
+    seller_notes TEXT,
+    admin_notes TEXT,
+    
+    -- Timestamps
+    confirmed_at TIMESTAMP NULL,
+    shipped_at TIMESTAMP NULL,
+    delivered_at TIMESTAMP NULL,
+    cancelled_at TIMESTAMP NULL,
+    
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (buyer_id) REFERENCES buyers(id) ON DELETE CASCADE,
+    FOREIGN KEY (seller_id) REFERENCES sellers(id) ON DELETE CASCADE,
+    
+    INDEX idx_order_number (order_number),
+    INDEX idx_buyer (buyer_id),
+    INDEX idx_seller (seller_id),
+    INDEX idx_status (status),
+    INDEX idx_payment_status (payment_status),
+    INDEX idx_created (created_at)
+);
 
+-- Order Items Table
+CREATE TABLE order_items (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    order_id BIGINT UNSIGNED NOT NULL,
+    product_id BIGINT UNSIGNED NOT NULL,
+    quantity INT NOT NULL DEFAULT 1,
+    unit_price DECIMAL(10,2) NOT NULL,
+    total_price DECIMAL(10,2) NOT NULL,
+    
+    -- Product snapshot at time of purchase
+    product_title VARCHAR(255) NOT NULL,
+    product_sku VARCHAR(100),
+    product_condition VARCHAR(50),
+    product_image_url VARCHAR(500),
+    
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+    
+    INDEX idx_order (order_id),
+    INDEX idx_product (product_id)
+);
 
+-- Shopping Cart Table
+CREATE TABLE cart_items (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    buyer_id BIGINT UNSIGNED NOT NULL,
+    product_id BIGINT UNSIGNED NOT NULL,
+    quantity INT NOT NULL DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (buyer_id) REFERENCES buyers(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+    
+    UNIQUE KEY unique_cart_item (buyer_id, product_id),
+    INDEX idx_buyer_cart (buyer_id),
+    INDEX idx_product_cart (product_id)
+);
 
+-- Wishlist/Favorites Table
+CREATE TABLE wishlists (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    buyer_id BIGINT UNSIGNED NOT NULL,
+    product_id BIGINT UNSIGNED NOT NULL,
+    updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    created_at TIMESTAMP NULL DEFAULT NULL,
+    
+    FOREIGN KEY (buyer_id) REFERENCES buyers(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+    
+    UNIQUE KEY unique_wishlist_item (buyer_id, product_id),
+    INDEX idx_buyer_wishlist (buyer_id),
+    INDEX idx_product_wishlist (product_id)
+);
 
+-- Payment Transactions Table
+CREATE TABLE payment_transactions (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    order_id BIGINT UNSIGNED NOT NULL,
+    transaction_type ENUM('payment', 'refund', 'partial_refund') NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    currency VARCHAR(3) DEFAULT 'USD',
+    
+    payment_method ENUM('credit_card', 'debit_card', 'paypal', 'bank_transfer', 'cash_on_delivery') NOT NULL,
+    payment_gateway VARCHAR(50),
+    gateway_transaction_id VARCHAR(255),
+    gateway_response TEXT,
+    
+    status ENUM('pending', 'processing', 'completed', 'failed', 'cancelled') DEFAULT 'pending',
+    
+    processed_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    
+    INDEX idx_order_transaction (order_id),
+    INDEX idx_gateway_transaction (gateway_transaction_id),
+    INDEX idx_status_transaction (status)
+);
 
+select * from orders;
+select * from order_items;
+select * from cart_items;
+select * from wishlists;
+select * from payment_transactions;
+
+USE refinedtech;
+
+-- Add missing columns to orders table
+ALTER TABLE orders 
+ADD COLUMN seller_id BIGINT UNSIGNED AFTER buyer_id,
+ADD COLUMN discount_amount DECIMAL(8,2) DEFAULT 0.00 AFTER tax_amount,
+ADD COLUMN final_amount DECIMAL(10,2) AFTER discount_amount,
+ADD COLUMN billing_address_line1 VARCHAR(255) AFTER shipping_phone,
+ADD COLUMN billing_address_line2 VARCHAR(255) AFTER billing_address_line1,
+ADD COLUMN billing_city VARCHAR(100) AFTER billing_address_line2,
+ADD COLUMN billing_state VARCHAR(100) AFTER billing_city,
+ADD COLUMN billing_postal_code VARCHAR(20) AFTER billing_state,
+ADD COLUMN billing_country VARCHAR(100) AFTER billing_postal_code,
+ADD COLUMN billing_phone VARCHAR(20) AFTER billing_country,
+ADD COLUMN payment_reference VARCHAR(255) AFTER payment_method,
+ADD COLUMN payment_gateway VARCHAR(50) AFTER payment_reference,
+ADD COLUMN transaction_id VARCHAR(255) AFTER payment_gateway,
+ADD COLUMN tracking_number VARCHAR(100) AFTER transaction_id,
+ADD COLUMN shipping_carrier VARCHAR(100) AFTER tracking_number,
+ADD COLUMN estimated_delivery_date DATE AFTER shipping_carrier,
+ADD COLUMN actual_delivery_date DATE AFTER estimated_delivery_date,
+ADD COLUMN buyer_notes TEXT AFTER notes,
+ADD COLUMN seller_notes TEXT AFTER buyer_notes,
+ADD COLUMN admin_notes TEXT AFTER seller_notes,
+ADD COLUMN confirmed_at TIMESTAMP NULL AFTER admin_notes,
+ADD COLUMN cancelled_at TIMESTAMP NULL AFTER delivered_at;
+
+-- Add foreign key constraint for seller_id
+ALTER TABLE orders ADD FOREIGN KEY (seller_id) REFERENCES sellers(id) ON DELETE CASCADE;
+
+-- Update payment_method column to match the expected enum values
+ALTER TABLE orders MODIFY COLUMN payment_method VARCHAR(50) NOT NULL;
+
+-- Update status column to match expected enum values
+ALTER TABLE orders MODIFY COLUMN status ENUM('pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded') DEFAULT 'pending';
 
 -- START FROM HERE
 USE refinedtech;
@@ -365,8 +556,11 @@ USE refinedtech;
  
 select * from admin_access_codes;
 select * from admins;
+-- DELETE FROM admins  WHERE id = 2;
 
 select * from buyers;
+select * from sellers;
+-- UPDATE sellers SET first_name = 'New', last_name = 'Buyer1', name = 'New Buyer1' WHERE id = 1;
 -- DELETE FROM sellers  WHERE id = 3;
 
 select * from products;
@@ -379,63 +573,283 @@ select * from reviews;
 select * from messages;
 select * from conversations;
 
--- Sample Data Queries --
--- View all buyers
--- SELECT * FROM buyers;
+select * from orders;
+select * from order_items;
+select * from cart_items;
+select * from wishlists;
+select * from payment_transactions;
 
--- View all sellers with their business details
--- SELECT id, name, email, shop_username, business_address, status FROM sellers;
+-- ================================================================================================
+-- MESSAGE SYSTEM QUERIES - RefinedTech Marketplace
+-- These queries help you view and analyze the messaging system between buyers and sellers
+-- ================================================================================================
 
--- View all admins 
--- SELECT id, name, email, admin_username, status FROM admins;
+-- 1. QUICK VIEW: Show all messages in chronological order (newest first)
+-- Functionality: Simple overview of all messages stored in the system
+SELECT * FROM conversation_messages ORDER BY created_at DESC;
 
--- View available admin access codes
--- SELECT access_code, description, is_used FROM admin_access_codes WHERE is_used = FALSE;
+-- 2. DETAILED MESSAGES: View messages with complete context and sender information
+-- Functionality: Shows each message with conversation details, product info, and sender names
+-- Useful for: Understanding the full context of each message exchange
+SELECT 
+    cm.id as message_id,
+    cm.message,
+    cm.sender_type,
+    cm.sender_id,
+    cm.is_read,
+    cm.created_at,
+    pc.subject as conversation_subject,
+    p.title as product_title,
+    CASE 
+        WHEN cm.sender_type = 'buyer' THEN b.name
+        WHEN cm.sender_type = 'seller' THEN s.shop_username
+    END as sender_name
+FROM conversation_messages cm
+JOIN product_conversations pc ON cm.conversation_id = pc.id
+JOIN products p ON pc.product_id = p.id
+LEFT JOIN buyers b ON cm.sender_type = 'buyer' AND cm.sender_id = b.id
+LEFT JOIN sellers s ON cm.sender_type = 'seller' AND cm.sender_id = s.id
+ORDER BY cm.created_at DESC;
 
--- View all products with seller information
--- SELECT p.id, p.title, p.brand, p.model, p.condition_grade, p.price, p.status, s.shop_username as seller_shop
--- FROM products p JOIN sellers s ON p.seller_id = s.id ORDER BY p.created_at DESC;
+-- 3. CONVERSATIONS OVERVIEW: Show all conversations with message statistics
+-- Functionality: Displays conversation summaries with message counts and unread counts
+-- Useful for: Dashboard views, conversation management, and activity monitoring
+SELECT 
+    pc.id as conversation_id,
+    pc.subject,
+    p.title as product_title,
+    b.name as buyer_name,
+    s.shop_username as seller_name,
+    pc.status,
+    pc.last_message_at,
+    COUNT(cm.id) as total_messages,
+    SUM(CASE WHEN cm.is_read = 0 THEN 1 ELSE 0 END) as unread_messages
+FROM product_conversations pc
+JOIN products p ON pc.product_id = p.id
+JOIN buyers b ON pc.buyer_id = b.id
+JOIN sellers s ON pc.seller_id = s.id
+LEFT JOIN conversation_messages cm ON pc.id = cm.conversation_id
+GROUP BY pc.id
+ORDER BY pc.last_message_at DESC;
 
--- View products by category
--- SELECT category, COUNT(*) as product_count, AVG(price) as avg_price 
--- FROM products WHERE status = 'active' GROUP BY category ORDER BY product_count DESC;
+-- 4. SPECIFIC CONVERSATION: View all messages in a particular conversation
+-- Functionality: Shows the complete message thread for a specific conversation
+-- Usage: Replace '1' with the actual conversation ID you want to view
+-- Useful for: Viewing chat history, dispute resolution, customer support
+SELECT 
+    cm.message,
+    cm.sender_type,
+    CASE 
+        WHEN cm.sender_type = 'buyer' THEN b.name
+        WHEN cm.sender_type = 'seller' THEN s.shop_username
+    END as sender_name,
+    cm.is_read,
+    cm.created_at
+FROM conversation_messages cm
+JOIN product_conversations pc ON cm.conversation_id = pc.id
+LEFT JOIN buyers b ON cm.sender_type = 'buyer' AND cm.sender_id = b.id
+LEFT JOIN sellers s ON cm.sender_type = 'seller' AND cm.sender_id = s.id
+WHERE pc.id = 1  -- Change this number to view different conversations
+ORDER BY cm.created_at ASC;
 
--- View featured products
--- SELECT title, brand, model, price, original_price, discount_percentage, views_count 
--- FROM products WHERE is_featured = TRUE AND status = 'active' ORDER BY views_count DESC;
+-- 5. MESSAGE SYSTEM STATISTICS: Get overall metrics about the messaging system
+-- Functionality: Provides key performance indicators and usage statistics
+-- Useful for: Admin dashboards, system monitoring, business analytics
+SELECT 
+    'Total Conversations' as metric,
+    COUNT(*) as count
+FROM product_conversations
+UNION ALL
+SELECT 
+    'Total Messages' as metric,
+    COUNT(*) as count
+FROM conversation_messages
+UNION ALL
+SELECT 
+    'Unread Messages' as metric,
+    COUNT(*) as count
+FROM conversation_messages
+WHERE is_read = 0
+UNION ALL
+SELECT 
+    'Messages from Buyers' as metric,
+    COUNT(*) as count
+FROM conversation_messages
+WHERE sender_type = 'buyer'
+UNION ALL
+SELECT 
+    'Messages from Sellers' as metric,
+    COUNT(*) as count
+FROM conversation_messages
+WHERE sender_type = 'seller';
 
--- Count users and products by type
--- SELECT 
---     (SELECT COUNT(*) FROM buyers) as total_buyers,
---     (SELECT COUNT(*) FROM sellers) as total_sellers, 
---     (SELECT COUNT(*) FROM admins) as total_admins,
---     (SELECT COUNT(*) FROM products) as total_products,
---     (SELECT COUNT(*) FROM products WHERE status = 'active') as active_products,
---     (SELECT COUNT(*) FROM products WHERE status = 'pending') as pending_products;
+-- 6. LATEST MESSAGES: Show the most recent message from each conversation
+-- Functionality: Displays the latest activity across all conversations
+-- Useful for: Recent activity feeds, notification systems, conversation previews
+SELECT 
+    pc.id as conversation_id,
+    pc.subject,
+    p.title as product_title,
+    cm.message as latest_message,
+    cm.sender_type,
+    CASE 
+        WHEN cm.sender_type = 'buyer' THEN b.name
+        WHEN cm.sender_type = 'seller' THEN s.shop_username
+    END as sender_name,
+    cm.created_at as message_time
+FROM product_conversations pc
+JOIN products p ON pc.product_id = p.id
+JOIN buyers b ON pc.buyer_id = b.id
+JOIN sellers s ON pc.seller_id = s.id
+JOIN conversation_messages cm ON pc.id = cm.conversation_id
+WHERE cm.id = (
+    SELECT MAX(id) 
+    FROM conversation_messages 
+    WHERE conversation_id = pc.id
+)
+ORDER BY cm.created_at DESC;
 
--- SUPER ADMIN LOGIN CREDENTIALS --
--- Email: bijoy@refinedtech.com
--- Password: password123 (hashed in database)
--- Username: bijoy
--- Status: approved (ready to use)
---
--- AVAILABLE ADMIN ACCESS CODES FOR NEW ADMINS:
--- ADM-SYSTEM02, ADM-SYSTEM03, ADM-A1B2C3D4, ADM-E5F6G7H8, ADM-I9J0K1L2, ADM-M3N4O5P6, ADM-Q7R8S9T0
+-- 7. BUYER-SPECIFIC QUERIES: Messages for a specific buyer
+-- Functionality: Shows all conversations and messages for a particular buyer
+-- Usage: Replace '2' with the actual buyer ID
+-- Useful for: Customer service, buyer activity tracking, personalized dashboards
+SELECT 
+    pc.id as conversation_id,
+    p.title as product_title,
+    s.shop_username as seller_name,
+    COUNT(cm.id) as message_count,
+    MAX(cm.created_at) as last_message_time
+FROM product_conversations pc
+JOIN products p ON pc.product_id = p.id
+JOIN sellers s ON pc.seller_id = s.id
+LEFT JOIN conversation_messages cm ON pc.id = cm.conversation_id
+WHERE pc.buyer_id = 2  -- Change this to specific buyer ID
+GROUP BY pc.id
+ORDER BY last_message_time DESC;
 
--- ENHANCED PRODUCTS SCHEMA NOTES --
--- The products table includes comprehensive attributes for refurbished tech products:
--- * Basic info: title, description, category, brand, model
--- * Condition system: grade (like-new to fair) with detailed descriptions
--- * Pricing: current price, original price, automatic discount calculation, negotiable pricing
--- * Technical specs: storage, RAM, processor, OS, battery health, screen size
--- * Product details: color, dimensions, weight, connectivity, accessories
--- * Marketplace features: featured products, urgent sales, view/favorite counts
--- * Location & shipping: city, state, shipping options
--- * Image management: JSON storage for multiple images and videos
--- * Admin workflow: approval system with notes and rejection reasons
--- * Sales tracking: sold date, buyer info, final sale price
---
--- Supporting tables:
--- * product_images: Structured image management with types and ordering
--- * product_categories: Hierarchical category system with icons and descriptions
--- * product_conditions: Reference table for condition grades with standardized descriptions
+-- 8. SELLER-SPECIFIC QUERIES: Messages for a specific seller
+-- Functionality: Shows all conversations and messages for a particular seller
+-- Usage: Replace '1' with the actual seller ID
+-- Useful for: Seller dashboard, performance tracking, customer interaction analysis
+SELECT 
+    pc.id as conversation_id,
+    p.title as product_title,
+    b.name as buyer_name,
+    COUNT(cm.id) as message_count,
+    MAX(cm.created_at) as last_message_time
+FROM product_conversations pc
+JOIN products p ON pc.product_id = p.id
+JOIN buyers b ON pc.buyer_id = b.id
+LEFT JOIN conversation_messages cm ON pc.id = cm.conversation_id
+WHERE pc.seller_id = 1  -- Change this to specific seller ID
+GROUP BY pc.id
+ORDER BY last_message_time DESC;
+
+-- 9. UNREAD MESSAGES BY USER: Find unread messages for specific users
+-- Functionality: Identifies messages that haven't been read by the recipient
+-- Useful for: Notification systems, badge counts, follow-up reminders
+-- For Buyers (messages from sellers they haven't read):
+SELECT 
+    cm.id,
+    cm.message,
+    s.shop_username as from_seller,
+    p.title as about_product,
+    cm.created_at
+FROM conversation_messages cm
+JOIN product_conversations pc ON cm.conversation_id = pc.id
+JOIN sellers s ON cm.sender_id = s.id
+JOIN products p ON pc.product_id = p.id
+WHERE cm.sender_type = 'seller' 
+AND cm.is_read = 0 
+AND pc.buyer_id = 2  -- Change to specific buyer ID
+ORDER BY cm.created_at DESC;
+
+-- For Sellers (messages from buyers they haven't read):
+SELECT 
+    cm.id,
+    cm.message,
+    b.name as from_buyer,
+    p.title as about_product,
+    cm.created_at
+FROM conversation_messages cm
+JOIN product_conversations pc ON cm.conversation_id = pc.id
+JOIN buyers b ON cm.sender_id = b.id
+JOIN products p ON pc.product_id = p.id
+WHERE cm.sender_type = 'buyer' 
+AND cm.is_read = 0 
+AND pc.seller_id = 1  -- Change to specific seller ID
+ORDER BY cm.created_at DESC;
+
+-- 10. CONVERSATION ACTIVITY: Most active conversations by message volume
+-- Functionality: Ranks conversations by the number of messages exchanged
+-- Useful for: Identifying high-engagement products, active negotiations, support issues
+SELECT 
+    pc.id as conversation_id,
+    p.title as product_title,
+    b.name as buyer_name,
+    s.shop_username as seller_name,
+    COUNT(cm.id) as total_messages,
+    MIN(cm.created_at) as first_message,
+    MAX(cm.created_at) as last_message,
+    DATEDIFF(MAX(cm.created_at), MIN(cm.created_at)) as conversation_duration_days
+FROM product_conversations pc
+JOIN products p ON pc.product_id = p.id
+JOIN buyers b ON pc.buyer_id = b.id
+JOIN sellers s ON pc.seller_id = s.id
+LEFT JOIN conversation_messages cm ON pc.id = cm.conversation_id
+GROUP BY pc.id
+HAVING total_messages > 0
+ORDER BY total_messages DESC, last_message DESC;
+
+-- 11. RECENT MESSAGING ACTIVITY: Show messaging activity from the last 7 days
+-- Functionality: Displays recent messaging trends and active conversations
+-- Useful for: Weekly reports, recent activity monitoring, engagement tracking
+SELECT 
+    DATE(cm.created_at) as message_date,
+    COUNT(*) as messages_sent,
+    COUNT(DISTINCT cm.conversation_id) as active_conversations,
+    COUNT(DISTINCT CASE WHEN cm.sender_type = 'buyer' THEN cm.sender_id END) as active_buyers,
+    COUNT(DISTINCT CASE WHEN cm.sender_type = 'seller' THEN cm.sender_id END) as active_sellers
+FROM conversation_messages cm
+WHERE cm.created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+GROUP BY DATE(cm.created_at)
+ORDER BY message_date DESC;
+
+-- 12. PRODUCT POPULARITY BY MESSAGES: Products generating the most conversations
+-- Functionality: Identifies which products are generating the most buyer interest
+-- Useful for: Product performance analysis, inventory decisions, marketing insights
+SELECT 
+    p.id as product_id,
+    p.title,
+    p.brand,
+    p.price,
+    s.shop_username as seller,
+    COUNT(DISTINCT pc.id) as total_conversations,
+    COUNT(cm.id) as total_messages,
+    AVG(CASE WHEN cm.id IS NOT NULL THEN 
+        (SELECT COUNT(*) FROM conversation_messages WHERE conversation_id = pc.id)
+    END) as avg_messages_per_conversation
+FROM products p
+JOIN sellers s ON p.seller_id = s.id
+LEFT JOIN product_conversations pc ON p.id = pc.product_id
+LEFT JOIN conversation_messages cm ON pc.id = cm.conversation_id
+GROUP BY p.id
+HAVING total_conversations > 0
+ORDER BY total_conversations DESC, total_messages DESC;
+
+-- ================================================================================================
+-- QUICK DIAGNOSTIC QUERIES
+-- Use these for troubleshooting and system health checks
+-- ================================================================================================
+
+-- Check if message tables have data:
+SELECT 
+    (SELECT COUNT(*) FROM product_conversations) as conversations,
+    (SELECT COUNT(*) FROM conversation_messages) as messages;
+
+-- Simple message list with basic info:
+SELECT id, message, sender_type, created_at FROM conversation_messages ORDER BY created_at;
+
+-- Count messages by type:
+SELECT sender_type, COUNT(*) as count FROM conversation_messages GROUP BY sender_type;
+

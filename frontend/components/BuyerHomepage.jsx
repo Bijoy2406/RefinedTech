@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { UserContext } from '../App.jsx';
 import TiltedCard from './TiltedCard';
+import LottieLoading from './LottieLoading';
 import '../css/BuyerHomepage.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
@@ -16,6 +17,9 @@ export default function BuyerHomepage() {
     const [filteredProducts, setFilteredProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    
+    // Tab state
+    const [activeTab, setActiveTab] = useState('products');
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
@@ -61,12 +65,17 @@ export default function BuyerHomepage() {
         // Handle URL parameters
         const categoryParam = searchParams.get('category');
         const productParam = searchParams.get('product');
+        const tabParam = searchParams.get('tab');
 
         if (categoryParam) {
             setFilters(prev => ({
                 ...prev,
                 category: categoryParam
             }));
+        }
+        
+        if (tabParam && ['products'].includes(tabParam)) {
+            setActiveTab(tabParam);
         }
 
         if (productParam) {
@@ -147,6 +156,15 @@ export default function BuyerHomepage() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleTabChange = (tab) => {
+        setActiveTab(tab);
+        
+        // Update URL
+        const newSearchParams = new URLSearchParams(searchParams);
+        newSearchParams.set('tab', tab);
+        setSearchParams(newSearchParams, { replace: true });
     };
 
     const applyFilters = () => {
@@ -389,14 +407,7 @@ export default function BuyerHomepage() {
     };
 
     if (loading) {
-        return (
-            <div className="buyer-homepage loading-state">
-                <div className="loading-spinner">
-                    <div className="spinner"></div>
-                    <p>Loading products...</p>
-                </div>
-            </div>
-        );
+        return <LottieLoading message="Loading products..." />;
     }
 
     return (
@@ -404,7 +415,33 @@ export default function BuyerHomepage() {
             {/* Header */}
             <div className="buyer-header">
                 <div className="header-content">
-                    <h1>Discover Refurbished Tech</h1>
+                    <h1>Buyer Dashboard</h1>
+                    <div className="tab-navigation">
+                        <button 
+                            className={`tab-btn ${activeTab === 'products' ? 'active' : ''}`}
+                            onClick={() => handleTabChange('products')}
+                        >
+                            🛍️ Browse Products
+                        </button>
+                        <button 
+                            className={`tab-btn ${activeTab === 'orders' ? 'active' : ''}`}
+                            onClick={() => navigate('/orders')}
+                        >
+                            📦 My Orders
+                        </button>
+                        <button 
+                            className={`tab-btn ${activeTab === 'cart' ? 'active' : ''}`}
+                            onClick={() => navigate('/cart')}
+                        >
+                            🛒 Shopping Cart
+                        </button>
+                        <button 
+                            className={`tab-btn ${activeTab === 'wishlist' ? 'active' : ''}`}
+                            onClick={() => navigate('/wishlist')}
+                        >
+                            ❤️ Wishlist
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -415,9 +452,12 @@ export default function BuyerHomepage() {
                 </div>
             )}
 
-            {/* Filters Section */}
-            <div className="filters-section">
-                <div className="filters-header">
+            {/* Tab Content */}
+            {activeTab === 'products' && (
+                <>
+                    {/* Filters Section */}
+                    <div className="filters-section">
+                        <div className="filters-header">
                     <h3>🔍 Filter Products</h3>
                     <button className="clear-filters-btn" onClick={clearFilters}>
                         Clear All Filters
@@ -570,13 +610,13 @@ export default function BuyerHomepage() {
                                         Next ➡️
                                     </button>
                                 </div>
-
-
                             </div>
                         )}
                     </>
                 )}
-            </div>
+                </div>
+            </>
+            )}
 
         </div>
     );

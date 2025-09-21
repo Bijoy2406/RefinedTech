@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import axios from 'axios';
+import LottieLoading from './LottieLoading';
 import '../css/PublicProductList.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
@@ -80,7 +81,7 @@ export default function PublicProductList() {
 
         {/* Products Grid */}
         {loading ? (
-          <div className="loading">Loading products...</div>
+          <LottieLoading message="Loading products..." />
         ) : (
           <div className="products-grid">
             {products.length > 0 ? (

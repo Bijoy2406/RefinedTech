@@ -10,9 +10,17 @@ use App\Models\Buyer;
 use App\Models\Seller;
 use App\Models\Admin;
 use App\Models\AdminAccessCode;
-
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use App\Services\CloudinaryService;
 class AuthController extends Controller
 {
+    protected $cloudinaryService;
+
+    public function __construct(CloudinaryService $cloudinaryService)
+    {
+        $this->cloudinaryService = $cloudinaryService;
+    }
+
     public function signup(Request $request)
     {
         $role = $request->role;
@@ -256,11 +264,15 @@ class AuthController extends Controller
     {
         $user = $request->user();
         $imageUrl = null;
-        if ($user && $user->profile_image) {
+        
+        // Priority: Cloudinary URL, then fallback to legacy route
+        if ($user && $user->profile_image_url) {
+            $imageUrl = $user->profile_image_url;
+        } elseif ($user && $user->profile_image) {
             try {
                 $imageUrl = route('profile.image', ['id' => $user->id, 'type' => strtolower($user->role)]);
             } catch (\Throwable $e) {
-                $imageUrl = null; // route helper failure fallback
+                $imageUrl = null;
             }
         }
         
@@ -354,7 +366,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Upload or replace profile image (stored as BLOB in respective user table)
+     * Upload or replace profile image (stored on Cloudinary)
      */
     public function uploadProfileImage(Request $request)
     {
@@ -368,8 +380,7 @@ class AuthController extends Controller
             }
 
             $user = $request->user();
-            $binary = null;
-            $mime = null;
+            $imageData = null;
 
             if ($hasFile) {
                 $validator = Validator::make($request->all(), [
@@ -379,22 +390,18 @@ class AuthController extends Controller
                     return response()->json(['errors' => $validator->errors()], 422);
                 }
                 $file = $request->file('image');
-                $binary = file_get_contents($file->getRealPath());
-                $mime = $file->getMimeType();
+                $imageData = $file->getRealPath();
             } else {
-                // Handle base64 data with proper UTF-8 handling
+                // Handle base64 data
                 $data = $base64;
                 if (preg_match('/^data:(image\/(?:png|jpeg|jpg|gif|webp));base64,(.*)$/i', $data, $matches)) {
-                    $mime = strtolower($matches[1]);
                     $data = $matches[2];
-                } else {
-                    $mime = 'image/png';
                 }
                 
-                // Clean the base64 string to remove any invalid characters
+                // Clean the base64 string
                 $data = preg_replace('/[^A-Za-z0-9+\/=]/', '', $data);
                 
-                // Validate approximate size (<=5MB)
+                // Validate base64
                 $decoded = base64_decode($data, true);
                 if ($decoded === false) {
                     return response()->json(['errors' => ['base64Image' => ['Invalid base64 encoding']]], 422);
@@ -403,35 +410,52 @@ class AuthController extends Controller
                     return response()->json(['errors' => ['base64Image' => ['Image exceeds 5MB']]], 422);
                 }
                 
-                $binary = $decoded;
-                
-                // Quick mime type detection
-                $sig = substr($binary, 0, 4);
-                if ($sig === "\x89PNG") $mime = 'image/png';
-                elseif (substr($binary, 0, 3) === "GIF") $mime = 'image/gif';
-                elseif (substr($binary, 0, 2) === "\xFF\xD8") $mime = 'image/jpeg';
-                elseif (strncmp($binary, 'RIFF', 4)===0 && substr($binary,8,4)==='WEBP') $mime = 'image/webp';
+                $imageData = 'data:image/png;base64,' . $data;
             }
 
-            // Ensure we have valid binary data
-            if (!$binary || strlen($binary) === 0) {
-                return response()->json(['errors' => ['image' => ['Invalid image data']]], 422);
+            // Delete old image from Cloudinary if exists
+            if ($user->profile_image_public_id) {
+                try {
+                    $this->cloudinaryService->deleteImage($user->profile_image_public_id);
+                } catch (\Exception $e) {
+                    \Log::warning('Failed to delete old Cloudinary image: ' . $e->getMessage());
+                }
             }
 
-            $user->profile_image = $binary;
-            $user->profile_image_mime = $mime;
+            // Upload to Cloudinary using CloudinaryService
+            $upload = $this->cloudinaryService->uploadImage($imageData, [
+                'folder' => 'refinedtech/profiles/' . strtolower($user->role) . 's',
+                'public_id' => strtolower($user->role) . '_' . $user->id,
+                'overwrite' => true,
+                'transformation' => [
+                    'width' => 400,
+                    'height' => 400,
+                    'crop' => 'fill',
+                    'quality' => 'auto'
+                ]
+            ]);
+
+            // Update user with Cloudinary URL and public_id
+            $user->profile_image_url = $upload['secure_url'];
+            $user->profile_image_public_id = $upload['public_id'];
+            
+            // Clear old BLOB data to save space
+            $user->profile_image = null;
+            $user->profile_image_mime = null;
+            
             $user->save();
 
-            // Create a clean response without any binary data
+            // Create response
             $responseData = [
                 'message' => 'Profile image updated',
-                'profile_image_url' => route('profile.image', ['id' => $user->id, 'type' => strtolower($user->role)]),
+                'profile_image_url' => $user->profile_image_url,
                 'user' => [
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
                     'role' => $user->role,
                     'status' => $user->status,
+                    'profile_image_url' => $user->profile_image_url,
                 ]
             ];
 
@@ -439,9 +463,21 @@ class AuthController extends Controller
             
         } catch (\Exception $e) {
             \Log::error('Profile image upload error: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            
+            // Provide more specific error messages based on the exception type
+            $errorMessage = 'Upload failed. Please try again.';
+            if (strpos($e->getMessage(), 'SSL') !== false || strpos($e->getMessage(), 'cURL') !== false) {
+                $errorMessage = 'Network connection error. Please check your internet connection and try again.';
+            } elseif (strpos($e->getMessage(), 'Invalid') !== false) {
+                $errorMessage = 'Invalid image format. Please use PNG, JPEG, or WebP.';
+            } elseif (strpos($e->getMessage(), 'timeout') !== false) {
+                $errorMessage = 'Upload timeout. Please try again with a smaller image.';
+            }
+            
             return response()->json([
                 'message' => 'Failed to upload image',
-                'errors' => ['image' => ['Upload failed. Please try again.']]
+                'errors' => ['image' => [$errorMessage]]
             ], 500);
         }
     }
@@ -463,7 +499,17 @@ class AuthController extends Controller
                     return response()->json(['error' => 'Invalid user type'], 404);
             }
 
-            if (!$model || !$model->profile_image) {
+            if (!$model) {
+                return response()->json(['error' => 'User not found'], 404);
+            }
+
+            // If Cloudinary URL exists, redirect to it
+            if ($model->profile_image_url) {
+                return redirect($model->profile_image_url);
+            }
+
+            // Fallback to legacy BLOB data
+            if (!$model->profile_image) {
                 return response()->json(['error' => 'Image not found'], 404);
             }
 
@@ -501,7 +547,6 @@ class AuthController extends Controller
         
         // Parse data URI
         if (preg_match('/^data:(image\/(?:png|jpeg|jpg|gif|webp));base64,(.*)$/i', $base64Data, $matches)) {
-            $mime = strtolower($matches[1]);
             $data = $matches[2];
         } else {
             return response()->json(['error' => 'Invalid image format'], 422);
@@ -517,21 +562,67 @@ class AuthController extends Controller
             return response()->json(['error' => 'Image exceeds 5MB limit'], 422);
         }
         
-        // Store in database
-        $user->profile_image = $decoded;
-        $user->profile_image_mime = $mime;
-        $user->save();
-        
-        // Return user data with profile_picture field for frontend compatibility
-        $userData = $user->toArray();
-        if ($user->profile_image) {
-            $userData['profile_picture'] = route('profile.image', ['id' => $user->id, 'type' => strtolower($user->role)]);
+        try {
+            // Delete old image from Cloudinary if exists
+            if ($user->profile_image_public_id) {
+                try {
+                    $this->cloudinaryService->deleteImage($user->profile_image_public_id);
+                } catch (\Exception $e) {
+                    \Log::warning('Failed to delete old Cloudinary image: ' . $e->getMessage());
+                }
+            }
+
+            // Upload to Cloudinary using CloudinaryService
+            $upload = $this->cloudinaryService->uploadImage($base64Data, [
+                'folder' => 'refinedtech/profiles/' . strtolower($user->role) . 's',
+                'public_id' => strtolower($user->role) . '_' . $user->id,
+                'overwrite' => true,
+                'transformation' => [
+                    'width' => 400,
+                    'height' => 400,
+                    'crop' => 'fill',
+                    'quality' => 'auto'
+                ]
+            ]);
+
+            // Update user with Cloudinary URL and public_id
+            $user->profile_image_url = $upload['secure_url'];
+            $user->profile_image_public_id = $upload['public_id'];
+            
+            // Clear old BLOB data to save space
+            $user->profile_image = null;
+            $user->profile_image_mime = null;
+            
+            $user->save();
+            
+            // Return user data with profile_picture field for frontend compatibility
+            $userData = $user->toArray();
+            $userData['profile_picture'] = $user->profile_image_url;
+            
+            return response()->json([
+                'message' => 'Profile picture updated successfully',
+                'user' => $userData
+            ], 200);
+            
+        } catch (\Exception $e) {
+            \Log::error('Profile picture update error: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            
+            // Provide more specific error messages based on the exception type
+            $errorMessage = 'Failed to update profile picture';
+            if (strpos($e->getMessage(), 'SSL') !== false || strpos($e->getMessage(), 'cURL') !== false) {
+                $errorMessage = 'Network connection error. Please check your internet connection and try again.';
+            } elseif (strpos($e->getMessage(), 'Invalid') !== false) {
+                $errorMessage = 'Invalid image format. Please use PNG, JPEG, or WebP.';
+            } elseif (strpos($e->getMessage(), 'timeout') !== false) {
+                $errorMessage = 'Upload timeout. Please try again with a smaller image.';
+            }
+            
+            return response()->json([
+                'message' => 'Failed to upload image',
+                'errors' => ['image' => [$errorMessage]]
+            ], 500);
         }
-        
-        return response()->json([
-            'message' => 'Profile picture updated successfully',
-            'user' => $userData
-        ], 200);
     }
 
     /**
