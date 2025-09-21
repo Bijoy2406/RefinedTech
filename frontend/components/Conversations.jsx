@@ -9,7 +9,7 @@ const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
 
 function Conversations() {
   const navigate = useNavigate();
-  const { user } = useContext(UserContext);
+  const { user, authLoading } = useContext(UserContext);
   const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -20,6 +20,9 @@ function Conversations() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Wait for auth loading to complete before checking authentication
+    if (authLoading) return;
+    
     if (!user) {
       navigate('/login');
       return;
@@ -31,7 +34,7 @@ function Conversations() {
     }
 
     fetchConversations();
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
   const fetchConversations = async () => {
     try {

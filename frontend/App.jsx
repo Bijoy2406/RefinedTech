@@ -27,6 +27,7 @@ export default function App() {
   const navigate = useNavigate()
   const [user, setUser] = useState(null)
   const [avatarUrl, setAvatarUrl] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true); // Add loading state
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -39,6 +40,9 @@ export default function App() {
   // Attempt to hydrate avatar asynchronously
   fetchUserAndAvatar(storedToken);
     }
+    
+    // Mark auth loading as complete
+    setAuthLoading(false);
 
     // Listen for profile updates
     const handleStorageChange = (e) => {
@@ -131,7 +135,15 @@ export default function App() {
 
   return (
     <ThemeProvider>
-      <UserContext.Provider value={{ user, setUser, avatarUrl, setAvatarUrl }}>
+      <UserContext.Provider value={{ user, setUser, avatarUrl, setAvatarUrl, authLoading }}>
+        {authLoading ? (
+          <div className="app-shell auth-loading">
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <p>Loading...</p>
+            </div>
+          </div>
+        ) : (
         <div className="app-shell">
         <nav className="nav">
           <Link className="brand" to="/">
@@ -200,6 +212,7 @@ export default function App() {
         <footer className="footer">© {new Date().getFullYear()} RefinedTech</footer>
         <Chatbot />
       </div>
+        )}
       </UserContext.Provider>
     </ThemeProvider>
   )

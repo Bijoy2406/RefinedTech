@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { UserContext } from '../App.jsx';
 import axios from 'axios';
 import LottieLoading from './LottieLoading';
 import '../css/Cart.css';
@@ -8,6 +9,7 @@ const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
 
 export default function Cart() {
   const navigate = useNavigate();
+  const { user, authLoading } = useContext(UserContext);
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState({});
@@ -18,8 +20,16 @@ export default function Cart() {
   });
 
   useEffect(() => {
+    // Wait for auth loading to complete before checking authentication
+    if (authLoading) return;
+    
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    
     fetchCart();
-  }, []);
+  }, [user, authLoading, navigate]);
 
   const fetchCart = async () => {
     try {

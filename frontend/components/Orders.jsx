@@ -9,7 +9,7 @@ const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
 
 export default function Orders() {
   const navigate = useNavigate();
-  const { user } = useContext(UserContext);
+  const { user, authLoading } = useContext(UserContext);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -18,6 +18,9 @@ export default function Orders() {
   const [detailsLoading, setDetailsLoading] = useState(false);
 
   useEffect(() => {
+    // Wait for auth loading to complete before checking authentication
+    if (authLoading) return;
+    
     if (!user) {
       navigate('/login');
       return;
@@ -29,7 +32,7 @@ export default function Orders() {
     }
 
     fetchOrders();
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
   const fetchOrders = async () => {
     try {

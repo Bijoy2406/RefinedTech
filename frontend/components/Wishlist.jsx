@@ -9,13 +9,16 @@ const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
 
 export default function Wishlist() {
   const navigate = useNavigate();
-  const { user } = useContext(UserContext);
+  const { user, authLoading } = useContext(UserContext);
   const [wishlistItems, setWishlistItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [removing, setRemoving] = useState({});
 
   useEffect(() => {
+    // Wait for auth loading to complete before checking authentication
+    if (authLoading) return;
+    
     if (!user) {
       navigate('/login');
       return;
@@ -27,7 +30,7 @@ export default function Wishlist() {
     }
 
     fetchWishlist();
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
   const fetchWishlist = async () => {
     try {
