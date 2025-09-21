@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\AdminAccessCode;
-use App\Models\User;
 
 class AdminAccessCodeSeeder extends Seeder
 {
@@ -14,11 +13,7 @@ class AdminAccessCodeSeeder extends Seeder
      */
     public function run(): void
     {
-        // Find the first admin user to act as the creator of these codes
-        // If no admin exists, we'll create codes with created_by_admin_id = 1 (assuming system admin)
-        $systemAdminId = User::where('role', 'Admin')->first()?->id ?? 1;
-
-        // Create some initial admin access codes
+        // Create some initial admin access codes (system generated)
         $codes = [
             [
                 'access_code' => 'ADM-SYSTEM01',
@@ -35,20 +30,29 @@ class AdminAccessCodeSeeder extends Seeder
         ];
 
         foreach ($codes as $codeData) {
-            AdminAccessCode::create([
-                'access_code' => $codeData['access_code'],
-                'created_by_admin_id' => $systemAdminId,
-                'description' => $codeData['description'],
-            ]);
+            AdminAccessCode::firstOrCreate(
+                ['access_code' => $codeData['access_code']],
+                [
+                    'created_by_admin_id' => null, // System generated
+                    'description' => $codeData['description'],
+                    'is_used' => false,
+                ]
+            );
         }
 
-        // Generate 5 additional unique codes
-        for ($i = 1; $i <= 5; $i++) {
-            AdminAccessCode::create([
-                'access_code' => AdminAccessCode::generateUniqueCode(),
-                'created_by_admin_id' => $systemAdminId,
-                'description' => "Auto-generated access code #{$i}",
-            ]);
+        // Generate 3 additional unique codes
+        for ($i = 1; $i <= 3; $i++) {
+            $uniqueCode = AdminAccessCode::generateUniqueCode();
+            AdminAccessCode::firstOrCreate(
+                ['access_code' => $uniqueCode],
+                [
+                    'created_by_admin_id' => null, // System generated
+                    'description' => "System generated admin access code #{$i}",
+                    'is_used' => false,
+                ]
+            );
         }
+
+        $this->command?->info('✅ Seeded admin access codes.');
     }
 }

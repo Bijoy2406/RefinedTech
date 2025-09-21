@@ -26,7 +26,7 @@ class AdminAccessCode extends Model
      */
     public function createdBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by_admin_id');
+        return $this->belongsTo(Admin::class, 'created_by_admin_id');
     }
 
     /**
@@ -34,7 +34,7 @@ class AdminAccessCode extends Model
      */
     public function usedBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'used_by_admin_id');
+        return $this->belongsTo(Admin::class, 'used_by_admin_id');
     }
 
     /**
