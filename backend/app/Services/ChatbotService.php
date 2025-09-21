@@ -250,7 +250,7 @@ class ChatbotService
         }
 
         // Get more results for exact matching, then prioritize
-        $maxResults = config('chatbot.behavior.max_search_results', 50);
+        $maxResults = config('chatbot.behavior.max_search_results', 200);
         $products = $query->limit($maxResults)->get();
         
         // Sort by relevance - exact title matches first, then brand, then model
