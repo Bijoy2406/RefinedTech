@@ -177,7 +177,7 @@ class OrderController extends Controller
 
             // Validate request
             $validator = Validator::make($request->all(), [
-                'payment_method' => 'required|in:credit_card,debit_card,paypal,bank_transfer,cash_on_delivery',
+                'payment_method' => 'required|in:sslcommerz',
                 'shipping_address_line1' => 'required|string|max:255',
                 'shipping_city' => 'required|string|max:100',
                 'shipping_state' => 'required|string|max:100',
@@ -283,7 +283,7 @@ class OrderController extends Controller
                     'shipping_postal_code' => $request->shipping_postal_code,
                     'shipping_country' => $request->shipping_country,
                     'shipping_phone' => $request->shipping_phone,
-                    'payment_method' => $request->payment_method,
+                    'payment_method' => 'sslcommerz',
                     'buyer_notes' => $request->buyer_notes,
                     'status' => 'pending',
                     'payment_status' => 'pending',
@@ -314,23 +314,13 @@ class OrderController extends Controller
                     CartItem::where('buyer_id', $buyer->id)->delete();
                 }
 
-                // Create payment transaction
-                $paymentTransaction = PaymentTransaction::createPayment(
-                    $order, 
-                    $request->payment_method,
-                    $request->payment_gateway
-                );
-
-                // Process payment (mock implementation)
-                $this->processPayment($paymentTransaction, $request);
-
                 $order->calculateEstimatedDelivery();
 
                 DB::commit();
 
                 return response()->json([
                     'success' => true,
-                    'message' => 'Order created successfully',
+                    'message' => 'Order created successfully. Proceed to payment.',
                     'order' => [
                         'id' => $order->id,
                         'order_number' => $order->order_number,
@@ -339,7 +329,158 @@ class OrderController extends Controller
                         'status' => $order->status,
                         'payment_status' => $order->payment_status,
                         'estimated_delivery_date' => $order->estimated_delivery_date,
-                    ]
+                    ],
+                    'next_step' => 'payment',
+                    'payment_required' => true
+                ], 201);
+
+            } catch (\Exception $e) {
+                DB::rollback();
+                throw $e;
+            }
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error creating order: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Create order directly using buyer's saved information (for quick buy)
+     */
+    public function createDirectOrder(Request $request): JsonResponse
+    {
+        try {
+            $user = $request->user();
+            
+            if (!$user || $user->role !== 'Buyer') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized. Buyer access required.'
+                ], 403);
+            }
+
+            $buyer = Buyer::where('email', $user->email)->first();
+            
+            if (!$buyer) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Buyer profile not found.'
+                ], 404);
+            }
+
+            // Validate request - only need product_id and quantity
+            $validator = Validator::make($request->all(), [
+                'product_id' => 'required|exists:products,id',
+                'quantity' => 'nullable|integer|min:1',
+                'payment_method' => 'required|in:sslcommerz',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            DB::beginTransaction();
+
+            try {
+                $product = Product::find($request->product_id);
+                
+                if (!$product || $product->status !== 'active') {
+                    throw new \Exception('Product not available for purchase');
+                }
+
+                $quantity = $request->quantity ?? 1;
+                
+                if ($quantity > $product->quantity_available) {
+                    throw new \Exception('Insufficient product quantity available');
+                }
+
+                // Use buyer's saved information for shipping
+                // You can enhance this by adding a shipping_addresses table
+                $shippingInfo = [
+                    'shipping_address_line1' => $buyer->address ?? 'N/A',
+                    'shipping_address_line2' => '',
+                    'shipping_city' => $buyer->city ?? 'Dhaka',
+                    'shipping_state' => $buyer->state ?? 'Dhaka Division',
+                    'shipping_postal_code' => $buyer->postal_code ?? '1200',
+                    'shipping_country' => $buyer->country ?? 'Bangladesh',
+                    'shipping_phone' => $buyer->phone_number ?? 'N/A',
+                ];
+
+                $orderItems = [OrderItem::createFromProduct($product, $quantity)];
+                $totalAmount = $product->price * $quantity;
+                $sellerId = $product->seller_id;
+
+                // Calculate additional costs
+                $shippingCost = 150; // Flat rate
+                $taxAmount = round($totalAmount * 0.05, 2); // 5% tax
+                $finalAmount = $totalAmount + $shippingCost + $taxAmount;
+
+                // Create order
+                $order = Order::create([
+                    'order_number' => Order::generateOrderNumber(),
+                    'buyer_id' => $buyer->id,
+                    'seller_id' => $sellerId,
+                    'subtotal' => $totalAmount,
+                    'total_amount' => $totalAmount,
+                    'shipping_cost' => $shippingCost,
+                    'tax_amount' => $taxAmount,
+                    'discount_amount' => 0,
+                    'final_amount' => $finalAmount,
+                    'shipping_address_line1' => $shippingInfo['shipping_address_line1'],
+                    'shipping_address_line2' => $shippingInfo['shipping_address_line2'],
+                    'shipping_city' => $shippingInfo['shipping_city'],
+                    'shipping_state' => $shippingInfo['shipping_state'],
+                    'shipping_postal_code' => $shippingInfo['shipping_postal_code'],
+                    'shipping_country' => $shippingInfo['shipping_country'],
+                    'shipping_phone' => $shippingInfo['shipping_phone'],
+                    'payment_method' => 'sslcommerz',
+                    'buyer_notes' => 'Quick buy order',
+                    'status' => 'pending',
+                    'payment_status' => 'pending',
+                ]);
+
+                // Create order items
+                foreach ($orderItems as $itemData) {
+                    $itemData['order_id'] = $order->id;
+                    OrderItem::create($itemData);
+                }
+
+                // Update product quantities
+                $product->quantity_available -= $quantity;
+                
+                if ($product->quantity_available <= 0) {
+                    $product->status = 'sold';
+                    $product->sold_at = now();
+                    $product->sold_to = $buyer->id;
+                }
+                
+                $product->save();
+
+                $order->calculateEstimatedDelivery();
+
+                DB::commit();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Order created successfully. Redirecting to payment.',
+                    'order' => [
+                        'id' => $order->id,
+                        'order_number' => $order->order_number,
+                        'total_amount' => $order->total_amount,
+                        'final_amount' => $order->final_amount,
+                        'status' => $order->status,
+                        'payment_status' => $order->payment_status,
+                        'estimated_delivery_date' => $order->estimated_delivery_date,
+                    ],
+                    'next_step' => 'payment',
+                    'payment_required' => true
                 ], 201);
 
             } catch (\Exception $e) {
@@ -629,52 +770,5 @@ class OrderController extends Controller
         return round($amount * 0.08, 2);
     }
 
-    /**
-     * Process payment (mock implementation)
-     */
-    private function processPayment(PaymentTransaction $transaction, Request $request): void
-    {
-        // This is a mock implementation
-        // In a real application, you would integrate with payment gateways like Stripe, PayPal, etc.
-        
-        try {
-            // Simulate payment processing delay
-            // sleep(1);
 
-            // For demo purposes, we'll assume payment is successful
-            $gatewayResponse = [
-                'gateway' => 'mock_gateway',
-                'transaction_id' => 'txn_' . uniqid(),
-                'status' => 'success',
-                'message' => 'Payment processed successfully',
-                'processed_at' => now()->toISOString(),
-            ];
-
-            $transaction->markAsCompleted(
-                $gatewayResponse['transaction_id'],
-                $gatewayResponse
-            );
-
-            // Update order payment status
-            $transaction->order->payment_status = 'paid';
-            $transaction->order->payment_reference = $gatewayResponse['transaction_id'];
-            $transaction->order->save();
-
-        } catch (\Exception $e) {
-            $gatewayResponse = [
-                'gateway' => 'mock_gateway',
-                'status' => 'failed',
-                'error' => $e->getMessage(),
-                'processed_at' => now()->toISOString(),
-            ];
-
-            $transaction->markAsFailed($gatewayResponse);
-
-            // Update order payment status
-            $transaction->order->payment_status = 'failed';
-            $transaction->order->save();
-
-            throw new \Exception('Payment processing failed: ' . $e->getMessage());
-        }
-    }
 }

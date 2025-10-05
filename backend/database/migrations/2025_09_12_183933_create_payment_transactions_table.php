@@ -15,10 +15,11 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('order_id');
             $table->string('transaction_id')->unique();
-            $table->enum('payment_method', ['credit_card', 'debit_card', 'paypal', 'bank_transfer', 'cash_on_delivery']);
+            $table->string('payment_method')->default('sslcommerz');
             $table->decimal('amount', 10, 2);
+            $table->string('currency', 3)->default('BDT');
             $table->enum('status', ['pending', 'processing', 'completed', 'failed', 'cancelled', 'refunded'])->default('pending');
-            $table->string('gateway')->nullable();
+            $table->string('gateway')->default('sslcommerz');
             $table->string('gateway_transaction_id')->nullable();
             $table->json('gateway_response')->nullable();
             $table->timestamp('processed_at')->nullable();

@@ -12,11 +12,12 @@ class PaymentTransaction extends Model
 
     protected $fillable = [
         'order_id',
+        'transaction_id',
         'transaction_type',
         'amount',
         'currency',
         'payment_method',
-        'payment_gateway',
+        'gateway',
         'gateway_transaction_id',
         'gateway_response',
         'status',
@@ -74,15 +75,16 @@ class PaymentTransaction extends Model
     /**
      * Create a payment transaction
      */
-    public static function createPayment(Order $order, string $paymentMethod, string $paymentGateway = null): PaymentTransaction
+    public static function createPayment(Order $order, string $paymentMethod, string $gateway = 'sslcommerz', string $transactionId = null): PaymentTransaction
     {
         return self::create([
             'order_id' => $order->id,
+            'transaction_id' => $transactionId ?? 'RT_' . $order->id . '_' . time() . '_' . rand(1000, 9999),
             'transaction_type' => 'payment',
             'amount' => $order->final_amount,
-            'currency' => 'USD',
+            'currency' => 'BDT',
             'payment_method' => $paymentMethod,
-            'payment_gateway' => $paymentGateway,
+            'gateway' => $gateway,
             'status' => 'pending',
         ]);
     }
@@ -97,11 +99,12 @@ class PaymentTransaction extends Model
 
         return self::create([
             'order_id' => $order->id,
+            'transaction_id' => 'RT_REFUND_' . $order->id . '_' . time() . '_' . rand(1000, 9999),
             'transaction_type' => $transactionType,
             'amount' => $refundAmount,
-            'currency' => 'USD',
-            'payment_method' => $order->payment_method,
-            'payment_gateway' => $order->payment_gateway,
+            'currency' => 'BDT',
+            'payment_method' => 'sslcommerz',
+            'gateway' => 'sslcommerz',
             'status' => 'pending',
         ]);
     }

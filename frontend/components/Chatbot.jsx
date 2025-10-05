@@ -304,7 +304,7 @@ export default function Chatbot() {
               disabled={isLoading}
             />
             <button 
-              onClick={sendMessage} 
+              onClick={() => sendMessage()} 
               disabled={!inputMessage.trim() || isLoading}
               className="send-btn"
             >

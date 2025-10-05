@@ -5,44 +5,100 @@
 /backend/node_modules/
 /backend/storage/*
 !/backend/storage/.gitignore
+!/backend/storage/app/.gitignore
+!/backend/storage/framework/.gitignore
+!/backend/storage/logs/.gitignore
 /backend/bootstrap/cache/*
 !/backend/bootstrap/cache/.gitignore
 /backend/.env
-/backend/.env.*
+/backend/.env.local
+/backend/.env.development
+/backend/.env.docker
+/backend/.env.production
 /backend/.phpunit.result.cache
 /backend/.DS_Store
 /backend/public/storage
+/backend/public/hot
 /backend/.idea/
-backend/.vscode/
-backend/.sass-cache
-backend/npm-debug.log
-backend/yarn-error.log
-backend/.cache/
-backend/.coverage
-backend/.php_cs.cache
+/backend/.vscode/
+/backend/.sass-cache
+/backend/npm-debug.log
+/backend/yarn-error.log
+/backend/.cache/
+/backend/.coverage
+/backend/.php_cs.cache
+/backend/cacert.pem
+/backend/test_*.php
+/backend/list_*.php
+/backend/public/debug_*.js
+/backend/public/test_*.html
 
 # === Frontend (React/Vite) ===
 /frontend/node_modules/
+/frontend/dist/
+/frontend/build/
+/frontend/.vite/
 /frontend/.env
-/frontend/.env.*
+/frontend/.env.local
+/frontend/.env.development
+/frontend/.env.production
 /frontend/.DS_Store
 /frontend/.idea/
-frontend/.vscode/
-frontend/npm-debug.log
-frontend/yarn-error.log
-frontend/.cache/
-frontend/.coverage
+/frontend/.vscode/
+/frontend/npm-debug.log
+/frontend/yarn-error.log
+/frontend/.cache/
+/frontend/.coverage
+/frontend/components/AuthTest.jsx
+
+# === Database ===
+/database/*.sql
+!/database/refinedtech.sql
+!/database/refinedtech_postgresql.sql
+
+# === Documentation (Keep important docs) ===
+# All markdown files in root are kept for documentation
 
 # === Global ===
 *.log
 *.tmp
 *.swp
 *.swo
+*.bak
+*.backup
 .DS_Store
 Thumbs.db
 .env
-.env.*
+.env.local
+.env.development
+.env.production
 .idea/
 .vscode/
 .cache/
 coverage/
+node_modules/
+
+# === OS Generated ===
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# === IDE ===
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+*.code-workspace
+
+# === Logs ===
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*

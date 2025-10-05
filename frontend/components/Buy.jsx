@@ -10,34 +10,26 @@ export default function Buy() {
   const navigate = useNavigate();
   const location = useLocation();
   const [loading, setLoading] = useState(false);
-  const [orderSuccess, setOrderSuccess] = useState(false);
-  const [orderData, setOrderData] = useState(null);
   const [error, setError] = useState('');
 
-  // Form state
   const [shippingForm, setShippingForm] = useState({
     shipping_address_line1: '',
     shipping_address_line2: '',
     shipping_city: '',
     shipping_state: '',
     shipping_postal_code: '',
-    shipping_country: 'United States',
+    shipping_country: 'Bangladesh',
     shipping_phone: '',
-  });
-
-  const [paymentForm, setPaymentForm] = useState({
-    payment_method: 'credit_card',
   });
 
   const [orderItems, setOrderItems] = useState([]);
   const [orderSummary, setOrderSummary] = useState({
     subtotal: 0,
-    shipping: 9.99,
+    shipping: 150,
     tax: 0,
     total: 0,
   });
 
-  // Check for direct product purchase or cart checkout
   const searchParams = new URLSearchParams(location.search);
   const productId = searchParams.get('product');
   const quantity = parseInt(searchParams.get('quantity')) || 1;
@@ -45,16 +37,13 @@ export default function Buy() {
 
   useEffect(() => {
     if (productId && !fromCart) {
-      // Direct product purchase
       fetchProductForPurchase();
     } else if (fromCart) {
-      // Cart checkout
       fetchCartItems();
     } else {
-      // No valid purchase context
       navigate('/');
     }
-  }, [productId, fromCart]);
+  }, [productId, fromCart, navigate]);
 
   const fetchProductForPurchase = async () => {
     try {
@@ -104,8 +93,8 @@ export default function Buy() {
 
   const calculateOrderSummary = (items) => {
     const subtotal = items.reduce((sum, item) => sum + item.total_price, 0);
-    const shipping = 9.99; // Fixed shipping cost
-    const tax = subtotal * 0.08; // 8% tax
+    const shipping = 150;
+    const tax = subtotal * 0.05;
     const total = subtotal + shipping + tax;
 
     setOrderSummary({
@@ -119,13 +108,6 @@ export default function Buy() {
   const handleShippingChange = (e) => {
     setShippingForm({
       ...shippingForm,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handlePaymentChange = (e) => {
-    setPaymentForm({
-      ...paymentForm,
       [e.target.name]: e.target.value
     });
   };
@@ -165,301 +147,220 @@ export default function Buy() {
       
       const orderData = {
         ...shippingForm,
-        ...paymentForm,
+        payment_method: 'sslcommerz',
       };
 
       if (productId && !fromCart) {
-        // Direct purchase
         orderData.product_id = parseInt(productId);
         orderData.quantity = quantity;
       } else {
-        // Cart checkout
         orderData.use_cart = true;
       }
 
-      const response = await axios.post(`${API_BASE}/api/orders/create`, orderData, {
+      const createOrderResponse = await axios.post(`${API_BASE}/api/orders/create`, orderData, {
         headers: { 
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
 
-      if (response.data.success) {
-        setOrderData(response.data.order);
-        setOrderSuccess(true);
+      if (createOrderResponse.data.success) {
+        const createdOrder = createOrderResponse.data.order;
+        
+        const paymentResponse = await axios.post(`${API_BASE}/api/payment/initiate`, {
+          order_id: createdOrder.id
+        }, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (paymentResponse.data.success) {
+          window.location.href = paymentResponse.data.payment_url;
+        } else {
+          throw new Error(paymentResponse.data.message || 'Failed to initiate payment');
+        }
+      } else {
+        throw new Error(createOrderResponse.data.message || 'Failed to create order');
       }
 
     } catch (error) {
-      console.error('Error placing order:', error);
+      console.error('Error processing order:', error);
       if (error.response?.data?.message) {
         setError(error.response.data.message);
       } else {
-        setError('Failed to place order. Please try again.');
+        setError('Failed to process order. Please try again.');
       }
     } finally {
       setLoading(false);
     }
   };
-
-  if (orderSuccess) {
-    return (
-      <div className="buy-page">
-        <div className="buy-container">
-          <div className="order-success">
-            <div className="success-icon">✅</div>
-            <h1>Order Placed Successfully!</h1>
-            <div className="order-details">
-              <p><strong>Order Number:</strong> {orderData.order_number}</p>
-              <p><strong>Total Amount:</strong> ৳{orderData.final_amount}</p>
-              <p><strong>Status:</strong> {orderData.status}</p>
-              <p><strong>Estimated Delivery:</strong> {orderData.estimated_delivery_date}</p>
-            </div>
-            <div className="success-actions">
-              <button 
-                className="btn btn-primary"
-                onClick={() => navigate('/buyer-homepage')}
-              >
-                View Order History
-              </button>
-              <button 
-                className="btn btn-secondary"
-                onClick={() => navigate('/')}
-              >
-                Continue Shopping
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
-      {loading && <LottieLoading message="Processing your order..." />}
+      {loading && <LottieLoading message="Creating your order..." />}
       <div className="buy-page">
-      <div className="buy-container">
-        <h1>Checkout</h1>
-        
-        {error && (
-          <div className="error-message">
-            {error}
-          </div>
-        )}
+        <div className="buy-container">
+          <h1>🛒 Checkout</h1>
+          <p>Complete your purchase securely with SSLCommerz</p>
+          
+          {error && (
+            <div className="error-message">
+              ⚠️ {error}
+            </div>
+          )}
 
-        <div className="checkout-content">
-          {/* Order Summary */}
-          <div className="order-summary">
-            <h2>Order Summary</h2>
-            <div className="order-items">
-              {orderItems.map((item, index) => (
-                <div key={index} className="order-item">
-                  {item.main_image && (
+          <div className="checkout-layout">
+            <div className="checkout-form">
+              <form onSubmit={handlePlaceOrder}>
+                <h2>🚚 Shipping Information</h2>
+                
+                <input
+                  type="text"
+                  name="shipping_address_line1"
+                  value={shippingForm.shipping_address_line1}
+                  onChange={handleShippingChange}
+                  placeholder="Street Address *"
+                  required
+                />
+
+                <input
+                  type="text"
+                  name="shipping_address_line2"
+                  value={shippingForm.shipping_address_line2}
+                  onChange={handleShippingChange}
+                  placeholder="Apartment, Suite, etc."
+                />
+
+                <div className="form-row">
+                  <input
+                    type="text"
+                    name="shipping_city"
+                    value={shippingForm.shipping_city}
+                    onChange={handleShippingChange}
+                    placeholder="City *"
+                    required
+                  />
+                  <input
+                    type="text"
+                    name="shipping_state"
+                    value={shippingForm.shipping_state}
+                    onChange={handleShippingChange}
+                    placeholder="State/Division *"
+                    required
+                  />
+                </div>
+
+                <div className="form-row">
+                  <input
+                    type="text"
+                    name="shipping_postal_code"
+                    value={shippingForm.shipping_postal_code}
+                    onChange={handleShippingChange}
+                    placeholder="Postal Code *"
+                    required
+                  />
+                  <select
+                    name="shipping_country"
+                    value={shippingForm.shipping_country}
+                    onChange={handleShippingChange}
+                    required
+                  >
+                    <option value="Bangladesh">🇧🇩 Bangladesh</option>
+                    <option value="India">🇮🇳 India</option>
+                    <option value="Pakistan">🇵🇰 Pakistan</option>
+                    <option value="Other">🌍 Other</option>
+                  </select>
+                </div>
+
+                <input
+                  type="tel"
+                  name="shipping_phone"
+                  value={shippingForm.shipping_phone}
+                  onChange={handleShippingChange}
+                  placeholder="Phone Number *"
+                  required
+                />
+
+                <div className="payment-section">
+                  <h2>💳 Payment Information</h2>
+                  <div className="payment-gateway">
                     <img 
-                      src={`${API_BASE}/storage/products/${item.main_image}`} 
-                      alt={item.title}
-                      className="item-image"
+                      src="https://securepay.sslcommerz.com/public/image/SSLCommerz-Pay-With-logo-All-Size-02.png" 
+                      alt="SSLCommerz Payment Gateway"
                     />
-                  )}
-                  <div className="item-details">
-                    <h4>{item.title}</h4>
-                    <p>Condition: {item.condition_grade}</p>
-                    <p>Quantity: {item.quantity}</p>
-                    <p className="item-price">৳{item.total_price.toFixed(2)}</p>
+                    <h3>🔒 Secure Payment with SSLCommerz</h3>
+                    <p>You will be redirected to SSLCommerz secure payment gateway</p>
+                    
+                    <div className="payment-methods">
+                      <div>💳 Credit/Debit Cards</div>
+                      <div>🏦 Internet Banking</div>
+                      <div>📱 bKash, Rocket, Nagad</div>
+                      <div>🛒 EMI Facilities</div>
+                    </div>
+
+                    <div className="security-badges">
+                      <span>🔒 SSL Encrypted</span>
+                      <span>🛡️ PCI DSS Compliant</span>
+                      <span>✅ 256-bit Security</span>
+                    </div>
+
+                    <div className="demo-note">
+                      <strong>⚠️ Demo Mode:</strong> Test environment - Use demo card: 4111111111111111, CVV: 123
+                    </div>
                   </div>
                 </div>
-              ))}
+
+                <div className="form-actions">
+                  <button
+                    type="button"
+                    onClick={() => navigate(-1)}
+                    disabled={loading}
+                  >
+                    ← Back
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                  >
+                    {loading ? '🔄 Processing...' : `🚀 Pay ৳${orderSummary.total}`}
+                  </button>
+                </div>
+              </form>
             </div>
-            
-            <div className="price-breakdown">
-              <div className="price-row">
-                <span>Subtotal:</span>
-                <span>৳{orderSummary.subtotal}</span>
+
+            <div className="order-summary">
+              <h2>📋 Order Summary</h2>
+              
+              <div className="order-items">
+                {orderItems.map((item, index) => (
+                  <div key={index} className="order-item">
+                    {item.main_image && (
+                      <img 
+                        src={`${API_BASE}/storage/products/${item.main_image}`} 
+                        alt={item.title}
+                      />
+                    )}
+                    <div className="item-details">
+                      <h4>{item.title}</h4>
+                      <p>Condition: {item.condition_grade}</p>
+                      <p>Qty: {item.quantity}</p>
+                      <p>৳{item.total_price.toFixed(2)}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="price-row">
-                <span>Shipping:</span>
-                <span>৳{orderSummary.shipping}</span>
-              </div>
-              <div className="price-row">
-                <span>Tax:</span>
-                <span>৳{orderSummary.tax}</span>
-              </div>
-              <div className="price-row total">
-                <span>Total:</span>
-                <span>৳{orderSummary.total}</span>
+              
+              <div className="summary-totals">
+                <div>Subtotal: ৳{orderSummary.subtotal}</div>
+                <div>Shipping: ৳{orderSummary.shipping}</div>
+                <div>VAT (5%): ৳{orderSummary.tax}</div>
+                <div className="total">Total: ৳{orderSummary.total}</div>
               </div>
             </div>
-          </div>
-
-          {/* Checkout Form */}
-          <div className="checkout-form">
-            <form onSubmit={handlePlaceOrder}>
-              {/* Shipping Information */}
-              <section className="form-section">
-                <h2>Shipping Information</h2>
-                
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Address Line 1 *</label>
-                    <input
-                      type="text"
-                      name="shipping_address_line1"
-                      value={shippingForm.shipping_address_line1}
-                      onChange={handleShippingChange}
-                      placeholder="Street address"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Address Line 2</label>
-                    <input
-                      type="text"
-                      name="shipping_address_line2"
-                      value={shippingForm.shipping_address_line2}
-                      onChange={handleShippingChange}
-                      placeholder="Apartment, suite, etc. (optional)"
-                    />
-                  </div>
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>City *</label>
-                    <input
-                      type="text"
-                      name="shipping_city"
-                      value={shippingForm.shipping_city}
-                      onChange={handleShippingChange}
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>State *</label>
-                    <input
-                      type="text"
-                      name="shipping_state"
-                      value={shippingForm.shipping_state}
-                      onChange={handleShippingChange}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Postal Code *</label>
-                    <input
-                      type="text"
-                      name="shipping_postal_code"
-                      value={shippingForm.shipping_postal_code}
-                      onChange={handleShippingChange}
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Country *</label>
-                    <select
-                      name="shipping_country"
-                      value={shippingForm.shipping_country}
-                      onChange={handleShippingChange}
-                      required
-                    >
-                      <option value="United States">United States</option>
-                      <option value="Canada">Canada</option>
-                      <option value="United Kingdom">United Kingdom</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Phone Number *</label>
-                    <input
-                      type="tel"
-                      name="shipping_phone"
-                      value={shippingForm.shipping_phone}
-                      onChange={handleShippingChange}
-                      placeholder="+1 (555) 123-4567"
-                      required
-                    />
-                  </div>
-                </div>
-              </section>
-
-              {/* Payment Information */}
-              <section className="form-section">
-                <h2>Payment Information</h2>
-                
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Payment Method *</label>
-                    <select
-                      name="payment_method"
-                      value={paymentForm.payment_method}
-                      onChange={handlePaymentChange}
-                      required
-                    >
-                      <option value="credit_card">Credit Card</option>
-                      <option value="debit_card">Debit Card</option>
-                      <option value="paypal">PayPal</option>
-                      <option value="bank_transfer">Bank Transfer</option>
-                      <option value="cash_on_delivery">Cash on Delivery</option>
-                    </select>
-                  </div>
-                </div>
-
-                {(paymentForm.payment_method === 'credit_card' || paymentForm.payment_method === 'debit_card') && (
-                  <div className="payment-info">
-                    <p className="payment-note">
-                      💳 Card payment will be processed securely after order confirmation.
-                    </p>
-                  </div>
-                )}
-
-                {paymentForm.payment_method === 'paypal' && (
-                  <div className="payment-info">
-                    <p className="payment-note">
-                      💰 You will be redirected to PayPal to complete payment.
-                    </p>
-                  </div>
-                )}
-
-                {paymentForm.payment_method === 'cash_on_delivery' && (
-                  <div className="payment-info">
-                    <p className="payment-note">
-                      💵 Pay in cash when your order is delivered.
-                    </p>
-                  </div>
-                )}
-              </section>
-
-              {/* Place Order Button */}
-              <div className="form-actions">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => navigate(-1)}
-                  disabled={loading}
-                >
-                  Back
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  disabled={loading}
-                >
-                  {loading ? 'Processing...' : `Place Order - ৳${orderSummary.total}`}
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       </div>
-    </div>
     </>
   );
 }

@@ -26,11 +26,6 @@
     animation: slideIn 0.3s ease;
 }
 
-/* Dark mode specific shadow enhancement */
-.dark-mode .profile-modal {
-    box-shadow: 0 20px 40px var(--shadow-dark);
-}
-
 .profile-header {
     display: flex;
     justify-content: space-between;
@@ -351,19 +346,6 @@
     margin-bottom: 16px;
     font-size: 0.9rem;
     font-weight: 500;
-}
-
-/* Dark mode message styles */
-.dark-mode .error-message {
-    background-color: var(--color-error-dark);
-    border-color: var(--color-error-border-dark);
-    color: var(--color-error-light);
-}
-
-.dark-mode .success-message {
-    background-color: var(--color-success-dark-bg);
-    border-color: var(--color-success-dark-border);
-    color: var(--color-success-light);
 }
 
 /* Animations */

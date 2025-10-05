@@ -84,6 +84,7 @@ Route::middleware(['multi.auth'])->group(function () {
     // Buyer order routes
     Route::get('/orders/buyer', [OrderController::class, 'getBuyerOrders']);
     Route::post('/orders/create', [OrderController::class, 'createOrder']);
+    Route::post('/orders/create-direct', [OrderController::class, 'createDirectOrder']); // Quick buy with saved info
     Route::put('/orders/{orderId}/cancel', [OrderController::class, 'cancelOrder']);
     
     // Seller order routes  
@@ -93,6 +94,18 @@ Route::middleware(['multi.auth'])->group(function () {
     // Common order routes (accessible by buyers, sellers, and admins)
     Route::get('/orders/{orderId}', [OrderController::class, 'getOrderDetails']);
 });
+
+// Payment Management
+Route::middleware(['multi.auth'])->group(function () {
+    Route::post('/payment/initiate', [App\Http\Controllers\PaymentController::class, 'initiatePayment']);
+    Route::get('/payment/status/{orderId}', [App\Http\Controllers\PaymentController::class, 'getPaymentStatus']);
+});
+
+// SSLCommerz Callback Routes (no authentication needed - accepts both GET and POST)
+Route::match(['get', 'post'], '/payment/sslcommerz/success', [App\Http\Controllers\PaymentController::class, 'paymentSuccess'])->name('payment.sslcommerz.success');
+Route::match(['get', 'post'], '/payment/sslcommerz/fail', [App\Http\Controllers\PaymentController::class, 'paymentFail'])->name('payment.sslcommerz.fail');
+Route::match(['get', 'post'], '/payment/sslcommerz/cancel', [App\Http\Controllers\PaymentController::class, 'paymentCancel'])->name('payment.sslcommerz.cancel');
+Route::post('/payment/sslcommerz/ipn', [App\Http\Controllers\PaymentController::class, 'paymentIPN'])->name('payment.sslcommerz.ipn');
 
 // Wishlist Management (Buyers only)
 Route::middleware(['multi.auth'])->group(function () {

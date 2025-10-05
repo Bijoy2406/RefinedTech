@@ -497,33 +497,3 @@
   .wishlist-actions {
     flex-direction: column;
   }
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .wishlist-container {
-    background: #1a1a1a;
-    color: #e0e0e0;
-  }
-  
-  .wishlist-item {
-    background: #2d2d2d;
-    color: #e0e0e0;
-  }
-  
-  .product-title a {
-    color: #e0e0e0;
-  }
-  
-  .product-title a:hover {
-    color: #8fa2ff;
-  }
-  
-  .empty-wishlist {
-    background: #2d2d2d;
-  }
-  
-  .wishlist-summary {
-    background: #2d2d2d;
-  }
-}

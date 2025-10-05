@@ -8,7 +8,7 @@
 ------------------------------- */
 :root {
   /* Map local profile page tokens to the global theme variables in theme.css
-     This lets light/dark mode toggle from theme.css control the profile styling.
+     This ensures consistent styling across the application.
   */
   --bg: var(--background);
   --bg-soft: var(--bg-secondary);
@@ -36,19 +36,11 @@
   --ring: var(--color-primary-alpha);
   --glow: 0 10px 30px rgba(99,102,241,.20), 0 2px 8px rgba(6,182,212,.14);
   --radius: 18px;
-  /* Heading gradient tokens: darker stops for light mode, lighter for dark mode (overridden in .dark-mode) */
+  /* Heading gradient tokens for light mode */
   --heading-grad-start: var(--color-primary-dark);
   --heading-grad-end: var(--color-primary);
 }
-/* Dark mode heading gradient overrides (theme.css will also set variables, but ensure headings are lighter in dark) */
-.dark-mode {
-  --heading-grad-start: var(--color-primary-light);
-  --heading-grad-end: var(--color-primary-dark);
-}
-body.dark .profile-avatar {
-  border-color: var(--accent-dark);
-  box-shadow: 0 0 12px rgba(var(--accent-1-rgb), 0.35);
-}
+
 .profile-avatar {
   width: 150px;              /* fixed size for consistency */
   height: 150px;

@@ -1,7 +1,6 @@
 import { Routes, Route, Link, Navigate, useNavigate } from 'react-router-dom'
 import { useState, useEffect, createContext, useContext } from 'react'
 import axios from 'axios'
-import { ThemeProvider, useTheme } from './components/Theme.jsx'
 import Home from './components/Home.jsx'
 import Login from './components/Login.jsx'
 import Signup from './components/Signup.jsx'
@@ -15,6 +14,9 @@ import ProductDetails from './components/ProductDetails.jsx'
 import Wishlist from './components/Wishlist.jsx'
 import Orders from './components/Orders.jsx'
 import Conversations from './components/Conversations.jsx'
+import PaymentSuccess from './components/PaymentSuccess.jsx'
+import PaymentFail from './components/PaymentFail.jsx'
+import PaymentCancel from './components/PaymentCancel.jsx'
 import './css/App.css'
 import Chatbot from './components/Chatbot.jsx'
 
@@ -28,7 +30,6 @@ export default function App() {
   const [user, setUser] = useState(null)
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [authLoading, setAuthLoading] = useState(true); // Add loading state
-  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const storedUser = localStorage.getItem('rt_user')
@@ -134,30 +135,26 @@ export default function App() {
   }
 
   return (
-    <ThemeProvider>
-      <UserContext.Provider value={{ user, setUser, avatarUrl, setAvatarUrl, authLoading }}>
-        {authLoading ? (
-          <div className="app-shell auth-loading">
-            <div className="loading-container">
-              <div className="loading-spinner"></div>
-              <p>Loading...</p>
-            </div>
+    <UserContext.Provider value={{ user, setUser, avatarUrl, setAvatarUrl, authLoading }}>
+      {authLoading ? (
+        <div className="app-shell auth-loading">
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <p>Loading...</p>
           </div>
-        ) : (
-        <div className="app-shell">
-        <nav className="nav">
-          <Link className="brand" to="/">
-            <img
-                src={theme === 'dark' ? '/logo_dark.png' : '/logo_light.png'}
-                alt="RefinedTech"
-                className="brand-logo"
-              />
-          </Link>
-          <div className="links">
-            <button onClick={toggleTheme} className="btn theme-toggle">
-              {theme === 'light' ? '🌙' : '☀️'}
-            </button>
-            {user ? (
+        </div>
+      ) : (
+      <div className="app-shell">
+      <nav className="nav">
+        <Link className="brand" to="/">
+          <img
+              src="/public/logo_light.png"
+              alt="RefinedTech"
+              className="brand-logo"
+            />
+        </Link>
+        <div className="links">
+          {user ? (
               <>
                 {user.role === 'Seller' && (
                   <>
@@ -204,6 +201,9 @@ export default function App() {
             <Route path="/orders" element={<Orders />} />
             <Route path="/conversations" element={<Conversations />} />
             <Route path="/buy" element={<Buy />} />
+            <Route path="/payment/success" element={<PaymentSuccess />} />
+            <Route path="/payment/fail" element={<PaymentFail />} />
+            <Route path="/payment/cancel" element={<PaymentCancel />} />
             <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" />} />
             <Route path="/product/:id" element={<ProductDetails />} />
             <Route path="*" element={<Navigate to="/" />} />
@@ -213,7 +213,6 @@ export default function App() {
         <Chatbot />
       </div>
         )}
-      </UserContext.Provider>
-    </ThemeProvider>
+    </UserContext.Provider>
   )
 }

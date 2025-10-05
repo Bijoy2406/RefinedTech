@@ -55,17 +55,6 @@
   background-clip: text;
 }
 
-/* Dark mode gradient colors */
-.dark-mode .hero-title .highlight .text-rotate,
-.dark-mode .hero-title .highlight .text-rotate *,
-.dark-mode .buyer-hero .highlight .text-rotate,
-.dark-mode .buyer-hero .highlight .text-rotate * {
-  background: white;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
 /* Default text color for non-highlight contexts */
 .text-rotate-word:not(.hero-title .highlight *):not(.buyer-hero .highlight *),
 .text-rotate-lines:not(.hero-title .highlight *):not(.buyer-hero .highlight *),

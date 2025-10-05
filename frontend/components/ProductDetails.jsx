@@ -98,18 +98,120 @@ function ProductDetails() {
     }
   }
 
-  const handleBuyNow = (quantity = 1) => {
+  const handleBuyNow = async (quantity = 1) => {
+    console.log('🛒 BUY NOW CLICKED - Starting process...')
+    console.log('User:', user)
+    console.log('Product ID:', product.id)
+    console.log('Quantity:', quantity)
+    
     if (!user) {
+      console.log('❌ No user logged in - redirecting to login')
       navigate('/login')
       return
     }
 
     if (user.role !== 'Buyer') {
-      alert('Only buyers can purchase items')
+      const message = 'Only buyers can purchase items'
+      console.log('❌ Role check failed:', message)
+      alert(message)
       return
     }
 
-    navigate(`/buy?product=${product.id}&quantity=${quantity}`)
+    // Show loading indicator
+    console.log('⏳ Setting loading state...')
+    setLoading(true)
+    setError(null)
+
+    try {
+      const token = localStorage.getItem('rt_token')
+      console.log('🔑 Token retrieved:', token ? 'Token exists' : 'No token found')
+      
+      // Create order directly with buyer's saved information
+      console.log('📦 Step 1: Creating order...')
+      console.log('Request URL:', `${API_BASE}/api/orders/create-direct`)
+      console.log('Request Data:', {
+        product_id: parseInt(product.id),
+        quantity: quantity,
+        payment_method: 'sslcommerz'
+      })
+      
+      const createOrderResponse = await axios.post(`${API_BASE}/api/orders/create-direct`, {
+        product_id: parseInt(product.id),
+        quantity: quantity,
+        payment_method: 'sslcommerz'
+      }, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      console.log('✅ Order creation response:', createOrderResponse.data)
+
+      if (createOrderResponse.data.success) {
+        const createdOrder = createOrderResponse.data.order
+        console.log('✅ Order created successfully! Order ID:', createdOrder.id)
+        console.log('Order details:', createdOrder)
+        
+        // Initiate payment immediately
+        console.log('💳 Step 2: Initiating payment...')
+        console.log('Request URL:', `${API_BASE}/api/payment/initiate`)
+        console.log('Request Data:', { order_id: createdOrder.id })
+        
+        const paymentResponse = await axios.post(`${API_BASE}/api/payment/initiate`, {
+          order_id: createdOrder.id
+        }, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+
+        console.log('✅ Payment initiation response:', paymentResponse.data)
+
+        if (paymentResponse.data.success) {
+          console.log('✅ Payment initiated successfully!')
+          console.log('🌐 Payment URL:', paymentResponse.data.payment_url)
+          console.log('🚀 Redirecting to SSLCommerz...')
+          // Redirect to SSLCommerz payment gateway
+          window.location.href = paymentResponse.data.payment_url
+        } else {
+          const errorMsg = paymentResponse.data.message || 'Failed to initiate payment'
+          console.log('❌ Payment initiation failed:', errorMsg)
+          throw new Error(errorMsg)
+        }
+      } else {
+        const errorMsg = createOrderResponse.data.message || 'Failed to create order'
+        console.log('❌ Order creation failed:', errorMsg)
+        throw new Error(errorMsg)
+      }
+    } catch (error) {
+      console.error('❌ ERROR in Buy Now process:', error)
+      console.log('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        statusText: error.response?.statusText
+      })
+      
+      setLoading(false)
+      
+      let errorMessage = ''
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message
+        console.log('📢 Showing error from API:', errorMessage)
+        alert(errorMessage)
+      } else if (error.message) {
+        errorMessage = error.message
+        console.log('📢 Showing error message:', errorMessage)
+        alert(errorMessage)
+      } else {
+        errorMessage = 'Failed to process order. Please try again.'
+        console.log('📢 Showing generic error:', errorMessage)
+        alert(errorMessage)
+      }
+      console.log('🔔 Alert/Toast message that would be shown:', errorMessage)
+    }
   }
 
   const handleWishlistToggle = async () => {

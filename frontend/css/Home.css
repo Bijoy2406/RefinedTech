@@ -1848,15 +1848,6 @@
   }
 }
 
-/* Dark mode specific adjustments */
-.dark-mode .buyer-hero::before {
-  opacity: 0.7;
-}
-
-.dark-mode .trust-section::before {
-  opacity: 0.8;
-}
-
 /* Enhanced focus states for accessibility */
 .btn:focus,
 .category-card.modern:focus,
@@ -1896,16 +1887,7 @@
   100% { transform: rotate(360deg); }
 }
 
-/* Enhanced text contrast for better readability */
-.dark-mode .hero-description {
-  color: var(--text-secondary);
-}
-
-.dark-mode .stat-label {
-  color: var(--text-tertiary);
-}
-
-/* Smooth transitions for theme switching */
+/* Smooth transitions */
 * {
   transition: background-color var(--transition-normal), 
               color var(--transition-normal), 

@@ -12,7 +12,7 @@ CREATE TYPE product_condition AS ENUM ('like-new', 'excellent', 'good', 'fair');
 CREATE TYPE product_status AS ENUM ('pending', 'active', 'rejected', 'sold', 'draft');
 CREATE TYPE order_status AS ENUM ('pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded');
 CREATE TYPE payment_status AS ENUM ('pending', 'paid', 'failed', 'refunded', 'partial_refund');
-CREATE TYPE payment_method AS ENUM ('credit_card', 'debit_card', 'paypal', 'bank_transfer', 'cash_on_delivery');
+CREATE TYPE payment_method AS ENUM ('sslcommerz');
 CREATE TYPE sender_type AS ENUM ('buyer', 'seller');
 CREATE TYPE user_type AS ENUM ('buyer', 'seller', 'admin');
 CREATE TYPE image_type AS ENUM ('main', 'gallery', 'condition', 'defect');
@@ -30,7 +30,13 @@ CREATE TABLE buyers (
     password VARCHAR(255) NOT NULL,
     country VARCHAR(255) NOT NULL,
     phone_number VARCHAR(255) NOT NULL,
+    address VARCHAR(500) NULL,
+    city VARCHAR(100) NULL,
+    state VARCHAR(100) NULL,
+    postal_code VARCHAR(20) NULL,
     status user_status DEFAULT 'approved',
+    profile_image_url VARCHAR(500) NULL,
+    profile_image_public_id VARCHAR(255) NULL,
     remember_token VARCHAR(100) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -502,21 +508,29 @@ CREATE TRIGGER update_wishlists_updated_at BEFORE UPDATE ON wishlists
 CREATE TABLE payment_transactions (
     id BIGSERIAL PRIMARY KEY,
     order_id BIGINT NOT NULL,
-    transaction_type transaction_type NOT NULL,
+    transaction_id VARCHAR(255) UNIQUE NOT NULL,
+    gateway VARCHAR(50) NOT NULL DEFAULT 'sslcommerz',
+    gateway_transaction_id VARCHAR(255) NULL,
+    payment_method VARCHAR(50) NOT NULL,
     amount DECIMAL(10,2) NOT NULL,
-    currency VARCHAR(3) DEFAULT 'USD',
-    
-    payment_method payment_method NOT NULL,
-    payment_gateway VARCHAR(50),
-    gateway_transaction_id VARCHAR(255),
-    gateway_response TEXT,
-    
+    currency VARCHAR(3) DEFAULT 'BDT',
     status transaction_status DEFAULT 'pending',
-    
+    gateway_response JSONB NULL,
     processed_at TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+);
+
+-- Order Status History Table (for tracking order lifecycle)
+CREATE TABLE order_status_history (
+    id BIGSERIAL PRIMARY KEY,
+    order_id BIGINT NOT NULL,
+    old_status order_status,
+    new_status order_status,
+    changed_by VARCHAR(50),
+    change_reason TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
 );
 
@@ -527,6 +541,10 @@ CREATE INDEX idx_payment_transactions_status ON payment_transactions (status);
 
 -- Create trigger for payment_transactions table
 CREATE TRIGGER update_payment_transactions_updated_at BEFORE UPDATE ON payment_transactions
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Create trigger for order_status_history table
+CREATE TRIGGER update_order_status_history_updated_at BEFORE UPDATE ON order_status_history
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Insert initial data
@@ -615,9 +633,352 @@ GROUP BY DATE(m.created_at)
 ORDER BY message_date DESC;
 */
 
+-- ================================================================================================
+-- VIEWS FOR DATA ABSTRACTION AND REPORTING
+-- ================================================================================================
+
+-- Seller Performance Dashboard View
+CREATE OR REPLACE VIEW seller_performance_dashboard AS
+SELECT 
+    s.id as seller_id,
+    s.shop_username,
+    s.name as seller_name,
+    s.email,
+    s.status,
+    COUNT(DISTINCT p.id) as total_products,
+    COUNT(DISTINCT CASE WHEN p.status = 'active' THEN p.id END) as active_products,
+    COUNT(DISTINCT o.id) as total_orders,
+    COUNT(DISTINCT CASE WHEN o.status = 'delivered' THEN o.id END) as completed_orders,
+    COALESCE(SUM(CASE WHEN o.status = 'delivered' THEN o.final_amount END), 0) as total_revenue,
+    COALESCE(AVG(CASE WHEN o.status = 'delivered' THEN o.final_amount END), 0) as avg_order_value,
+    COUNT(DISTINCT CASE WHEN o.status IN ('pending', 'confirmed', 'processing', 'shipped') THEN o.id END) as pending_orders,
+    ROUND(
+        CASE WHEN COUNT(o.id) > 0 
+        THEN (COUNT(CASE WHEN o.status = 'delivered' THEN 1 END)::DECIMAL / COUNT(o.id)) * 100 
+        ELSE 0 END, 2
+    ) as delivery_success_rate,
+    MAX(o.created_at) as last_order_received
+FROM sellers s
+LEFT JOIN products p ON s.id = p.seller_id
+LEFT JOIN orders o ON s.id = o.seller_id
+WHERE s.status = 'approved'
+GROUP BY s.id, s.shop_username, s.name, s.email, s.status;
+
+-- Enhanced Product Catalog View
+CREATE OR REPLACE VIEW enhanced_product_catalog AS
+SELECT 
+    p.id,
+    p.title,
+    p.brand,
+    p.model,
+    p.category,
+    p.subcategory,
+    p.condition_grade,
+    p.price,
+    p.original_price,
+    p.discount_percentage,
+    p.quantity_available,
+    p.images,
+    p.tags,
+    p.is_featured,
+    p.is_urgent_sale,
+    p.negotiable,
+    p.location_city,
+    p.location_state,
+    p.status,
+    p.views_count,
+    p.favorites_count,
+    p.created_at,
+    s.id as seller_id,
+    s.shop_username,
+    s.name as seller_name,
+    pc.title as condition_title,
+    pc.description as condition_description,
+    pc.icon as condition_icon,
+    pc.color as condition_color,
+    COALESCE(sales_stats.total_sold, 0) as total_sold,
+    COALESCE(sales_stats.total_revenue, 0) as total_revenue_generated,
+    CASE 
+        WHEN p.original_price IS NOT NULL AND p.original_price > p.price 
+        THEN ROUND(((p.original_price - p.price) / p.original_price) * 100, 2)
+        ELSE COALESCE(p.discount_percentage, 0)
+    END as actual_discount_percentage
+FROM products p
+JOIN sellers s ON p.seller_id = s.id
+LEFT JOIN product_conditions pc ON p.condition_grade = pc.grade
+LEFT JOIN (
+    SELECT 
+        oi.product_id,
+        SUM(oi.quantity) as total_sold,
+        SUM(oi.total_price) as total_revenue
+    FROM order_items oi
+    JOIN orders o ON oi.order_id = o.id
+    WHERE o.status = 'delivered'
+    GROUP BY oi.product_id
+) sales_stats ON p.id = sales_stats.product_id;
+
+-- Customer Order History View
+CREATE OR REPLACE VIEW customer_order_history AS
+SELECT 
+    o.id as order_id,
+    o.order_number,
+    o.status,
+    o.payment_status,
+    o.total_amount,
+    o.shipping_cost,
+    o.tax_amount,
+    o.final_amount,
+    o.created_at as order_date,
+    o.confirmed_at,
+    o.shipped_at,
+    o.delivered_at,
+    b.id as buyer_id,
+    b.name as buyer_name,
+    b.email as buyer_email,
+    s.id as seller_id,
+    s.shop_username,
+    s.name as seller_name,
+    COUNT(oi.id) as total_items,
+    STRING_AGG(oi.product_title, ', ') as product_titles,
+    CASE 
+        WHEN o.delivered_at IS NOT NULL THEN EXTRACT(DAY FROM (o.delivered_at - o.created_at))
+        ELSE EXTRACT(DAY FROM (CURRENT_DATE - o.created_at))
+    END as days_to_delivery
+FROM orders o
+JOIN buyers b ON o.buyer_id = b.id
+JOIN sellers s ON o.seller_id = s.id
+JOIN order_items oi ON o.id = oi.order_id
+GROUP BY o.id, o.order_number, o.status, o.payment_status, o.total_amount, 
+         o.shipping_cost, o.tax_amount, o.final_amount, o.created_at, 
+         o.confirmed_at, o.shipped_at, o.delivered_at,
+         b.id, b.name, b.email, s.id, s.shop_username, s.name;
+
+-- ================================================================================================
+-- TRIGGERS FOR BUSINESS LOGIC AND DATA INTEGRITY
+-- ================================================================================================
+
+-- Trigger to update product views counter when conversations are created
+CREATE OR REPLACE FUNCTION update_product_views_on_conversation()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE products 
+    SET views_count = views_count + 1
+    WHERE id = (SELECT product_id FROM products WHERE seller_id = NEW.seller_id LIMIT 1);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create trigger for product views (modified for our schema)
+CREATE TRIGGER update_product_views
+    AFTER INSERT ON conversations
+    FOR EACH ROW
+    EXECUTE FUNCTION update_product_views_on_conversation();
+
+-- Trigger to track order status changes
+CREATE OR REPLACE FUNCTION track_order_status_changes()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF OLD.status != NEW.status THEN
+        INSERT INTO order_status_history (
+            order_id,
+            old_status,
+            new_status,
+            changed_by,
+            change_reason,
+            created_at
+        ) VALUES (
+            NEW.id,
+            OLD.status,
+            NEW.status,
+            'system',
+            CASE 
+                WHEN NEW.status = 'confirmed' THEN 'Order confirmed by seller'
+                WHEN NEW.status = 'processing' THEN 'Order is being processed'
+                WHEN NEW.status = 'shipped' THEN 'Order has been shipped'
+                WHEN NEW.status = 'delivered' THEN 'Order delivered successfully'
+                WHEN NEW.status = 'cancelled' THEN 'Order cancelled'
+                ELSE 'Status updated'
+            END,
+            CURRENT_TIMESTAMP
+        );
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER track_order_status_changes
+    AFTER UPDATE ON orders
+    FOR EACH ROW
+    EXECUTE FUNCTION track_order_status_changes();
+
+-- Trigger to cleanup wishlist when items are purchased
+CREATE OR REPLACE FUNCTION cleanup_wishlist_on_purchase()
+RETURNS TRIGGER AS $$
+BEGIN
+    DELETE FROM wishlists 
+    WHERE product_id = NEW.product_id 
+    AND buyer_id = (
+        SELECT buyer_id FROM orders WHERE id = NEW.order_id
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER cleanup_wishlist_on_purchase
+    AFTER INSERT ON order_items
+    FOR EACH ROW
+    EXECUTE FUNCTION cleanup_wishlist_on_purchase();
+
+-- ================================================================================================
+-- STORED PROCEDURES FOR BUSINESS OPERATIONS
+-- ================================================================================================
+
+-- Procedure for bulk product import (PostgreSQL version)
+CREATE OR REPLACE FUNCTION bulk_product_import(
+    p_seller_id BIGINT,
+    p_product_data JSONB,
+    OUT p_products_imported INTEGER,
+    OUT p_error_message TEXT
+)
+RETURNS RECORD AS $$
+DECLARE
+    v_product JSONB;
+    v_product_count INTEGER DEFAULT 0;
+    v_error_count INTEGER DEFAULT 0;
+BEGIN
+    p_products_imported := 0;
+    p_error_message := '';
+    
+    -- Validate seller exists and is approved
+    IF NOT EXISTS (SELECT 1 FROM sellers WHERE id = p_seller_id AND status = 'approved') THEN
+        p_error_message := 'Seller not found or not approved';
+        RETURN;
+    END IF;
+    
+    BEGIN
+        -- Loop through products in JSON array
+        FOR v_product IN SELECT * FROM jsonb_array_elements(p_product_data)
+        LOOP
+            BEGIN
+                INSERT INTO products (
+                    seller_id, title, description, category, brand, model,
+                    condition_grade, price, quantity_available, created_at
+                ) VALUES (
+                    p_seller_id,
+                    v_product->>'title',
+                    v_product->>'description',
+                    v_product->>'category',
+                    v_product->>'brand',
+                    v_product->>'model',
+                    (v_product->>'condition_grade')::product_condition,
+                    (v_product->>'price')::DECIMAL(10,2),
+                    COALESCE((v_product->>'quantity')::INTEGER, 1),
+                    CURRENT_TIMESTAMP
+                );
+                
+                v_product_count := v_product_count + 1;
+                
+            EXCEPTION WHEN OTHERS THEN
+                v_error_count := v_error_count + 1;
+                CONTINUE;
+            END;
+        END LOOP;
+        
+        p_products_imported := v_product_count;
+        
+        IF v_error_count > 0 THEN
+            p_error_message := FORMAT('Imported %s products, %s failed', v_product_count, v_error_count);
+        ELSE
+            p_error_message := FORMAT('Successfully imported %s products', v_product_count);
+        END IF;
+        
+    EXCEPTION WHEN OTHERS THEN
+        p_error_message := 'Error during bulk import: ' || SQLERRM;
+        RETURN;
+    END;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Procedure for order cancellation with inventory restoration
+CREATE OR REPLACE FUNCTION cancel_order(
+    p_order_id BIGINT,
+    p_cancellation_reason TEXT DEFAULT NULL,
+    OUT p_result_message TEXT
+)
+RETURNS TEXT AS $$
+DECLARE
+    v_order_status order_status;
+    v_refund_amount DECIMAL(10,2);
+    v_order_exists INTEGER DEFAULT 0;
+BEGIN
+    p_result_message := '';
+    
+    BEGIN
+        -- Check if order exists and get current status
+        SELECT status, final_amount INTO v_order_status, v_refund_amount
+        FROM orders 
+        WHERE id = p_order_id;
+        
+        GET DIAGNOSTICS v_order_exists = ROW_COUNT;
+        
+        IF v_order_exists = 0 THEN
+            p_result_message := 'Order not found';
+            RETURN;
+        END IF;
+        
+        IF v_order_status IN ('delivered', 'cancelled') THEN
+            p_result_message := 'Order cannot be cancelled - current status is ' || v_order_status;
+            RETURN;
+        END IF;
+        
+        -- Update order status
+        UPDATE orders 
+        SET status = 'cancelled', 
+            cancelled_at = CURRENT_TIMESTAMP,
+            admin_notes = COALESCE(admin_notes, '') || E'\nCancelled: ' || COALESCE(p_cancellation_reason, 'No reason provided')
+        WHERE id = p_order_id;
+        
+        -- Restore product quantities
+        UPDATE products 
+        SET quantity_available = quantity_available + oi.quantity,
+            status = CASE WHEN status = 'sold' THEN 'active' ELSE status END
+        FROM order_items oi
+        WHERE products.id = oi.product_id AND oi.order_id = p_order_id;
+        
+        -- Create refund transaction record
+        INSERT INTO payment_transactions (
+            order_id, transaction_id, gateway, payment_method, amount, 
+            currency, status, created_at
+        ) VALUES (
+            p_order_id, 'REFUND-' || EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)::BIGINT, 
+            'sslcommerz', 'sslcommerz', v_refund_amount, 'BDT', 'pending', CURRENT_TIMESTAMP
+        );
+        
+        p_result_message := 'Order cancelled successfully and inventory restored';
+        
+    EXCEPTION WHEN OTHERS THEN
+        p_result_message := 'Error occurred during order cancellation: ' || SQLERRM;
+        RETURN;
+    END;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Comments for reference
 -- super_admin's password: password123
 -- all other pass: 123456
+
+-- ================================================================================================
+-- SAMPLE QUERIES FOR TESTING AND ADMINISTRATION
+-- ================================================================================================
+
+-- Test Views
+-- SELECT * FROM seller_performance_dashboard LIMIT 5;
+-- SELECT * FROM enhanced_product_catalog WHERE status = 'active' LIMIT 10;
+-- SELECT * FROM customer_order_history WHERE buyer_id = 1;
+
+-- Test Functions
+-- SELECT * FROM bulk_product_import(1, '[{"title":"Test Product","category":"Smartphones","brand":"TestBrand","model":"Test1","condition_grade":"good","price":1000}]');
+-- SELECT cancel_order(1, 'Customer requested cancellation');
 
 -- Query examples (commented out for PostgreSQL)
 -- SELECT * FROM admin_access_codes;
@@ -636,3 +997,4 @@ ORDER BY message_date DESC;
 -- SELECT * FROM cart_items;
 -- SELECT * FROM wishlists;
 -- SELECT * FROM payment_transactions;
+-- SELECT * FROM order_status_history;

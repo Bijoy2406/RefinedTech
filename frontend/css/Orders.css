@@ -532,19 +532,3 @@
     width: 100%;
   }
 }
-
-/* Dark Mode Support */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background-color: #1a1a1a;
-    --card-background: #2d2d2d;
-    --text-color: #ffffff;
-    --text-secondary: #b0b0b0;
-    --border-color: #404040;
-    --secondary-background: #3a3a3a;
-    --primary-color: #4a9eff;
-    --error-bg: #2d1b1e;
-    --error-color: #f5c2c7;
-    --error-border: #5d2428;
-  }
-}

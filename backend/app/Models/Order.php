@@ -69,6 +69,28 @@ class Order extends Model
     ];
 
     /**
+     * Boot method to add model events
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Automatically populate the old shipping_address field when creating/updating
+        static::saving(function ($order) {
+            if ($order->shipping_address_line1) {
+                $address = $order->shipping_address_line1;
+                if ($order->shipping_address_line2) {
+                    $address .= ', ' . $order->shipping_address_line2;
+                }
+                $address .= ', ' . $order->shipping_city . ', ' . $order->shipping_state;
+                $address .= ' ' . $order->shipping_postal_code . ', ' . $order->shipping_country;
+                
+                $order->shipping_address = $address;
+            }
+        });
+    }
+
+    /**
      * Generate a unique order number
      */
     public static function generateOrderNumber()

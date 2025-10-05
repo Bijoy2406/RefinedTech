@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import { ThemeToggle, ThemeLogo } from './Theme.jsx'
 import '../css/Navbar.css'
 
 export default function Navbar({ 
@@ -11,7 +10,6 @@ export default function Navbar({
   return (
     <nav className="nav theme-nav">
       <div className="links">
-        <ThemeToggle />
         {user ? (
           <>
             <button onClick={onLogout} className="btn outline">Logout</button>

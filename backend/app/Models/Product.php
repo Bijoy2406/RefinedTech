@@ -105,6 +105,14 @@ class Product extends Model
     }
 
     /**
+     * Get the buyer who purchased this product
+     */
+    public function soldTo(): BelongsTo
+    {
+        return $this->belongsTo(Buyer::class, 'sold_to');
+    }
+
+    /**
      * Scope a query to only include active products
      */
     public function scopeActive($query)

@@ -569,9 +569,9 @@ select * from product_categories;
 select * from product_conditions;
 
 
-select * from reviews;
-select * from messages;
-select * from conversations;
+-- select * from reviews;
+-- select * from messages;
+-- select * from conversations;
 
 select * from orders;
 select * from order_items;
@@ -852,4 +852,715 @@ SELECT id, message, sender_type, created_at FROM conversation_messages ORDER BY 
 
 -- Count messages by type:
 SELECT sender_type, COUNT(*) as count FROM conversation_messages GROUP BY sender_type;
+
+-- ================================================================================================
+-- ADVANCED SQL QUERIES FOR REFINEDTECH DATABASE
+-- This section contains 200-300 lines of advanced SQL queries demonstrating:
+-- 1. Aggregate Functions with Complex Grouping
+-- 2. Various Types of SQL Joins (INNER, LEFT, RIGHT, FULL OUTER, CROSS)
+-- 3. Sub Queries and Nested Sub Queries
+-- 4. Views for Data Abstraction
+-- 5. Stored Procedures for Business Logic
+-- 6. Triggers for Data Integrity
+-- 7. Transactions for Data Consistency
+-- ================================================================================================
+
+-- ================================================================================================
+-- SECTION 1: ADVANCED AGGREGATE FUNCTIONS WITH COMPLEX GROUPING
+-- ================================================================================================
+
+-- Query 1: Comprehensive Sales Analytics with Multiple Aggregate Functions
+-- Functionality: Provides complete sales overview by seller with revenue, order statistics, and performance metrics
+-- Business Value: Helps identify top-performing sellers and revenue patterns
+SELECT 
+    s.id as seller_id,
+    s.shop_username,
+    s.name as seller_name,
+    COUNT(DISTINCT o.id) as total_orders,
+    COUNT(DISTINCT p.id) as total_products_listed,
+    SUM(oi.total_price) as total_revenue,
+    AVG(oi.total_price) as avg_order_value,
+    MIN(oi.total_price) as min_order_value,
+    MAX(oi.total_price) as max_order_value,
+    STDDEV(oi.total_price) as revenue_std_deviation,
+    COUNT(DISTINCT o.buyer_id) as unique_customers,
+    SUM(p.views_count) as total_product_views,
+    AVG(p.price) as avg_product_price,
+    SUM(CASE WHEN o.status = 'delivered' THEN 1 ELSE 0 END) as successful_deliveries,
+    ROUND((SUM(CASE WHEN o.status = 'delivered' THEN 1 ELSE 0 END) / COUNT(o.id)) * 100, 2) as delivery_success_rate
+FROM sellers s
+LEFT JOIN products p ON s.id = p.seller_id
+LEFT JOIN order_items oi ON p.id = oi.product_id
+LEFT JOIN orders o ON oi.order_id = o.id
+WHERE s.status = 'approved'
+GROUP BY s.id, s.shop_username, s.name
+HAVING total_orders > 0
+ORDER BY total_revenue DESC, delivery_success_rate DESC;
+
+-- Query 2: Product Performance Analytics with Window Functions
+-- Functionality: Analyzes product performance with ranking and cumulative statistics
+-- Business Value: Identifies best-performing products and market trends
+SELECT 
+    p.id,
+    p.title,
+    p.brand,
+    p.category,
+    p.price,
+    p.condition_grade,
+    s.shop_username,
+    p.views_count,
+    p.favorites_count,
+    COUNT(oi.id) as times_sold,
+    SUM(oi.total_price) as total_sales_value,
+    RANK() OVER (PARTITION BY p.category ORDER BY p.views_count DESC) as view_rank_in_category,
+    DENSE_RANK() OVER (ORDER BY p.favorites_count DESC) as favorite_rank_overall,
+    ROW_NUMBER() OVER (PARTITION BY s.id ORDER BY p.price DESC) as price_rank_by_seller,
+    LAG(p.price) OVER (PARTITION BY p.category ORDER BY p.created_at) as prev_product_price_in_category,
+    LEAD(p.price) OVER (PARTITION BY p.category ORDER BY p.created_at) as next_product_price_in_category,
+    SUM(p.views_count) OVER (PARTITION BY p.category) as total_category_views,
+    AVG(p.price) OVER (PARTITION BY p.condition_grade) as avg_price_by_condition
+FROM products p
+JOIN sellers s ON p.seller_id = s.id
+LEFT JOIN order_items oi ON p.id = oi.product_id
+WHERE p.status = 'active'
+GROUP BY p.id, p.title, p.brand, p.category, p.price, p.condition_grade, 
+         s.shop_username, p.views_count, p.favorites_count, p.created_at
+ORDER BY total_sales_value DESC, p.views_count DESC;
+
+-- ================================================================================================
+-- SECTION 2: COMPREHENSIVE SQL JOINS (ALL TYPES)
+-- ================================================================================================
+
+-- Query 3: INNER JOIN - Active Orders with Complete Information
+-- Functionality: Retrieves detailed information about active orders using INNER JOIN
+-- Business Value: Provides complete order details for order management and customer service
+SELECT DISTINCT
+    o.order_number,
+    o.status as order_status,
+    o.total_amount,
+    o.payment_status,
+    b.name as buyer_name,
+    b.email as buyer_email,
+    s.shop_username as seller_shop,
+    s.name as seller_name,
+    p.title as product_title,
+    p.brand,
+    p.condition_grade,
+    oi.quantity,
+    oi.unit_price,
+    oi.total_price,
+    o.created_at as order_date,
+    o.shipped_at,
+    o.estimated_delivery_date
+FROM orders o
+INNER JOIN buyers b ON o.buyer_id = b.id
+INNER JOIN sellers s ON o.seller_id = s.id
+INNER JOIN order_items oi ON o.id = oi.order_id
+INNER JOIN products p ON oi.product_id = p.id
+WHERE o.status IN ('confirmed', 'processing', 'shipped')
+ORDER BY o.created_at DESC;
+
+-- Query 4: LEFT JOIN - All Products with Optional Order Information
+-- Functionality: Shows all products including those never ordered using LEFT JOIN
+-- Business Value: Identifies products that need marketing attention or price adjustment
+SELECT 
+    p.id as product_id,
+    p.title,
+    p.brand,
+    p.category,
+    p.price,
+    p.condition_grade,
+    s.shop_username,
+    p.views_count,
+    p.created_at,
+    COALESCE(SUM(oi.quantity), 0) as total_quantity_sold,
+    COALESCE(SUM(oi.total_price), 0) as total_revenue_generated,
+    COALESCE(COUNT(DISTINCT o.id), 0) as number_of_orders,
+    CASE 
+        WHEN COUNT(o.id) = 0 THEN 'Never Sold'
+        WHEN COUNT(o.id) = 1 THEN 'Sold Once'
+        ELSE 'Multiple Sales'
+    END as sales_status
+FROM products p
+JOIN sellers s ON p.seller_id = s.id
+LEFT JOIN order_items oi ON p.id = oi.product_id
+LEFT JOIN orders o ON oi.order_id = o.id AND o.status = 'delivered'
+WHERE p.status = 'active'
+GROUP BY p.id, p.title, p.brand, p.category, p.price, p.condition_grade, 
+         s.shop_username, p.views_count, p.created_at
+ORDER BY total_revenue_generated DESC, p.views_count DESC;
+
+-- Query 5: RIGHT JOIN - All Buyers with Optional Purchase History
+-- Functionality: Shows all buyers including those who haven't made purchases using RIGHT JOIN
+-- Business Value: Identifies potential customers for targeted marketing campaigns
+SELECT 
+    b.id as buyer_id,
+    b.name as buyer_name,
+    b.email,
+    b.country,
+    b.created_at as registration_date,
+    COALESCE(COUNT(DISTINCT o.id), 0) as total_orders,
+    COALESCE(SUM(o.total_amount), 0) as total_spent,
+    COALESCE(AVG(o.total_amount), 0) as avg_order_value,
+    COALESCE(COUNT(DISTINCT w.product_id), 0) as wishlist_items,
+    COALESCE(COUNT(DISTINCT c.product_id), 0) as cart_items,
+    CASE 
+        WHEN COUNT(o.id) = 0 THEN 'No Purchases'
+        WHEN SUM(o.total_amount) < 100 THEN 'Low Value Customer'
+        WHEN SUM(o.total_amount) BETWEEN 100 AND 500 THEN 'Medium Value Customer'
+        ELSE 'High Value Customer'
+    END as customer_segment,
+    DATEDIFF(CURDATE(), MAX(o.created_at)) as days_since_last_order
+FROM orders o
+RIGHT JOIN buyers b ON o.buyer_id = b.id
+LEFT JOIN wishlists w ON b.id = w.buyer_id
+LEFT JOIN cart_items c ON b.id = c.buyer_id
+WHERE b.status = 'approved'
+GROUP BY b.id, b.name, b.email, b.country, b.created_at
+ORDER BY total_spent DESC, total_orders DESC;
+
+-- Query 6: CROSS JOIN - Product Category and Condition Matrix
+-- Functionality: Creates a matrix of all category-condition combinations for analysis
+-- Business Value: Helps identify market gaps and pricing opportunities
+SELECT 
+    pc.name as category,
+    pcon.grade as condition_grade,
+    pcon.title as condition_title,
+    COUNT(p.id) as products_available,
+    COALESCE(AVG(p.price), 0) as avg_price,
+    COALESCE(MIN(p.price), 0) as min_price,
+    COALESCE(MAX(p.price), 0) as max_price,
+    COALESCE(SUM(p.views_count), 0) as total_views
+FROM product_categories pc
+CROSS JOIN product_conditions pcon
+LEFT JOIN products p ON pc.name = p.category AND pcon.grade = p.condition_grade AND p.status = 'active'
+GROUP BY pc.name, pcon.grade, pcon.title
+ORDER BY pc.name, pcon.grade;
+
+-- ================================================================================================
+-- SECTION 3: COMPLEX SUB QUERIES AND NESTED SUB QUERIES
+-- ================================================================================================
+
+-- Query 7: Nested Sub Query - Top Performing Products by Category
+-- Functionality: Finds products that rank in top 3 by sales within their category using nested subqueries
+-- Business Value: Identifies best-selling products for featured promotions and inventory planning
+SELECT 
+    p.category,
+    p.title,
+    p.brand,
+    p.price,
+    s.shop_username,
+    sales_data.total_sales,
+    sales_data.total_revenue
+FROM products p
+JOIN sellers s ON p.seller_id = s.id
+JOIN (
+    SELECT 
+        product_id,
+        SUM(quantity) as total_sales,
+        SUM(total_price) as total_revenue
+    FROM order_items oi
+    WHERE oi.order_id IN (
+        SELECT id FROM orders WHERE status = 'delivered'
+    )
+    GROUP BY product_id
+) sales_data ON p.id = sales_data.product_id
+WHERE p.id IN (
+    SELECT sub_p.id
+    FROM products sub_p
+    JOIN (
+        SELECT 
+            p2.category,
+            oi2.product_id,
+            SUM(oi2.total_price) as revenue,
+            RANK() OVER (PARTITION BY p2.category ORDER BY SUM(oi2.total_price) DESC) as revenue_rank
+        FROM products p2
+        JOIN order_items oi2 ON p2.id = oi2.product_id
+        JOIN orders o2 ON oi2.order_id = o2.id
+        WHERE o2.status = 'delivered'
+        GROUP BY p2.category, oi2.product_id
+    ) ranked_products ON sub_p.id = ranked_products.product_id
+    WHERE ranked_products.revenue_rank <= 3 AND sub_p.category = p.category
+)
+ORDER BY p.category, sales_data.total_revenue DESC;
+
+-- Query 8: Correlated Sub Query - Buyers with Above Average Spending in Their Country
+-- Functionality: Identifies high-value buyers by comparing their spending to country averages
+-- Business Value: Helps segment customers for targeted marketing and VIP programs
+SELECT 
+    b.id,
+    b.name,
+    b.email,
+    b.country,
+    buyer_stats.total_spent,
+    buyer_stats.order_count,
+    country_avg.avg_spending_in_country,
+    ROUND((buyer_stats.total_spent / country_avg.avg_spending_in_country) * 100, 2) as spending_ratio_to_country_avg
+FROM buyers b
+JOIN (
+    SELECT 
+        buyer_id,
+        SUM(total_amount) as total_spent,
+        COUNT(*) as order_count
+    FROM orders
+    WHERE status = 'delivered'
+    GROUP BY buyer_id
+) buyer_stats ON b.id = buyer_stats.buyer_id
+JOIN (
+    SELECT 
+        b2.country,
+        AVG(country_totals.total_spent) as avg_spending_in_country
+    FROM buyers b2
+    JOIN (
+        SELECT 
+            o.buyer_id,
+            SUM(o.total_amount) as total_spent
+        FROM orders o
+        WHERE o.status = 'delivered'
+        GROUP BY o.buyer_id
+    ) country_totals ON b2.id = country_totals.buyer_id
+    GROUP BY b2.country
+) country_avg ON b.country = country_avg.country
+WHERE buyer_stats.total_spent > (
+    SELECT AVG(order_totals.spent)
+    FROM (
+        SELECT SUM(o.total_amount) as spent
+        FROM orders o
+        JOIN buyers b_inner ON o.buyer_id = b_inner.id
+        WHERE o.status = 'delivered' AND b_inner.country = b.country
+        GROUP BY o.buyer_id
+    ) order_totals
+)
+ORDER BY spending_ratio_to_country_avg DESC;
+
+-- Query 9: EXISTS Sub Query - Active Sellers with Recent Activity
+-- Functionality: Finds sellers who have recent activity (products, orders, or messages) using EXISTS
+-- Business Value: Identifies engaged sellers for partnership opportunities and support
+SELECT 
+    s.id,
+    s.shop_username,
+    s.name,
+    s.email,
+    s.created_at,
+    recent_activity.last_product_date,
+    recent_activity.last_order_date,
+    recent_activity.last_message_date
+FROM sellers s
+JOIN (
+    SELECT 
+        s2.id as seller_id,
+        MAX(p.created_at) as last_product_date,
+        MAX(o.created_at) as last_order_date,
+        MAX(cm.created_at) as last_message_date
+    FROM sellers s2
+    LEFT JOIN products p ON s2.id = p.seller_id
+    LEFT JOIN orders o ON s2.id = o.seller_id
+    LEFT JOIN product_conversations pc ON s2.id = pc.seller_id
+    LEFT JOIN conversation_messages cm ON pc.id = cm.conversation_id AND cm.sender_type = 'seller'
+    GROUP BY s2.id
+) recent_activity ON s.id = recent_activity.seller_id
+WHERE EXISTS (
+    SELECT 1 FROM products p WHERE p.seller_id = s.id AND p.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+) OR EXISTS (
+    SELECT 1 FROM orders o WHERE o.seller_id = s.id AND o.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+) OR EXISTS (
+    SELECT 1 FROM product_conversations pc 
+    JOIN conversation_messages cm ON pc.id = cm.conversation_id 
+    WHERE pc.seller_id = s.id AND cm.sender_type = 'seller' AND cm.created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+)
+ORDER BY GREATEST(
+    COALESCE(recent_activity.last_product_date, '1900-01-01'),
+    COALESCE(recent_activity.last_order_date, '1900-01-01'),
+    COALESCE(recent_activity.last_message_date, '1900-01-01')
+) DESC;
+
+-- ================================================================================================
+-- SECTION 4: VIEWS FOR DATA ABSTRACTION AND SECURITY
+-- ================================================================================================
+
+-- View 1: Seller Performance Dashboard View
+-- Functionality: Provides a comprehensive view of seller performance metrics
+-- Business Value: Simplifies complex queries for seller dashboards and reporting
+DROP VIEW IF EXISTS seller_performance_dashboard;
+CREATE VIEW seller_performance_dashboard AS
+SELECT 
+    s.id as seller_id,
+    s.shop_username,
+    s.name as seller_name,
+    s.email,
+    s.status as seller_status,
+    COUNT(DISTINCT p.id) as total_products,
+    COUNT(DISTINCT CASE WHEN p.status = 'active' THEN p.id END) as active_products,
+    COUNT(DISTINCT o.id) as total_orders,
+    COUNT(DISTINCT CASE WHEN o.status = 'delivered' THEN o.id END) as completed_orders,
+    COALESCE(SUM(CASE WHEN o.status = 'delivered' THEN o.total_amount END), 0) as total_revenue,
+    COALESCE(AVG(CASE WHEN o.status = 'delivered' THEN o.total_amount END), 0) as avg_order_value,
+    COUNT(DISTINCT o.buyer_id) as unique_customers,
+    SUM(p.views_count) as total_product_views,
+    SUM(p.favorites_count) as total_favorites,
+    ROUND(
+        CASE 
+            WHEN COUNT(o.id) > 0 THEN 
+                (COUNT(CASE WHEN o.status = 'delivered' THEN 1 END) / COUNT(o.id)) * 100
+            ELSE 0 
+        END, 2
+    ) as order_completion_rate,
+    MAX(p.created_at) as last_product_listed,
+    MAX(o.created_at) as last_order_received
+FROM sellers s
+LEFT JOIN products p ON s.id = p.seller_id
+LEFT JOIN orders o ON s.id = o.seller_id
+WHERE s.status = 'approved'
+GROUP BY s.id, s.shop_username, s.name, s.email, s.status;
+-- View 2: Product Catalog with Enhanced Information
+-- Functionality: Provides enriched product information for frontend displays
+-- Business Value: Optimizes product browsing experience and reduces complex joins in application
+DROP VIEW IF EXISTS enhanced_product_catalog;
+CREATE VIEW enhanced_product_catalog AS
+CREATE OR REPLACE VIEW enhanced_product_catalog AS
+SELECT 
+    p.id,
+    p.title,
+    p.description,
+    p.category,
+    p.subcategory,
+    p.brand,
+    p.model,
+    p.sku,
+    p.condition_grade,
+    pc.title as condition_title,
+    pc.description as condition_description,
+    p.price,
+    p.original_price,
+    p.discount_percentage,
+    p.quantity_available,
+    p.warranty_period,
+    p.images,
+    p.is_featured,
+    p.is_urgent_sale,
+    p.negotiable,
+    p.views_count,
+    p.favorites_count,
+    p.location_city,
+    p.location_state,
+    p.status,
+    p.created_at,
+    s.shop_username,
+    s.name as seller_name,
+    COALESCE(sales_stats.times_sold, 0) as times_sold,
+    COALESCE(sales_stats.total_sales_value, 0) as total_sales_value,
+    CASE 
+        WHEN p.original_price > 0 THEN ROUND(((p.original_price - p.price) / p.original_price) * 100, 2)
+        ELSE 0 
+    END as actual_discount_percentage
+FROM products p
+JOIN sellers s ON p.seller_id = s.id
+LEFT JOIN product_conditions pc ON p.condition_grade = pc.grade
+LEFT JOIN (
+    SELECT 
+        product_id,
+        COUNT(*) as times_sold,
+        SUM(total_price) as total_sales_value
+    FROM order_items oi
+    JOIN orders o ON oi.order_id = o.id
+    WHERE o.status = 'delivered'
+    GROUP BY product_id
+) sales_stats ON p.id = sales_stats.product_id
+-- View 3: Customer Order History View
+-- Functionality: Provides comprehensive order history for customer service and analytics
+-- Business Value: Enables quick access to customer order information for support and analysis
+DROP VIEW IF EXISTS customer_order_history;
+CREATE VIEW customer_order_history AS
+-- Business Value: Enables quick access to customer order information for support and analysis
+-- CREATE OR REPLACE VIEW customer_order_history AS
+SELECT 
+    o.id as order_id,
+    o.order_number,
+    o.status as order_status,
+    o.payment_status,
+    o.total_amount,
+    o.shipping_cost,
+    o.tax_amount,
+    o.final_amount,
+    o.created_at as order_date,
+    o.shipped_at,
+    o.delivered_at,
+    b.id as buyer_id,
+    b.name as buyer_name,
+    b.email as buyer_email,
+    b.country as buyer_country,
+    s.id as seller_id,
+    s.shop_username,
+    s.name as seller_name,
+    GROUP_CONCAT(
+        CONCAT(p.title, ' (', oi.quantity, 'x ', oi.unit_price, ')') 
+        SEPARATOR ', '
+    ) as order_items,
+    COUNT(oi.id) as total_items,
+    SUM(oi.quantity) as total_quantity,
+    DATEDIFF(COALESCE(o.delivered_at, CURDATE()), o.created_at) as days_to_delivery
+FROM orders o
+JOIN buyers b ON o.buyer_id = b.id
+JOIN sellers s ON o.seller_id = s.id
+JOIN order_items oi ON o.id = oi.order_id
+JOIN products p ON oi.product_id = p.id
+GROUP BY o.id, o.order_number, o.status, o.payment_status, o.total_amount, 
+         o.shipping_cost, o.tax_amount, o.final_amount, o.created_at, 
+         o.shipped_at, o.delivered_at, b.id, b.name, b.email, b.country, 
+         s.id, s.shop_username, s.name;
+
+
+-- ================================================================================================
+-- SECTION 6: TRIGGERS FOR DATA INTEGRITY AND AUTOMATION
+-- ================================================================================================
+
+-- Trigger 1: Update Product Views Counter
+-- Functionality: Automatically increments view count when product details are accessed
+-- Business Value: Tracks product popularity without manual intervention
+DELIMITER //
+CREATE TRIGGER update_product_views
+    AFTER INSERT ON product_conversations
+    FOR EACH ROW
+BEGIN
+    UPDATE products 
+    SET views_count = views_count + 1 
+    WHERE id = NEW.product_id;
+END //
+DELIMITER ;
+
+-- Trigger 2: Order Status History Tracking
+-- Functionality: Maintains audit trail of order status changes
+-- Business Value: Provides complete order lifecycle tracking for customer service and analysis
+CREATE TABLE order_status_history (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    order_id BIGINT UNSIGNED NOT NULL,
+    old_status VARCHAR(50),
+    new_status VARCHAR(50),
+    changed_by VARCHAR(100),
+    change_reason TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+);
+
+DELIMITER //
+CREATE TRIGGER track_order_status_changes
+    AFTER UPDATE ON orders
+    FOR EACH ROW
+BEGIN
+    IF OLD.status != NEW.status THEN
+        INSERT INTO order_status_history (
+            order_id, old_status, new_status, changed_by, change_reason
+        ) VALUES (
+            NEW.id, OLD.status, NEW.status, USER(), 
+            CONCAT('Status changed from ', OLD.status, ' to ', NEW.status)
+        );
+        
+        -- Update timestamps based on status
+        CASE NEW.status
+            WHEN 'confirmed' THEN 
+                UPDATE orders SET confirmed_at = NOW() WHERE id = NEW.id;
+            WHEN 'shipped' THEN 
+                UPDATE orders SET shipped_at = NOW() WHERE id = NEW.id;
+            WHEN 'delivered' THEN 
+                UPDATE orders SET delivered_at = NOW() WHERE id = NEW.id;
+            WHEN 'cancelled' THEN 
+                UPDATE orders SET cancelled_at = NOW() WHERE id = NEW.id;
+        END CASE;
+    END IF;
+END //
+DELIMITER ;
+
+-- Trigger 3: Automatic Wishlist Management
+-- Functionality: Automatically removes items from wishlist when purchased
+-- Business Value: Keeps wishlist clean and relevant for better user experience
+DELIMITER //
+CREATE TRIGGER cleanup_wishlist_on_purchase
+    AFTER INSERT ON order_items
+    FOR EACH ROW
+BEGIN
+    DELETE FROM wishlists 
+    WHERE product_id = NEW.product_id 
+    AND buyer_id = (
+        SELECT buyer_id FROM orders WHERE id = NEW.order_id
+    );
+END //
+DELIMITER ;
+
+-- ================================================================================================
+-- SECTION 7: TRANSACTIONS FOR DATA CONSISTENCY
+-- ================================================================================================
+
+-- Transaction 1: Bulk Product Import with Error Handling
+-- Functionality: Safely imports multiple products with rollback on any failure
+-- Business Value: Ensures data integrity during bulk operations and prevents partial imports
+DROP PROCEDURE IF EXISTS BulkProductImport;
+DELIMITER $$
+CREATE PROCEDURE BulkProductImport(
+    IN p_seller_id BIGINT,
+    IN p_products JSON,
+    OUT p_success_count INT,
+    OUT p_error_message VARCHAR(500)
+)
+BEGIN
+    DECLARE v_product_count INT DEFAULT 0;
+    DECLARE v_counter INT DEFAULT 0;
+    DECLARE v_title VARCHAR(255);
+    DECLARE v_brand VARCHAR(100);
+    DECLARE v_price DECIMAL(10,2);
+    DECLARE v_category VARCHAR(100);
+    DECLARE v_condition_grade VARCHAR(20);
+    DECLARE v_done INT DEFAULT FALSE;
+    
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_error_message = 'Error during bulk import - all changes rolled back';
+        SET p_success_count = 0;
+    END;
+    
+    START TRANSACTION;
+    
+    -- Initialize output parameters
+    SET p_success_count = 0;
+    SET p_error_message = '';
+    
+    -- Check if JSON is valid and not null
+    IF p_products IS NULL THEN
+        SET p_error_message = 'No product data provided';
+        ROLLBACK;
+    ELSE
+        SET v_product_count = JSON_LENGTH(p_products);
+        
+        IF v_product_count IS NULL OR v_product_count = 0 THEN
+            SET p_error_message = 'No valid products in JSON data';
+            ROLLBACK;
+        ELSE
+            -- Process each product
+            WHILE v_counter < v_product_count AND v_done = FALSE DO
+                -- Extract product data from JSON
+                SET v_title = JSON_UNQUOTE(JSON_EXTRACT(p_products, CONCAT('$[', v_counter, '].title')));
+                SET v_brand = JSON_UNQUOTE(JSON_EXTRACT(p_products, CONCAT('$[', v_counter, '].brand')));
+                SET v_price = CAST(JSON_UNQUOTE(JSON_EXTRACT(p_products, CONCAT('$[', v_counter, '].price'))) AS DECIMAL(10,2));
+                SET v_category = JSON_UNQUOTE(JSON_EXTRACT(p_products, CONCAT('$[', v_counter, '].category')));
+                SET v_condition_grade = JSON_UNQUOTE(JSON_EXTRACT(p_products, CONCAT('$[', v_counter, '].condition_grade')));
+                
+                -- Validate required fields
+                IF v_title IS NULL OR v_title = '' OR 
+                   v_brand IS NULL OR v_brand = '' OR 
+                   v_price IS NULL OR v_price <= 0 OR 
+                   v_category IS NULL OR v_category = '' THEN
+                    SET p_error_message = CONCAT('Invalid product data at index ', v_counter, ': missing or invalid required fields');
+                    SET v_done = TRUE;
+                ELSE
+                    -- Set default condition if not provided
+                    IF v_condition_grade IS NULL OR v_condition_grade = '' THEN
+                        SET v_condition_grade = 'good';
+                    END IF;
+                    
+                    -- Insert the product
+                    INSERT INTO products (
+                        seller_id, title, brand, price, category, condition_grade,
+                        sku, status, created_at, updated_at
+                    ) VALUES (
+                        p_seller_id, 
+                        v_title, 
+                        v_brand, 
+                        v_price, 
+                        v_category, 
+                        v_condition_grade,
+                        CONCAT('SKU-', UNIX_TIMESTAMP(), '-', v_counter), 
+                        'pending', 
+                        NOW(), 
+                        NOW()
+                    );
+                    
+                    SET p_success_count = p_success_count + 1;
+                END IF;
+                
+                SET v_counter = v_counter + 1;
+            END WHILE;
+            
+            -- Check if loop completed successfully
+            IF v_done = TRUE THEN
+                ROLLBACK;
+            ELSE
+                COMMIT;
+                SET p_error_message = CONCAT('Successfully imported ', p_success_count, ' products');
+            END IF;
+        END IF;
+    END IF;
+END$$
+DELIMITER ;
+
+-- Transaction 2: Order Cancellation with Inventory Restoration
+-- Functionality: Safely cancels orders and restores product inventory
+-- Business Value: Maintains accurate inventory levels and handles order cancellations properly
+DROP PROCEDURE IF EXISTS CancelOrder;
+DELIMITER $$
+CREATE PROCEDURE CancelOrder(
+    IN p_order_id BIGINT,
+    IN p_cancellation_reason TEXT,
+    OUT p_result_message VARCHAR(255)
+)
+BEGIN
+    DECLARE v_order_status VARCHAR(50);
+    DECLARE v_refund_amount DECIMAL(10,2);
+    DECLARE v_order_exists INT DEFAULT 0;
+    
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_result_message = 'Error occurred during order cancellation';
+    END;
+    
+    START TRANSACTION;
+    
+    -- Check if order exists and get current status
+    SELECT COUNT(*), status, total_amount 
+    INTO v_order_exists, v_order_status, v_refund_amount
+    FROM orders 
+    WHERE id = p_order_id
+    GROUP BY status, total_amount;
+    
+    IF v_order_exists = 0 THEN
+        SET p_result_message = 'Order not found';
+        ROLLBACK;
+    ELSEIF v_order_status IN ('delivered', 'cancelled') THEN
+        SET p_result_message = CONCAT('Order cannot be cancelled - current status is ', v_order_status);
+        ROLLBACK;
+    ELSE
+        -- Update order status
+        UPDATE orders 
+        SET status = 'cancelled', 
+            cancelled_at = NOW(),
+            admin_notes = CONCAT(COALESCE(admin_notes, ''), '\nCancelled: ', COALESCE(p_cancellation_reason, 'No reason provided'))
+        WHERE id = p_order_id;
+        
+        -- Restore product quantities
+        UPDATE products p
+        JOIN order_items oi ON p.id = oi.product_id
+        SET p.quantity_available = p.quantity_available + oi.quantity,
+            p.status = CASE WHEN p.status = 'sold' THEN 'active' ELSE p.status END
+        WHERE oi.order_id = p_order_id;
+        
+        -- Create refund transaction record
+        INSERT INTO payment_transactions (
+            order_id, transaction_type, amount, status, created_at
+        ) VALUES (
+            p_order_id, 'refund', v_refund_amount, 'pending', NOW()
+        );
+        
+        COMMIT;
+        SET p_result_message = 'Order cancelled successfully and inventory restored';
+    END IF;
+END$$
+DELIMITER ;
+
+-- ================================================================================================
+-- SAMPLE QUERIES TO TEST THE ABOVE IMPLEMENTATIONS
+-- ================================================================================================
+
+-- Test Views
+SELECT * FROM seller_performance_dashboard LIMIT 5;
+SELECT * FROM customer_order_history WHERE buyer_id = 2;
 

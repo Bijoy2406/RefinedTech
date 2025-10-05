@@ -1,9 +1,8 @@
 /* ===================================
-   REFINEDTECH MODERN THEME SYSTEM
+   REFINEDTECH LIGHT THEME SYSTEM
    Sleek, gradient-based design with glassmorphism
    ================================= */
 
-/* ===== LIGHT THEME (Default) ===== */
 :root {
   /* === Colors === */
   --color-primary: #6366f1;
@@ -138,87 +137,102 @@
   --z-modal: 1040;
   --z-popover: 1050;
   --z-tooltip: 1060;
+
+  /* === Legacy Support === */
+  --background: #ffffff;
+  --accent-primary: #6366f1;
 }
 
-/* ===== DARK THEME ===== */
-.dark-mode {
-  /* === Colors === */
-  --color-primary: #8b5cf6;
-  --color-primary-light: #a78bfa;
-  --color-primary-dark: #7c3aed;
-  --color-secondary: #374151;
-  --color-secondary-dark: #1f2937;
-  
-  /* Success, Error, Warning, Info colors remain same for consistency */
-  
-  /* === Backgrounds === */
-  --bg-primary: #111827;
-  --bg-secondary: #1f2937;
-  --bg-tertiary: #374151;
-  --bg-overlay: rgba(0, 0, 0, 0.7);
-  --bg-gradient: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
-  
-  /* === Text Colors === */
-  --text-primary: #f9fafb;
-  --text-secondary: #d1d5db;
-  --text-tertiary: #9ca3af;
-  --text-inverse: #111827;
-  --text-link: #a78bfa;
-  --text-link-hover: #c4b5fd;
-  
-  /* === Buttons === */
-  --btn-primary-bg: linear-gradient(135deg, #8b5cf6, #a78bfa);
-  --btn-primary-text: #ffffff;
-  --btn-primary-hover: linear-gradient(135deg, #7c3aed, #8b5cf6);
-  
-  --btn-secondary-bg: #374151;
-  --btn-secondary-text: #f9fafb;
-  --btn-secondary-hover: #4b5563;
-  
-  --btn-outline-border: #374151;
-  --btn-outline-text: #a78bfa;
-  --btn-outline-hover-bg: linear-gradient(135deg, #8b5cf6, #a78bfa);
-  --btn-outline-hover-text: #ffffff;
-  
-  --btn-success-bg: linear-gradient(135deg, #10b981, #34d399);
-  --btn-success-text: #ffffff;
-  --btn-success-hover: linear-gradient(135deg, #059669, #10b981);
-  
-  --btn-error-bg: linear-gradient(135deg, #ef4444, #f87171);
-  --btn-error-text: #ffffff;
-  --btn-error-hover: linear-gradient(135deg, #dc2626, #ef4444);
-  
-  /* === Inputs & Forms === */
-  --input-bg: #1f2937;
-  --input-border: #374151;
-  --input-border-focus: #8b5cf6;
-  --input-text: #f9fafb;
-  --input-placeholder: #6b7280;
-  --input-disabled-bg: #111827;
-  --input-disabled-text: #6b7280;
-  
-  /* === Cards & Containers === */
-  --card-bg: rgba(31, 41, 55, 0.9);
-  --card-border: rgba(55, 65, 81, 0.5);
-  --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  --card-shadow-hover: 0 16px 64px rgba(0, 0, 0, 0.4);
-  --card-backdrop: blur(10px);
-  
-  /* === Navigation === */
-  --nav-bg: rgba(17, 24, 39, 0.8);
-  --nav-border: rgba(55, 65, 81, 0.5);
-  --nav-backdrop: blur(20px);
-  
-  /* === Modals === */
-  --modal-bg: rgba(31, 41, 55, 0.95);
-  --modal-overlay: rgba(0, 0, 0, 0.7);
-  --modal-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
-  --modal-backdrop: blur(20px);
-  
-  /* === Borders & Dividers === */
-  --border-color: #374151;
-  --border-light: #4b5563;
-  --border-focus: #8b5cf6;
+/* === Global Styles === */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+a {
+  color: var(--text-link);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--text-link-hover);
+}
+
+.btn {
+  padding: .6rem 1rem;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  display: inline-block;
+  font-weight: 500;
+  transition: all var(--transition-normal);
+}
+
+.btn.primary {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+}
+
+.btn.primary:hover {
+  background: var(--btn-primary-hover);
+}
+
+.btn.secondary {
+  background-color: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+}
+
+.btn.secondary:hover {
+  background-color: var(--btn-secondary-hover);
+}
+
+.btn.outline {
+  background: transparent;
+  border: 2px solid var(--btn-outline-border);
+  color: var(--btn-outline-text);
+}
+
+.btn.outline:hover {
+  background: var(--btn-outline-hover-bg);
+  color: var(--btn-outline-hover-text);
+  border-color: transparent;
+}
+
+input, select, textarea {
+  padding: .6rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--input-border);
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  font-family: var(--font-family);
+  transition: border-color var(--transition-normal);
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--input-border-focus);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+label {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-top: .5rem;
+  font-weight: 500;
+}
+
+.status {
+  margin-top: 1rem;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
 }
 
 /* ===== THEME UTILITY CLASSES ===== */
@@ -279,23 +293,23 @@
 
 /* === Button Theme Classes === */
 .btn-success {
-  background-color: var(--btn-success-bg);
+  background: var(--btn-success-bg);
   color: var(--btn-success-text);
   border: none;
 }
 
 .btn-success:hover {
-  background-color: var(--btn-success-hover);
+  background: var(--btn-success-hover);
 }
 
 .btn-error {
-  background-color: var(--btn-error-bg);
+  background: var(--btn-error-bg);
   color: var(--btn-error-text);
   border: none;
 }
 
 .btn-error:hover {
-  background-color: var(--btn-error-hover);
+  background: var(--btn-error-hover);
 }
 
 /* === Card Theme Classes === */
@@ -305,6 +319,7 @@
   box-shadow: var(--card-shadow);
   border-radius: var(--radius-md);
   padding: var(--spacing-lg);
+  transition: all var(--transition-normal);
 }
 
 .card:hover {
@@ -314,8 +329,8 @@
 /* === Modal Theme Classes === */
 .modal-overlay {
   background-color: var(--modal-overlay);
-  -webkit-backdrop-filter: var(--nav-backdrop);
-  backdrop-filter: var(--nav-backdrop);
+  backdrop-filter: var(--modal-backdrop);
+  -webkit-backdrop-filter: var(--modal-backdrop);
 }
 
 .modal-content {
@@ -323,6 +338,8 @@
   box-shadow: var(--modal-shadow);
   border-radius: var(--radius-lg);
   border: 1px solid var(--card-border);
+  backdrop-filter: var(--modal-backdrop);
+  -webkit-backdrop-filter: var(--modal-backdrop);
 }
 
 /* === Input Theme Classes === */
@@ -338,7 +355,7 @@
 .input-field:focus {
   border-color: var(--input-border-focus);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
 .input-field:disabled {
@@ -356,8 +373,8 @@
 .nav-themed {
   background-color: var(--nav-bg);
   border-bottom: 1px solid var(--nav-border);
-  -webkit-backdrop-filter: var(--nav-backdrop);
   backdrop-filter: var(--nav-backdrop);
+  -webkit-backdrop-filter: var(--nav-backdrop);
 }
 
 /* === Transition Classes === */
@@ -379,36 +396,4 @@
     --spacing-xl: 1.5rem;
     --spacing-2xl: 2rem;
   }
-}
-
-/* ===== LEGACY SUPPORT ===== */
-/* Keep existing CSS variable names for backward compatibility */
-:root {
-  --background: var(--bg-primary);
-  --text-primary: var(--text-primary);
-  --text-secondary: var(--text-secondary);
-  --primary-btn-bg: var(--btn-primary-bg);
-  --primary-btn-text: var(--btn-primary-text);
-  --secondary-btn-bg: var(--btn-secondary-bg);
-  --secondary-btn-text: var(--btn-secondary-text);
-  --input-bg: var(--input-bg);
-  --input-border: var(--input-border);
-  --card-bg: var(--card-bg);
-  --card-border: var(--card-border);
-  --link-color: var(--text-link);
-}
-
-.dark-mode {
-  --background: var(--bg-primary);
-  --text-primary: var(--text-primary);
-  --text-secondary: var(--text-secondary);
-  --primary-btn-bg: var(--btn-primary-bg);
-  --primary-btn-text: var(--btn-primary-text);
-  --secondary-btn-bg: var(--btn-secondary-bg);
-  --secondary-btn-text: var(--btn-secondary-text);
-  --input-bg: var(--input-bg);
-  --input-border: var(--input-border);
-  --card-bg: var(--card-bg);
-  --card-border: var(--card-border);
-  --link-color: var(--text-link);
 }

@@ -13,7 +13,7 @@ return [
     // Gemini API settings
     'gemini' => [
         'api_key' => env('GEMINI_API_KEY'),
-        'model' => 'gemini-1.5-flash',
+        'model' => 'gemini-2.5-flash-lite', // Updated to use working model
         'temperature' => 0.7,
         'top_k' => 40,
         'top_p' => 0.95,

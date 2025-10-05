@@ -36,10 +36,6 @@
   transition: filter var(--transition-normal);
 }
 
-.dark-mode .brand-logo {
-  filter: brightness(1.2) contrast(1.1);
-}
-
 .links {
   display: flex;
   gap: var(--spacing-sm);
@@ -141,18 +137,6 @@
 .links .btn[href="/conversations"]:active {
   transform: translateY(0);
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-}
-
-/* Theme toggle button specific styling */
-.links .theme-toggle {
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-full);
-  font-size: 1.2rem;
 }
 
 .profile-btn {

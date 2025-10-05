@@ -234,18 +234,18 @@ class ChatbotService
             $query->where(function ($q) use ($searchTerms) {
                 foreach ($searchTerms as $term) {
                     $q->where(function ($subQ) use ($term) {
-                        $subQ->where('title', 'ILIKE', "%{$term}%")
-                             ->orWhere('brand', 'ILIKE', "%{$term}%")
-                             ->orWhere('model', 'ILIKE', "%{$term}%");
+                        $subQ->where('title', 'LIKE', "%{$term}%")
+                             ->orWhere('brand', 'LIKE', "%{$term}%")
+                             ->orWhere('model', 'LIKE', "%{$term}%");
                     });
                 }
             });
         } else {
             // Direct string search
             $query->where(function ($q) use ($message) {
-                $q->where('title', 'ILIKE', "%{$message}%")
-                  ->orWhere('brand', 'ILIKE', "%{$message}%")
-                  ->orWhere('model', 'ILIKE', "%{$message}%");
+                $q->where('title', 'LIKE', "%{$message}%")
+                  ->orWhere('brand', 'LIKE', "%{$message}%")
+                  ->orWhere('model', 'LIKE', "%{$message}%");
             });
         }
 
@@ -297,22 +297,22 @@ class ChatbotService
             // Use OR logic for broader matching
             $query->where(function ($q) use ($searchTerms) {
                 foreach ($searchTerms as $term) {
-                    $q->orWhere('title', 'ILIKE', "%{$term}%")
-                      ->orWhere('description', 'ILIKE', "%{$term}%")
-                      ->orWhere('brand', 'ILIKE', "%{$term}%")
-                      ->orWhere('model', 'ILIKE', "%{$term}%")
-                      ->orWhere('category', 'ILIKE', "%{$term}%")
-                      ->orWhere('subcategory', 'ILIKE', "%{$term}%");
+                    $q->orWhere('title', 'LIKE', "%{$term}%")
+                      ->orWhere('description', 'LIKE', "%{$term}%")
+                      ->orWhere('brand', 'LIKE', "%{$term}%")
+                      ->orWhere('model', 'LIKE', "%{$term}%")
+                      ->orWhere('category', 'LIKE', "%{$term}%")
+                      ->orWhere('subcategory', 'LIKE', "%{$term}%");
                 }
             });
         } else {
             // Fallback to general search
             $query->where(function ($q) use ($message) {
-                $q->where('title', 'ILIKE', "%{$message}%")
-                  ->orWhere('description', 'ILIKE', "%{$message}%")
-                  ->orWhere('brand', 'ILIKE', "%{$message}%")
-                  ->orWhere('category', 'ILIKE', "%{$message}%")
-                  ->orWhere('subcategory', 'ILIKE', "%{$message}%");
+                $q->where('title', 'LIKE', "%{$message}%")
+                  ->orWhere('description', 'LIKE', "%{$message}%")
+                  ->orWhere('brand', 'LIKE', "%{$message}%")
+                  ->orWhere('category', 'LIKE', "%{$message}%")
+                  ->orWhere('subcategory', 'LIKE', "%{$message}%");
             });
         }
 
