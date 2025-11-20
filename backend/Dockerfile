@@ -5,6 +5,7 @@ FROM php:8.2-apache
 WORKDIR /var/www/html
 
 # Install system dependencies
+# ADDED: libpq-dev (Required for PostgreSQL)
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -16,12 +17,15 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     sqlite3 \
     libsqlite3-dev \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
+# ADDED: pdo_pgsql (Required for PostgreSQL connection)
 RUN docker-php-ext-install \
     pdo_mysql \
     pdo_sqlite \
+    pdo_pgsql \
     mbstring \
     exif \
     pcntl \
@@ -42,7 +46,8 @@ COPY . /var/www/html
 COPY --chown=www-data:www-data . /var/www/html
 
 # Install dependencies
-RUN composer install --no-dev --optimize-autoloader
+# FIXED: Added --no-scripts to prevent "artisan config:clear" crash during build
+RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 # Create necessary directories and set permissions
 RUN mkdir -p /var/www/html/storage/logs \
@@ -75,9 +80,6 @@ RUN echo '<VirtualHost *:80>\n\
 RUN echo '#!/bin/bash\n\
 set -e\n\
 \n\
-# Wait for any database to be ready (if using external DB)\n\
-# sleep 10\n\
-\n\
 # Copy .env.example to .env if .env does not exist\n\
 if [ ! -f /var/www/html/.env ]; then\n\
     cp /var/www/html/.env.example /var/www/html/.env\n\
@@ -86,13 +88,6 @@ fi\n\
 # Generate application key if not set\n\
 if ! grep -q "APP_KEY=base64:" /var/www/html/.env; then\n\
     php artisan key:generate --force\n\
-fi\n\
-\n\
-# Create SQLite database if it does not exist\n\
-if [ ! -f /var/www/html/database/database.sqlite ]; then\n\
-    touch /var/www/html/database/database.sqlite\n\
-    chmod 664 /var/www/html/database/database.sqlite\n\
-    chown www-data:www-data /var/www/html/database/database.sqlite\n\
 fi\n\
 \n\
 # Run database migrations\n\
