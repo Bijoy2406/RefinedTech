@@ -56,8 +56,7 @@ RUN mkdir -p storage/logs storage/framework/cache storage/framework/sessions sto
     && chmod -R 755 storage bootstrap/cache
 
 # Generate optimized autoloader
-RUN composer dump-autoload --optimize
-
+RUN composer dump-autoload --optimize --no-scripts
 # Expose port (Render will set PORT environment variable)
 EXPOSE $PORT
 
